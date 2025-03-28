@@ -1,4 +1,7 @@
 
+# ignore hidden files created by Mac OS:
+.DS_Store
+
 # ignore the .venv directory which configures the virtual environment:
 .venv/
 
