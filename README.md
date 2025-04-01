@@ -44,13 +44,14 @@ Follow these steps to setup locally before you run the `notebooks/SAC_Demo.ipynb
 
 > NOTE: on Google machines you may need to first [install and configure pyenv](https://github.com/pyenv/pyenv?tab=readme-ov-file#installation).
 
-5. Build the `.proto` files at `smart_control/proto` into python files by running `cd smart_control/proto && protoc --python_out=. smart_control_building.proto smart_control_normalization.proto smart_control_reward.proto && cd ../..`.  
+5. Build the `.proto` files at `smart_control/proto` into python files by running `cd smart_control/proto && protoc --python_out=. smart_control_building.proto smart_control_normalization.proto smart_control_reward.proto && cd ../..`.
 
 6. Create a local `.env` file in the root directory of this repo, and specify your desired `VIDEO_PATH_ROOT` environment variable (e.g. `VIDEO_PATH_ROOT="/path/to/sbsim/geometric_sim_videos"`), which is used as the value of `VIDEO_PATH_ROOT` at `smart_control/simulator/constants.py`. This is the path where simulation videos will be stored.
 
 7. Now in the `notebooks/SAC_Demo.ipynb` notebook, modify the values of `data_path`, `metrics_path`, `output_data_path` and `root_dir`. In particular, `data_path` should point to the `sim_config.gin` file at `smart_control/configs/sim_config.gin`.
 
-8. Now you are ready to run the `notebooks/SAC_Demo.ipynb` notebook.
+8. Now you are ready to run the `notebooks/SAC_Demo.ipynb` notebook (using VS Code).
+
 
 ## Real World Data
 
