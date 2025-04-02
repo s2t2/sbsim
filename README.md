@@ -24,7 +24,9 @@ Before you run this notebook, make sure to go through the setup instructions bel
 
 ## Setup
 
-Follow these steps to setup locally before you run the `notebooks/SAC_Demo.ipynb` notebook. Note: this will only work on linux, as some libraries are not supported by other operating systems.
+Follow these steps to setup locally before you run the `notebooks/SAC_Demo.ipynb` notebook. 
+
+> NOTE: this will only work on Linux, as some libraries are not supported by other operating systems.
 
 1. Clone the repository.
 
