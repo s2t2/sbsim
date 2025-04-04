@@ -1,0 +1,11 @@
+.venv/
+*/**/__pycache__/
+*/**/output_data/
+*/**/metrics/
+**/videos/
+**/train/
+**/eval/
+smart_control/refactor/data/
+smart_control/refactor/experiment_results/
+smart_control/learning/
+.vscode/
