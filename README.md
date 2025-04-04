@@ -38,7 +38,7 @@ Follow these steps to setup locally before you run the `notebooks/SAC_Demo.ipynb
 
 > NOTE: on Google machines you may need to first install venv by running `apt install python3.12-venv` (prefixed with `sudo` as necessary).
 
-4. Install the dependencies by running `poetry install`.
+4. Install the dependencies by running `poetry install --with dev`.
 
 > NOTE: you may need to first use a Python version that is compatible with this project, by running `poetry env use 3.11` (for example if you want to use Python version 3.11).
 
@@ -48,12 +48,32 @@ Follow these steps to setup locally before you run the `notebooks/SAC_Demo.ipynb
 
 5. Build the `.proto` files at `smart_control/proto` into python files by running `cd smart_control/proto && protoc --python_out=. smart_control_building.proto smart_control_normalization.proto smart_control_reward.proto && cd ../..`.
 
-6. Create a local `.env` file in the root directory of this repo, and specify your desired `VIDEO_PATH_ROOT` environment variable (e.g. `VIDEO_PATH_ROOT="/path/to/sbsim/geometric_sim_videos"`), which is used as the value of `VIDEO_PATH_ROOT` at `smart_control/simulator/constants.py`. This is the path where simulation videos will be stored.
+6. Create a local `.env` file in the root directory of this repo, and specify the following environment variables (see example `.env` file contents below):
 
-7. Now in the `notebooks/SAC_Demo.ipynb` notebook, modify the values of `data_path`, `metrics_path`, `output_data_path` and `root_dir`. In particular, `data_path` should point to the `sim_config.gin` file at `smart_control/configs/sim_config.gin`.
+  + `VIDEO_PATH_ROOT`: used by `smart_control/simulator/constants.py`, this is the path where simulation videos will be stored.
+  + `DATA_PATH`: used by demo notebooks, this should point to the directory in this repository where the `sim_config.gin` file is located (currently `smart_control/configs/resources/sb1`).
+  + `METRICS_PATH`: used by demo notebooks
+  + `OUTPUT_DATA_PATH`: used by demo notebooks
+  + `ROOT_DIR`: used by demo notebooks
 
-8. Now you are ready to run the `notebooks/SAC_Demo.ipynb` notebook (using VS Code).
 
+```sh
+# example .env file ...
+
+VIDEO_PATH_ROOT="/path/to/sbsim/geometric_sim_videos"
+
+DATA_PATH="/path/to/sbsim/smart_control/configs/resources/sb1/"
+METRICS_PATH="/path/to/sbsim/metrics" 
+OUTPUT_DATA_PATH='/path/to/sbsim/smart_control/sb_colab_demo'
+ROOT_DIR="/path/to/sbsim/root" 
+
+# fall back to using Python instead of C extensions (for the wrapt package):
+# WRAPT_DISABLE_EXTENSIONS="true"
+```
+
+7. Now you are ready to run the `notebooks/SAC_Demo.ipynb` notebook. 
+
+> NOTE: if you would like to use jupyter to run the notebook, first create a kernel by running `poetry run python -m ipykernel install --user --name=sbsim-kernel`, then choose this kernel when running the notebook in VS Code. Otherwise you can run `poetry run jupyter notebook` to run the notebook with Jupyter.
 
 ## Real World Data
 

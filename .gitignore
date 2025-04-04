@@ -8,5 +8,19 @@
 # ignore the .env file which contains environment variables:
 .env
 
-# ignore the video path, if storing them in this repo:
+# ignore cache files
+__pycache__
+
+
+# ignore the video path, if storing in this repo:
 geometric_sim_videos/
+# ignore video:
+geometric_sim_videossample.mp4
+
+# these are for the SAC Demo notebook...
+
+# ignore the root path, if storing in this repo:
+root/
+
+# ignore the metrics path, if storing in this repo:
+metrics/
