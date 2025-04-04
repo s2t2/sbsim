@@ -35,7 +35,7 @@ jobs:
         python -m venv .venv
         source .venv/bin/activate
         pip install poetry
-        poetry install
+        poetry install --with dev
     
     - name: Run tests
       run: |
