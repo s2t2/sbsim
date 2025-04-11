@@ -12,7 +12,9 @@ from tf_agents.train.utils import spec_utils
 from tf_agents.trajectories import policy_step
 from tf_agents.typing import types
 
+from smart_control.reinforcement_learning.utils.constants import DEFAULT_TIME_ZONE
 from smart_control.reinforcement_learning.utils.time_utils import to_dow, to_hod
+
 
 logger = logging.getLogger(__name__)
 
@@ -47,24 +49,24 @@ def get_active_setpoint(
 ) -> SetpointValue:
     """Find the active setpoint value at a given time"""
     logger.debug("Getting active setpoint...")
-    
+
     # Create a dictionary of {time: value} for the specific device and setpoint
     events = {
         event.start_time: event.setpoint_value
         for event in schedule
         if event.device == device and event.setpoint_name == setpoint_name
     }
-    
+
     if not events:
         logger.exception("Events is None...")
         return None
-    
+
     # Convert to Series for easier time-based lookup
     series = pd.Series(events)
-    
+
     # Find events that happened at or before the timestamp
     prior_events = series.index[series.index <= timestamp]
-    
+
     # If no prior events, wrap around and take the last event
     if prior_events.empty:
         return series.iloc[-1]
@@ -73,7 +75,7 @@ def get_active_setpoint(
 
 class SchedulePolicy(tf_policy.TFPolicy):
     """Policy that selects actions based on time-dependent schedules"""
-    
+
     def __init__(
         self,
         time_step_spec,
@@ -125,7 +127,7 @@ class SchedulePolicy(tf_policy.TFPolicy):
     def _get_action_map(self, time_step) -> Dict:
         """Determine the appropriate actions based on time"""
         observation = time_step.observation
-        
+
         # Denormalize the time signals
         dow_sin = (observation[0][self.dow_sin_index] * self.norm_std) + self.norm_mean
         dow_cos = (observation[0][self.dow_cos_index] * self.norm_std) + self.norm_mean
@@ -135,13 +137,13 @@ class SchedulePolicy(tf_policy.TFPolicy):
         # Convert to day of week and hour of day
         dow = to_dow(dow_sin, dow_cos)
         hod = to_hod(hod_sin, hod_cos)
-        
+
         # Create timestamp
         timestamp = pd.Timedelta(hod, unit='hour') + self.local_start_time.utcoffset()
-        
+
         # Use appropriate schedule based on day type
         schedule = self.weekday_schedule if dow < 5 else self.weekend_schedule
-        
+
         # Get active setpoints for each device/setpoint pair
         return {
             (device, setpoint): get_active_setpoint(schedule, device, setpoint, timestamp)
@@ -151,34 +153,34 @@ class SchedulePolicy(tf_policy.TFPolicy):
     def _action(self, time_step, policy_state, seed):
         """Generate the policy action"""
         del seed, policy_state
-        
+
         # Get and normalize actions
         action_map = self._get_action_map(time_step)
         normalized_map = self._normalize_actions(action_map)
-        
+
         # Convert to array in the correct order
         action_array = np.array([
             normalized_map[(device, setpoint)]
             for device, setpoint in self.action_sequence
         ], dtype=np.float32)
-        
+
         # Add batch dimension - this is the key fix
         action_array = np.expand_dims(action_array, axis=0)
-        
+
         return policy_step.PolicyStep(tf.convert_to_tensor(action_array), (), ())
-    
+
 
 # This is the baseline default policy that we use for benchmarking/initial data collection
 def create_baseline_schedule_policy(tf_env: tf_env.TFPyEnvironment):
     env = tf_env.pyenv.envs[0]
-    
+
     _, action_spec, time_step_spec = spec_utils.get_tensor_specs(tf_env)
-    
+
     hod_cos_index = env._field_names.index('hod_cos_000')
     hod_sin_index = env._field_names.index('hod_sin_000')
     dow_cos_index = env._field_names.index('dow_cos_000')
     dow_sin_index = env._field_names.index('dow_sin_000')
-    
+
     # Note that temperatures are specified in Kelvin:
     weekday_schedule_events = [
         ScheduleEvent(
@@ -233,9 +235,9 @@ def create_baseline_schedule_policy(tf_env: tf_env.TFPyEnvironment):
             315.0,
         ),
     ]
-    
-    local_start_time = env.current_simulation_timestamp.tz_convert(tz='US/Pacific')
-    
+
+    local_start_time = env.current_simulation_timestamp.tz_convert(tz=DEFAULT_TIME_ZONE)
+
     baseline_schedule_policy = SchedulePolicy(
         time_step_spec=time_step_spec,
         action_spec=action_spec,
@@ -252,5 +254,5 @@ def create_baseline_schedule_policy(tf_env: tf_env.TFPyEnvironment):
         dow_sin_index=dow_sin_index,
         local_start_time=local_start_time
     )
-    
+
     return baseline_schedule_policy
