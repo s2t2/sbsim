@@ -5,7 +5,10 @@ This script sets up the training process with separate collection and evaluation
 
 import os
 
+# setting this environment variable before importing tensorflow
+# https://github.com/tensorflow/tensorflow/issues/63548#issuecomment-2008941537
 os.environ['WRAPT_DISABLE_EXTENSIONS'] = 'true'
+
 import logging
 from datetime import datetime
 
@@ -34,6 +37,7 @@ from smart_control.reinforcement_learning.utils.environment import (
     create_and_setup_environment,
 )
 
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -56,7 +60,7 @@ def train_agent(
 ):
     """
     Trains a reinforcement learning agent using a pre-populated replay buffer.
-    
+
     Args:
         starter_buffer_path: Path to the pre-populated replay buffer
         agent_type: Type of agent to train ('sac' or 'td3')
@@ -71,33 +75,33 @@ def train_agent(
     """
     # Set up scenario config path
     scenario_config_path = os.path.join(CONFIG_PATH, "sim_config_1_day.gin")
-    
+
     # Generate timestamp for summary directory
     current_time = datetime.now().strftime("%Y_%m_%d-%H:%M:%S")
     summary_dir = os.path.join(EXPERIMENT_RESULTS_PATH, f"{experiment_name}_{current_time}")
     logger.info(f"Experiment results will be saved to {summary_dir}")
-    
+
     try:
         os.makedirs(summary_dir, exist_ok=False)
     except FileExistsError:
         logger.exception(f"Directory {summary_dir} already exists. Exiting.")
         raise FileExistsError(f"Directory {summary_dir} already exists. Exiting.")
-    
+
     # Create train and eval environments
     logger.info("Creating train and eval environments")
     train_env = create_and_setup_environment(scenario_config_path, metrics_path=os.path.join(summary_dir, 'metrics'))
     eval_env = create_and_setup_environment(scenario_config_path, metrics_path=None)
-    
+
     # Wrap in TF environments
     train_tf_env = tf_py_environment.TFPyEnvironment(train_env)
     eval_tf_env = tf_py_environment.TFPyEnvironment(eval_env)
-    
+
     # Create global step for training
     train_step = tf.Variable(0, trainable=False, dtype=tf.int64)
-    
+
     # Get specs
     _, action_spec, time_step_spec = spec_utils.get_tensor_specs(train_tf_env)
-    
+
     # Create agent based on type
     logger.info(f"Creating {agent_type} agent")
     if agent_type.lower() == 'sac':
@@ -106,11 +110,11 @@ def train_agent(
     else:
         logger.exception(f"Unsupported agent type: {agent_type}. Choose from 'sac' or 'td3'.")
         raise ValueError(f"Unsupported agent type: {agent_type}. Choose from 'sac' or 'td3'.")
-    
+
     # Create policies
     collect_policy = agent.collect_policy
     eval_policy = greedy_policy.GreedyPolicy(agent.policy)
-    
+
     # Set up metrics
     train_metrics = [
         tf_metrics.NumberOfEpisodes(),
@@ -118,12 +122,12 @@ def train_agent(
         tf_metrics.AverageReturnMetric(),
         tf_metrics.AverageEpisodeLengthMetric(),
     ]
-    
+
     eval_metrics = [
         tf_metrics.AverageReturnMetric(buffer_size=num_eval_episodes),
         tf_metrics.AverageEpisodeLengthMetric(buffer_size=num_eval_episodes)
     ]
-    
+
     # Load replay buffer from existing path
     logger.info("Instantiating replay buffer manager")
     replay_manager = ReplayBufferManager(
@@ -133,11 +137,11 @@ def train_agent(
         sequence_length=2
     )
     logger.info(f"Replay buffer size before loading starter buffer: {replay_manager.num_frames()} frames")
-    
+
     logger.info(f"Loading starter replay buffer from {starter_buffer_path}")
     replay_buffer, replay_buffer_observer = replay_manager.load_replay_buffer()
     logger.info(f"Replay buffer size after loading starter buffer: {replay_manager.num_frames()} frames")
-    
+
     # Create dataset for sampling from the buffer
     logger.info("Creating dataset for sampling from replay buffer")
     dataset = replay_buffer.as_dataset(
@@ -145,23 +149,23 @@ def train_agent(
         num_steps=2,
         num_parallel_calls=3
     ).prefetch(3)
-    
+
     # Create print observer for collection
     print_observer = PrintStatusObserver(
         status_interval_steps=1,  # Print status every 100 steps
         environment=train_tf_env,
         replay_buffer=replay_buffer
     )
-    
+
     eval_print_observer = PrintStatusObserver(
         status_interval_steps=1,
         environment=eval_tf_env,
         replay_buffer=replay_buffer
     )
-    
+
     # Combine observers
     collect_observers = CompositeObserver([print_observer, replay_buffer_observer])
-    
+
     # Create collect actor
     logger.info("Creating collect and eval actors")
     collect_actor = actor.Actor(
@@ -174,7 +178,7 @@ def train_agent(
         summary_dir=os.path.join(summary_dir, 'collect'),
         summary_interval=1
     )
-    
+
     # Create eval actor
     logger.info("Creating eval actor")
     eval_actor = actor.Actor(
@@ -187,7 +191,7 @@ def train_agent(
         summary_dir=os.path.join(summary_dir, 'eval'),
         summary_interval=1
     )
-    
+
     # Create learner
     logger.info("Creating learner")
     agent_learner = learner.Learner(
@@ -206,7 +210,7 @@ def train_agent(
             triggers.StepPerSecondLogTrigger(train_step, interval=log_interval)
         ]
     )
-    
+
     # Main training loop
     logger.info(f"Starting training for {train_iterations} iterations")
 
@@ -219,38 +223,38 @@ def train_agent(
         # Get current training step value before operations
         current_step = train_step.numpy()
         logger.exception(f"Starting training loop iteration {i} (step {current_step})")
-        
+
         # Evaluate periodically
         if (i % eval_interval == 0):
             logger.info(f"Evaluating at iteration {i} (step {current_step})")
             eval_actor.run()
-            
+
             # Write eval summaries with the current global step
             with eval_actor.summary_writer.as_default():
                 for m in eval_metrics:
                     tf.summary.scalar(m.name, m.result(), step=current_step)
                 eval_actor.summary_writer.flush()
-        
+
         # Collect experience
         logger.info(f"Starting collection for loop iteration {i} (step {current_step})")
         collect_actor.run()
-        
+
         # Write collect summaries with the current global step
         with collect_actor.summary_writer.as_default():
             for m in train_metrics:
                 tf.summary.scalar(m.name, m.result(), step=current_step)
             collect_actor.summary_writer.flush()
-        
+
         # Train the agent using the specified learner iterations
         # This will internally increment the train_step
         logger.info(f"Training agent for loop iteration {i}")
         agent_learner.run(iterations=learner_iterations)
-        
+
         # Checkpoint replay buffer periodically based on the new argument
         if (i % checkpoint_interval == 0):
             logger.info("Checkpointing replay buffer")
             replay_buffer.py_client.checkpoint()
-        
+
         train_step.assign_add(1)
 
     # Final checkpoint and evaluation
@@ -271,7 +275,7 @@ def train_agent(
 
 if __name__ == "__main__":
     import argparse
-    
+
     parser = argparse.ArgumentParser(description='Train a reinforcement learning agent using a pre-populated replay buffer')
     parser.add_argument('--starter-buffer-path', type=str, required=True, help='Path to the starter replay buffer')
     parser.add_argument('--agent-type', type=str, default='sac', choices=['sac', 'td3'],
@@ -280,7 +284,7 @@ if __name__ == "__main__":
     parser.add_argument('--collect-steps-per-training-iteration', type=int, default=50, help='Number of collection steps per iteration')
     parser.add_argument('--batch-size', type=int, default=256, help='Batch size for training (each gradient update uses \
                                                                      this many elements from the replay buffer batched)')
-    
+
     parser.add_argument('--eval-interval', type=int, default=10, help='Interval for evaluating the agent')
     parser.add_argument('--num-eval-episodes', type=int, default=1, help='Number of episodes for evaluation')
     parser.add_argument('--log-interval', type=int, default=1, help='Interval for logging training metrics')
@@ -289,9 +293,9 @@ if __name__ == "__main__":
     parser.add_argument('--checkpoint-interval', type=int, default=10, help='Interval for checkpointing the replay buffer')
     parser.add_argument('--learner-iterations', type=int, default=200, help='Number of iterations (gradient updates) \
                                                                              to run the agent learner per training loop')
-    
+
     args = parser.parse_args()
-    
+
     train_agent(
         starter_buffer_path=args.starter_buffer_path,
         experiment_name=args.experiment_name,
