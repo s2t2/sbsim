@@ -57,6 +57,9 @@ pytest
 # or, to disable warnings:
 pytest --disable-pytest-warnings
 
+# or, to run specific test files:
+pytest --disable-pytest-warnings path/to/your/test.py
+
 # or, to run specific tests:
 pytest --disable-pytest-warnings -k your_test_name_here
 ```
