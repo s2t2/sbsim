@@ -28,4 +28,3 @@ def create_and_setup_environment(
     env._occupancy_normalization_constant = occupancy_normalization_constant
     
     return env
-    
