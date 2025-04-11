@@ -28,20 +28,22 @@ from smart_control.reinforcement_learning.utils.data_processing import (
     get_zone_timeseries,
 )
 from smart_control.utils import building_renderer
+from smart_control.reinforcement_learning.utils.constants import KELVIN_TO_CELSIUS as _KELVIN_TO_CELSIUS
+
 
 logger = logging.getLogger(__name__)
 
 
 class RenderingObserver(Observer):
     """Observer that renders the environment and plots metrics.
-    
+
     This observer renders the environment at specified intervals and can
     also show plots of metrics.
     """
-    
+
     # Class constant
-    KELVIN_TO_CELSIUS = 273.15
-    
+    KELVIN_TO_CELSIUS = _KELVIN_TO_CELSIUS
+
     def __init__(
         self,
         render_interval_steps: int = 10,
@@ -53,7 +55,7 @@ class RenderingObserver(Observer):
         save_path: str = RENDERS_PATH,
     ):
         """Initialize the observer.
-        
+
         Args:
             metrics_path: Path to metrics directory.
             render_interval_steps: Number of steps between renders.
@@ -77,15 +79,15 @@ class RenderingObserver(Observer):
         self._cumulative_reward = 0.0
         self._start_time = None
         self._save_path = save_path
-        
+
         # Create save directory if it doesn't exist
         os.makedirs(self._save_path, exist_ok=True)
-        
+
         if self._environment is not None:
             # Store environment properties if available
             if hasattr(self._environment.pyenv.envs[0], '_num_timesteps_in_episode'):
                 self._num_timesteps_in_episode = (self._environment.pyenv.envs[0]._num_timesteps_in_episode)
-    
+
     def _format_plot(
         self, ax1, xlabel: str, start_time: int, end_time: int, time_zone: str
     ):
@@ -121,7 +123,7 @@ class RenderingObserver(Observer):
             reward_timeseries.index.max(),
             time_zone,
         )
-        
+
     def _plot_energy_timeline(self, ax1, energy_timeseries, time_zone, cumulative=False):
         def _to_kwh(
             energy_rate: float,
@@ -205,7 +207,7 @@ class RenderingObserver(Observer):
             timeseries['end_time'].max(),
             time_zone,
         )
-        
+
     def _plot_energy_cost_timeline(
         self,
         ax1,
@@ -214,7 +216,7 @@ class RenderingObserver(Observer):
         cumulative: bool = False,
     ):
         local_times = [ts.tz_convert(time_zone) for ts in reward_timeseries.index]
-        
+
         if cumulative:
             feature_timeseries_cost = reward_timeseries['electricity_energy_cost'].cumsum()
         else:
@@ -238,7 +240,7 @@ class RenderingObserver(Observer):
             reward_timeseries.index.max(),
             time_zone,
         )
-        
+
     def _plot_carbon_timeline(self, ax1, reward_timeseries, time_zone, cumulative=False):
         """Plots carbon-emission timeline."""
 
@@ -265,10 +267,10 @@ class RenderingObserver(Observer):
             reward_timeseries.index.max(),
             time_zone,
         )
-        
+
     def _plot_occupancy_timeline(self, ax1, reward_timeseries: pd.DataFrame, time_zone: str):
         local_times = [ts.tz_convert(time_zone) for ts in reward_timeseries.index]
-        
+
         ax1.plot(
             local_times,
             reward_timeseries['occupancy'],
@@ -279,7 +281,7 @@ class RenderingObserver(Observer):
             linestyle='-',
             label='Num Occupants',
         )
-        
+
         self._format_plot(
             ax1,
             'Occupancy',
@@ -287,7 +289,7 @@ class RenderingObserver(Observer):
             reward_timeseries.index.max(),
             time_zone,
         )
-        
+
     def _plot_temperature_timeline(self, ax1, zone_timeseries, outside_air_temperature_timeseries, time_zone):
         zone_temps = pd.pivot_table(
             zone_timeseries,
@@ -295,9 +297,9 @@ class RenderingObserver(Observer):
             columns='zone',
             values='zone_air_temperature',
         ).sort_index()
-        
+
         zone_temps.quantile(q=0.25, axis=1)
-        
+
         zone_temp_stats = pd.DataFrame({
             'min_temp': zone_temps.min(axis=1),
             'q25_temp': zone_temps.quantile(q=0.25, axis=1),
@@ -316,7 +318,7 @@ class RenderingObserver(Observer):
             .sort_index()
             .min(axis=1)
         )
-        
+
         zone_cooling_setpoints = (
             pd.pivot_table(
                 zone_timeseries,
@@ -334,7 +336,7 @@ class RenderingObserver(Observer):
             color='yellow',
             lw=1,
         )
-        
+
         ax1.plot(
             zone_cooling_setpoints.index,
             zone_heating_setpoints - self.KELVIN_TO_CELSIUS,
@@ -349,7 +351,7 @@ class RenderingObserver(Observer):
             facecolor='green',
             alpha=0.8,
         )
-        
+
         ax1.fill_between(
             zone_temp_stats.index,
             zone_temp_stats['q25_temp'] - self.KELVIN_TO_CELSIUS,
@@ -357,7 +359,7 @@ class RenderingObserver(Observer):
             facecolor='green',
             alpha=0.8,
         )
-        
+
         ax1.plot(
             zone_temp_stats.index,
             zone_temp_stats['median_temp'] - self.KELVIN_TO_CELSIUS,
@@ -365,7 +367,7 @@ class RenderingObserver(Observer):
             lw=3,
             alpha=1.0,
         )
-        
+
         ax1.plot(
             outside_air_temperature_timeseries.index,
             outside_air_temperature_timeseries - self.KELVIN_TO_CELSIUS,
@@ -373,7 +375,7 @@ class RenderingObserver(Observer):
             lw=3,
             alpha=1.0,
         )
-        
+
         self._format_plot(
             ax1,
             'Temperature [C]',
@@ -381,7 +383,7 @@ class RenderingObserver(Observer):
             zone_temp_stats.index.max(),
             time_zone,
         )
-        
+
     def _plot_action_timeline(self, ax1, action_timeseries, action_tuple, time_zone):
         """Plots action timeline."""
 
@@ -389,7 +391,7 @@ class RenderingObserver(Observer):
             (action_timeseries['device_id'] == action_tuple[0])
             & (action_timeseries['setpoint_name'] == action_tuple[1])
         ]
-        
+
         single_action_timeseries = single_action_timeseries.sort_values(by='timestamp')
 
         if action_tuple[1] in ['supply_water_setpoint','supply_air_heating_temperature_setpoint']:
@@ -427,7 +429,7 @@ class RenderingObserver(Observer):
             return
 
         action_timeseries = get_action_timeseries(action_responses)
-        
+
         action_tuples = list(
             set([(row['device_id'], row['setpoint_name']) for _, row in action_timeseries.iterrows()])
         )
@@ -437,14 +439,14 @@ class RenderingObserver(Observer):
             reward_responses,
             time_zone
         ).sort_index()
-        
+
         outside_air_temperature_timeseries = get_outside_air_temperature_timeseries(
             observation_responses,
             time_zone
         )
-        
+
         zone_timeseries = get_zone_timeseries(reward_infos, time_zone)
-        
+
         fig, axes = plt.subplots(
             nrows=6 + len(action_tuples),
             ncols=1,
@@ -469,7 +471,7 @@ class RenderingObserver(Observer):
         fig.savefig(fig_path, bbox_inches='tight', dpi=100)
         plt.close(fig)
         logger.info(f"Saved timeseries plot to {fig_path}")
-        
+
     def _render_env(self, env: environment.Environment, step_count: int):
         """Renders the environment and saves to file."""
         building_layout = env.building._simulator._building._floor_plan
@@ -494,21 +496,21 @@ class RenderingObserver(Observer):
             diff_range=0.5,
             diff_size=1,
         ).convert('RGB')
-        
+
         # Save image instead of displaying
         timestamp = env.current_simulation_timestamp.strftime("%Y%m%d_%H%M%S")
         img_path = os.path.join(self._save_path, f'env_render_{step_count}_{timestamp}.png')
         image.save(img_path)
         logger.info(f"Saved environment render to {img_path}")
-            
+
     def __call__(self, trajectory: trajectory_lib.Trajectory) -> None:
         """Process a trajectory and render/plot if interval is reached.
-        
+
         Args:
             trajectory: The trajectory to process.
         """
         logger.info("Called RenderingObserver observer...")
-        
+
         reward = trajectory.reward
         self._cumulative_reward += reward
         self._counter += 1
@@ -519,16 +521,16 @@ class RenderingObserver(Observer):
             logger.info(f"Rendering environment at step {self._counter}...")
             execution_time = pd.Timestamp.now() - self._start_time
             mean_execution_time = execution_time.total_seconds() / self._counter
-            
+
             logger.info(f"Step {self._counter}: Cumulative reward = {float(self._cumulative_reward):.2f}, Mean execution time = {mean_execution_time:.2f}s")
-            
+
             if self._environment.pyenv.envs[0]._metrics_path is not None:
                 logger.warning("Plotting timeseries charts...")
                 reader = get_latest_episode_reader(self._environment.pyenv.envs[0]._metrics_path)
                 self._plot_timeseries_charts(reader, self._time_zone, self._counter)
 
             self._render_env(self._environment.pyenv.envs[0], self._counter)
-    
+
     def reset(self) -> None:
         """Reset the observer to its initial state."""
         self._counter = 0
