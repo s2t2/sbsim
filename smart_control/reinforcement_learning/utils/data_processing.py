@@ -6,6 +6,8 @@ import numpy as np
 import pandas as pd
 
 from smart_control.reinforcement_learning.utils.constants import DEFAULT_TIME_ZONE
+from smart_control.reinforcement_learning.utils.constants import KELVIN_TO_CELSIUS
+
 from smart_control.utils import controller_reader, conversion_utils
 
 logger = logging.getLogger(__name__)
@@ -15,10 +17,10 @@ def get_latest_episode_reader(
     metrics_path: str,
 ) -> 'controller_reader.ProtoReader':
     """Get reader for the latest episode.
-    
+
     Args:
         metrics_path: Path to metrics directory.
-        
+
     Returns:
         Reader for the latest episode.
     """
@@ -32,11 +34,11 @@ def get_latest_episode_reader(
 
 def get_energy_timeseries(reward_infos: List[Any], time_zone: str = DEFAULT_TIME_ZONE) -> pd.DataFrame:
     """Returns a timeseries of energy rates.
-    
+
     Args:
         reward_infos: List of reward info objects.
         time_zone: Time zone for the timestamps.
-        
+
     Returns:
         DataFrame with energy timeseries data.
     """
@@ -119,11 +121,11 @@ def get_outside_air_temperature_timeseries(
     time_zone: str = DEFAULT_TIME_ZONE,
 ) -> pd.Series:
     """Returns a timeseries of outside air temperature.
-    
+
     Args:
         observation_responses: List of observation response objects.
         time_zone: Time zone for the timestamps.
-        
+
     Returns:
         Series with outside air temperature timeseries data.
     """
@@ -152,16 +154,16 @@ def get_reward_timeseries(
     time_zone: str = DEFAULT_TIME_ZONE,
 ) -> pd.DataFrame:
     """Returns a timeseries of reward values.
-    
+
     Args:
         reward_infos: List of reward info objects.
         reward_responses: List of reward response objects.
         time_zone: Time zone for the timestamps.
-        
+
     Returns:
         DataFrame with reward timeseries data.
     """
-    
+
     cols = [
         'agent_reward_value',
         'electricity_energy_cost',
@@ -204,11 +206,11 @@ def get_reward_timeseries(
 
 def get_zone_timeseries(reward_infos: List[Any], time_zone: str = DEFAULT_TIME_ZONE) -> pd.DataFrame:
     """Converts reward infos to a timeseries dataframe.
-    
+
     Args:
         reward_infos: List of reward info objects.
         time_zone: Time zone for the timestamps.
-        
+
     Returns:
         DataFrame with zone timeseries data.
     """
@@ -271,10 +273,10 @@ def get_zone_timeseries(reward_infos: List[Any], time_zone: str = DEFAULT_TIME_Z
 
 def get_action_timeseries(action_responses: List[Any]) -> pd.DataFrame:
     """Converts action responses to a dataframe.
-    
+
     Args:
         action_responses: List of action response objects.
-        
+
     Returns:
         DataFrame with action timeseries data.
     """
@@ -311,25 +313,23 @@ def get_action_timeseries(action_responses: List[Any]) -> pd.DataFrame:
 
 def convert_kelvin_to_celsius(temperature_kelvin: Union[float, np.ndarray, pd.Series]) -> Union[float, np.ndarray, pd.Series]:
     """Convert temperature from Kelvin to Celsius.
-    
+
     Args:
         temperature_kelvin: Temperature in Kelvin.
-        
+
     Returns:
         Temperature in Celsius.
     """
-    from smart_control.utils.constants import KELVIN_TO_CELSIUS
     return temperature_kelvin - KELVIN_TO_CELSIUS
 
 
 def convert_celsius_to_kelvin(temperature_celsius: Union[float, np.ndarray, pd.Series]) -> Union[float, np.ndarray, pd.Series]:
     """Convert temperature from Celsius to Kelvin.
-    
+
     Args:
         temperature_celsius: Temperature in Celsius.
-        
+
     Returns:
         Temperature in Kelvin.
     """
-    from smart_control.utils.constants import KELVIN_TO_CELSIUS
     return temperature_celsius + KELVIN_TO_CELSIUS

@@ -31,8 +31,9 @@ from smart_control.utils.observation_normalizer import (
     StandardScoreObservationNormalizer,
 )
 
-ROOT_DIR = "/home/gabriel-user/projects/sbsim/" # Path to the root directory of the project
 
+# Path to the root directory of the project:
+ROOT_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "..")
 
 DATA_PATH = os.path.join(ROOT_DIR, "smart_control", "configs", "resources", "sb1")
 CONFIG_PATH = os.path.join(ROOT_DIR, "smart_control", "configs", "resources", "sb1", "train_sim_configs")

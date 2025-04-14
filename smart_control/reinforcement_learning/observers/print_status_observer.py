@@ -4,23 +4,25 @@ import pandas as pd
 from tf_agents.trajectories import trajectory as trajectory_lib
 
 from smart_control.reinforcement_learning.observers.base_observer import Observer
+from smart_control.reinforcement_learning.utils.constants import DEFAULT_TIME_ZONE
+
 
 logger = logging.getLogger(__name__)
 
 
 class PrintStatusObserver(Observer):
     """Observer that prints status information.
-    
+
     This observer prints information about the training progress, including
     rewards, execution time, and replay buffer size.
     """
-    
+
     def __init__(
         self,
         status_interval_steps: int=1,
         environment=None,
         replay_buffer=None,
-        time_zone='US/Pacific'
+        time_zone=DEFAULT_TIME_ZONE
     ):
         self._counter = 0
         self._status_interval_steps = status_interval_steps
@@ -32,7 +34,7 @@ class PrintStatusObserver(Observer):
         self._start_time = None
         self._num_timesteps_in_episode = (self._environment.pyenv.envs[0]._num_timesteps_in_episode)
         self._environment.pyenv.envs[0]._end_timestamp
-    
+
     def __call__(self, trajectory: trajectory_lib.Trajectory) -> None:
         reward = trajectory.reward
         self._cumulative_reward += reward
@@ -64,12 +66,12 @@ class PrintStatusObserver(Observer):
                     self._cumulative_reward
                 )
             )
-            
+
             logger.info(
-                "[Exec Time: %s] [Mean Exec Time: %.2fs] [%s]" 
+                "[Exec Time: %s] [Mean Exec Time: %.2fs] [%s]"
                 % (execution_time, mean_execution_time, rb_string)
             )
-    
+
     def reset(self) -> None:
         """Reset the observer to its initial state."""
         self._counter = 0
