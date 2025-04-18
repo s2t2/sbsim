@@ -86,4 +86,3 @@ class Readers:
   @property
   def readers(self) -> Sequence[BaseReader]:
     return self._readers
-

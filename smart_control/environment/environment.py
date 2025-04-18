@@ -119,12 +119,10 @@ def replace_missing_observations_past(
   def get_observation_request_tuples(
       observation_request: smart_control_building_pb2.ObservationRequest,
   ) -> set[DeviceMeasurementTuple]:
-    return set(
-        [
-            (request.device_id, request.measurement_name)
-            for request in observation_request.single_observation_requests
-        ]
-    )
+    return set([
+        (request.device_id, request.measurement_name)
+        for request in observation_request.single_observation_requests
+    ])
 
   def get_observation_response_mapping(
       observation_response: smart_control_building_pb2.ObservationResponse,
@@ -438,7 +436,7 @@ class Environment(py_environment.PyEnvironment):
         "Episode starts at %s and ends at %s; % d timesteps.",
         self._start_timestamp,
         self._end_timestamp,
-        self._num_timesteps_in_episode
+        self._num_timesteps_in_episode,
     )
 
     self._id_map = bidict.bidict()

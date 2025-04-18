@@ -16,9 +16,9 @@ limitations under the License.
 """
 
 from absl.testing import absltest
-
 from smart_control.reinforcement_learning.utils.data_processing import (
-  convert_celsius_to_kelvin, convert_kelvin_to_celsius
+    convert_celsius_to_kelvin,
+    convert_kelvin_to_celsius,
 )
 
 

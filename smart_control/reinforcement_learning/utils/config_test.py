@@ -17,8 +17,8 @@ limitations under the License.
 
 import os
 from absl.testing import absltest
-
 from smart_control.reinforcement_learning.utils.config import ROOT_DIR
+
 
 class TestConfigPaths(absltest.TestCase):
 
@@ -34,5 +34,5 @@ class TestConfigPaths(absltest.TestCase):
     self.assertIn("OWNERS", file_names)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   absltest.main()

@@ -233,9 +233,7 @@ class BuildingRenderer:
         diff[0][1] = max_bar
         diff = np.clip(diff, min_bar, max_bar)
         plt.figure(figsize=(16, 12))
-        sn.heatmap(
-            data=diff, cmap=cmap, xticklabels=False, yticklabels=False
-        )
+        sn.heatmap(data=diff, cmap=cmap, xticklabels=False, yticklabels=False)
         plt.savefig('colorbar.png')
         plt.close()
         bar = PIL.Image.open('colorbar.png')

@@ -3,7 +3,6 @@ from typing import Any
 
 import gin
 import numpy as np
-
 # the following imports are necessary for proper gin setup, even if they aren't referenced
 # do not remove
 from smart_control.reward.electricity_energy_cost import ElectricityEnergyCost
@@ -35,86 +34,142 @@ from smart_control.utils.observation_normalizer import (
 # Path to the root directory of the project:
 ROOT_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "..")
 
-DATA_PATH = os.path.join(ROOT_DIR, "smart_control", "configs", "resources", "sb1")
-CONFIG_PATH = os.path.join(ROOT_DIR, "smart_control", "configs", "resources", "sb1", "train_sim_configs")
-METRICS_PATH = os.path.join(ROOT_DIR, "smart_control", "reinforcement_learning", "experiment_results", "metrics")
-RENDERS_PATH = os.path.join(ROOT_DIR, "smart_control", "reinforcement_learning", "experiment_results", "renders")
-OUTPUT_DATA_PATH = os.path.join(ROOT_DIR, "smart_control", "reinforcement_learning", "data", "starter_buffers")
-EXPERIMENT_RESULTS_PATH = os.path.join(ROOT_DIR, "smart_control", "reinforcement_learning", "experiment_results")
+DATA_PATH = os.path.join(
+    ROOT_DIR, "smart_control", "configs", "resources", "sb1"
+)
+CONFIG_PATH = os.path.join(
+    ROOT_DIR,
+    "smart_control",
+    "configs",
+    "resources",
+    "sb1",
+    "train_sim_configs",
+)
+METRICS_PATH = os.path.join(
+    ROOT_DIR,
+    "smart_control",
+    "reinforcement_learning",
+    "experiment_results",
+    "metrics",
+)
+RENDERS_PATH = os.path.join(
+    ROOT_DIR,
+    "smart_control",
+    "reinforcement_learning",
+    "experiment_results",
+    "renders",
+)
+OUTPUT_DATA_PATH = os.path.join(
+    ROOT_DIR,
+    "smart_control",
+    "reinforcement_learning",
+    "data",
+    "starter_buffers",
+)
+EXPERIMENT_RESULTS_PATH = os.path.join(
+    ROOT_DIR, "smart_control", "reinforcement_learning", "experiment_results"
+)
 
 
 @gin.configurable
 def get_histogram_path() -> str:
-    """Get path to histogram data.
-    
-    Returns:
-        Path to histogram data.
-    """
-    return DATA_PATH
+  """Get path to histogram data.
+
+  Returns:
+      Path to histogram data.
+  """
+  return DATA_PATH
 
 
 @gin.configurable
 def get_reset_temp_values() -> np.ndarray:
-    """Get reset temperature values.
-    
-    Returns:
-        Reset temperature values.
-    """
-    reset_temps_filepath = os.path.join(DATA_PATH, "reset_temps.npy")
-    
-    return np.load(reset_temps_filepath)
+  """Get reset temperature values.
+
+  Returns:
+      Reset temperature values.
+  """
+  reset_temps_filepath = os.path.join(DATA_PATH, "reset_temps.npy")
+
+  return np.load(reset_temps_filepath)
 
 
 @gin.configurable
 def get_zone_path() -> str:
-    """Get path to zone data.
-    
-    Returns:
-        Path to zone data.
-    """
-    return os.path.join(DATA_PATH, "double_resolution_zone_1_2.npy")
+  """Get path to zone data.
+
+  Returns:
+      Path to zone data.
+  """
+  return os.path.join(DATA_PATH, "double_resolution_zone_1_2.npy")
 
 
 @gin.configurable
 def get_metrics_path() -> str:
-    """Get path to metrics.
-    
-    Returns:
-        Path to metrics.
-    """
-    return os.path.join(METRICS_PATH, "metrics")
+  """Get path to metrics.
+
+  Returns:
+      Path to metrics.
+  """
+  return os.path.join(METRICS_PATH, "metrics")
 
 
 @gin.configurable
 def get_weather_path() -> str:
-    """Get path to weather data.
-    
-    Returns:
-        Path to weather data.
-    """
-    return os.path.join(DATA_PATH, "local_weather_moffett_field_20230701_20231122.csv")
+  """Get path to weather data.
+
+  Returns:
+      Path to weather data.
+  """
+  return os.path.join(
+      DATA_PATH, "local_weather_moffett_field_20230701_20231122.csv"
+  )
 
 
 @gin.configurable
 def get_histogram_reducer() -> Any:
-    """Get histogram reducer.
-    
-    Returns:
-        Histogram reducer.
-    """
-    
-    histogram_parameters_tuples = (
-        ('zone_air_temperature_sensor', (285., 286., 287., 288, 289., 290., 291.,
-        292., 293., 294., 295., 296., 297., 298., 299., 300., 301, 302, 303)),
-        ('supply_air_damper_percentage_command', (0.0, 0.2, 0.4, 0.6, 0.8, 1.0)),
-        ('supply_air_flowrate_setpoint', (0., 0.05, .1, .2, .3, .4, .5,  .7,  .9)),
-    )
-    
-    reader = controller_reader.ProtoReader(DATA_PATH)
-    
-    hr = histogram_reducer.HistogramReducer(
-        histogram_parameters_tuples=histogram_parameters_tuples,
-        reader=reader,
-        normalize_reduce=True,
-    )
-    return hr
+  """Get histogram reducer.
+
+  Returns:
+      Histogram reducer.
+  """
+
+  histogram_parameters_tuples = (
+      (
+          "zone_air_temperature_sensor",
+          (
+              285.0,
+              286.0,
+              287.0,
+              288,
+              289.0,
+              290.0,
+              291.0,
+              292.0,
+              293.0,
+              294.0,
+              295.0,
+              296.0,
+              297.0,
+              298.0,
+              299.0,
+              300.0,
+              301,
+              302,
+              303,
+          ),
+      ),
+      ("supply_air_damper_percentage_command", (0.0, 0.2, 0.4, 0.6, 0.8, 1.0)),
+      (
+          "supply_air_flowrate_setpoint",
+          (0.0, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.7, 0.9),
+      ),
+  )
+
+  reader = controller_reader.ProtoReader(DATA_PATH)
+
+  hr = histogram_reducer.HistogramReducer(
+      histogram_parameters_tuples=histogram_parameters_tuples,
+      reader=reader,
+      normalize_reduce=True,
+  )
+  return hr

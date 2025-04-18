@@ -72,12 +72,10 @@ class SimulatorBuilding(BaseBuilding):
         (hvac.boiler, self._create_device_info(hvac.boiler)),
         (hvac.air_handler, self._create_device_info(hvac.air_handler)),
     ]
-    all_devices.extend(
-        [
-            (vav, self._create_device_info(vav, vav.zone_id()))
-            for vav in hvac.vavs.values()
-        ]
-    )
+    all_devices.extend([
+        (vav, self._create_device_info(vav, vav.zone_id()))
+        for vav in hvac.vavs.values()
+    ])
 
     # List of device infos to return in devices().
     self._device_infos = [device_info for _, device_info in all_devices]
