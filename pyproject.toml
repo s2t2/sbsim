@@ -31,6 +31,7 @@ ipython = "^8.27.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.5"
+pylint = "^3.3.6"
 
 [build-system]
 requires = ["poetry-core"]
