@@ -43,4 +43,5 @@ jobs:
 
     - name: Run style checks
       run: |
+        source .venv/bin/activate
         pylint --rcfile=.pylintrc smart_control
