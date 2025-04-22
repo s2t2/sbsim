@@ -67,3 +67,27 @@ pytest --disable-pytest-warnings -k your_test_name_here
 ## Linting
 
 We are using the [`pyink` package](https://github.com/google/pyink) to format code according to [Google Python style guidelines](https://google.github.io/styleguide/pyguide.html).
+
+The formatter will automatically update files inplace.
+
+Formatting will happen automatically as a pre-commit hook. Additionally, we have added a VS Code workspace configuration file to perform the formatting on file save.
+
+However if you would like to run manually:
+
+```sh
+# format all the files:
+pyink .
+
+# format a specific file or directory:
+pyink /path/to/file/or/dir
+```
+
+If you would like to perform a dry run:
+
+```sh
+# to check if a file would be changed:
+pyink . --check
+
+# to see what changes would be made:
+pyink . --diff
+```
