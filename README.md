@@ -70,7 +70,9 @@ We are using the [`pyink` package](https://github.com/google/pyink) to format co
 
 The formatter will automatically update files inplace.
 
-Formatting will happen automatically as a pre-commit hook. Additionally, we have added a VS Code workspace configuration file to perform the formatting on file save.
+Formatting will happen automatically as a pre-commit hook. To enable the pre-commit hooks, you must perform a one-time setup by running `pre-commit install`. This will add ".git/hooks/pre-commit".
+
+Additionally, we have added a VS Code workspace configuration file to perform the formatting on file save.
 
 However if you would like to run manually:
 
@@ -90,4 +92,16 @@ pyink . --check
 
 # to see what changes would be made:
 pyink . --diff
+```
+
+## Pre-commit Hooks
+
+We are using a pre-commit hook to perform code formatting. This will take place on each commit. However if you would like to run the pre-commit hooks without making a commit:
+
+```sh
+# to run for all files:
+pre-commit run --all-files
+
+# to run for a specific set of file(s):
+pre-commit run --files path/to/my_file.py path/to/other_file.py
 ```

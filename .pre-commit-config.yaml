@@ -1,10 +1,13 @@
 repos:
   - repo: https://github.com/google/pyink
-    rev: 23.3.0
+    rev: 24.10.1
     hooks:
       - id: pyink
         # It is recommended to specify the latest version of Python
         # supported by your project here, or alternatively use
         # pre-commit's default_language_version, see
         # https://pre-commit.com/#top_level-default_language_version
-        language_version: python3.11
+        #language_version: python3.11
+        # NOTE: commenting out the language version resolves error:
+        # cannot format /path/to/file.py: module 'blib2to3.pygram' has no attribute
+        # ... 'python_grammar_no_print_statement_no_exec_statement_async_keywords'
