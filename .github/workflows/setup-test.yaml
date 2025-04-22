@@ -40,6 +40,7 @@ jobs:
 
     - name: Run the formatter
       run: |
+        source .venv/bin/activate
         pyink .
 
     - name: Run tests
