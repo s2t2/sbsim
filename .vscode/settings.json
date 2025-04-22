@@ -9,10 +9,10 @@
   // https://github.com/google/pyink?tab=readme-ov-file#is-there-a-vs-code-extension-for-pyink
   // requires installation of the "ms-python.black-formatter" extension
   // https://marketplace.visualstudio.com/items?itemName=ms-python.black-formatter
-  //"[python]": {
-  //  "editor.defaultFormatter": "ms-python.black-formatter"
-  //},
-  //"black-formatter.path": [
-  //  ".venv/bin/pyink"
-  //]
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter"
+  },
+  "black-formatter.path": [
+    ".venv/bin/pyink"
+  ]
 }
