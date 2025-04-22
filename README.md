@@ -66,12 +66,4 @@ pytest --disable-pytest-warnings -k your_test_name_here
 
 ## Linting
 
-Running linter, for following [Google Python style guidelines](https://google.github.io/styleguide/pyguide.html):
-
-```sh
-# check all files:
-pylint --rcfile=.pylintrc smart_control
-
-# or, to check a specific file:
-pylint --rcfile=.pylintrc smart_control/path/to/file.py
-```
+We are using the [`pyink` package](https://github.com/google/pyink) to format code according to [Google Python style guidelines](https://google.github.io/styleguide/pyguide.html).
