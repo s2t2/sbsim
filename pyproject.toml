@@ -48,6 +48,7 @@ pyink-annotation-pragmas = [
   "pyright:",
   "pyre-",
 ]
+known_first_party = ["smart_control"]
 
 [build-system]
 requires = ["poetry-core"]
