@@ -46,7 +46,19 @@ Follow these steps to setup locally before you run the `notebooks/SAC_Demo.ipynb
 
 In addition to our calibrated simulator, we released 6 years of data on 3 buildings, for further calibration, and to use, in conjunction with the simulator, for training and evaluating RL models. The dataset is part of [Tensorflow Datasets](https://github.com/tensorflow/datasets/tree/master/tensorflow_datasets/datasets/smart_buildings_dataset)
 
-## Testing
+## Contributing
+
+We encourage and welcome your contributions to this repository. All contributors will need to sign the Google's [Contributor License Agreement (CLA)](https://cla.developers.google.com/).
+
+Contributors are encouraged to consult the sections below for more information about code documenation, testing, and formatting.
+
+### Documentation
+
+We encourage you to document your code using docstrings. Specifically we use the [Google Docstring Guidelines](https://google.github.io/styleguide/pyguide.html#381-docstrings) outlined in the Google Python Style Guide.
+
+### Testing
+
+We encourage you to add tests to ensure your code is working as expected.
 
 Running tests:
 
@@ -64,17 +76,17 @@ pytest --disable-pytest-warnings path/to/your/test.py
 pytest --disable-pytest-warnings -k your_test_name_here
 ```
 
-## Linting
+### Linting
 
-We are using the [`pyink` package](https://github.com/google/pyink) to format code according to [Google Python style guidelines](https://google.github.io/styleguide/pyguide.html).
+We are using the [`pyink` package](https://github.com/google/pyink) to format code according to [Google Python Style Guidelines](https://google.github.io/styleguide/pyguide.html).
 
 The formatter will automatically update files inplace.
 
-Formatting will happen automatically as a pre-commit hook. To enable the pre-commit hooks, you must perform a one-time setup by running `pre-commit install`. This will add ".git/hooks/pre-commit".
+Formatting will happen automatically as a pre-commit hook (see "Pre-commit Hooks" section below for more information and setup instructions).
 
-Additionally, we have added a VS Code workspace configuration file to perform the formatting on file save.
+Additionally, for contributors using the VS Code text editor, we have added a VS Code workspace settings configuration file to run the formatter on file save. NOTE: this requires the [`ms-python.black-formatter` extension](https://marketplace.visualstudio.com/items?itemName=ms-python.black-formatter) for VS Code.
 
-However if you would like to run manually:
+If you would like to run the formatter manually:
 
 ```sh
 # format all the files:
@@ -87,21 +99,26 @@ pyink /path/to/file/or/dir
 If you would like to perform a dry run:
 
 ```sh
-# to check if a file would be changed:
+# check if a file would be changed:
 pyink . --check
 
-# to see what changes would be made:
+# see what changes would be made:
 pyink . --diff
 ```
 
-## Pre-commit Hooks
+### Pre-commit Hooks
 
-We are using a pre-commit hook to perform code formatting. This will take place on each commit. However if you would like to run the pre-commit hooks without making a commit:
+We are using a pre-commit hook to perform code formatting. This will take place on each commit.
+
+To enable the pre-commit hooks, you must perform a one-time setup by running `pre-commit install`. This will update ".git/hooks/pre-commit".
+
+
+If you would like to run the pre-commit hooks without making a commit:
 
 ```sh
-# to run for all files:
+# run for all files:
 pre-commit run --all-files
 
-# to run for a specific set of file(s):
+# run for a specific set of file(s):
 pre-commit run --files path/to/my_file.py path/to/other_file.py
 ```
