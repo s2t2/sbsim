@@ -1,5 +1,15 @@
+
+# virtual environment:
 .venv/
-*/**/__pycache__/
+
+# cache files:
+__pycache__/
+.pytest_cache
+
+# clutter files (Mac OS):
+.DS_Store
+
+# results files:
 */**/output_data/
 */**/metrics/
 **/videos/
