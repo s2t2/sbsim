@@ -48,7 +48,7 @@ In addition to our calibrated simulator, we released 6 years of data on 3 buildi
 
 ## Contributing
 
-We encourage and welcome your contributions to this repository. All contributors will need to sign the Google's [Contributor License Agreement (CLA)](https://cla.developers.google.com/).
+We encourage and welcome your contributions to this repository. All open source contributors will need to sign Google's [Contributor License Agreement (CLA)](https://cla.developers.google.com/).
 
 Contributors are encouraged to consult the sections below for more information about code documenation, testing, and formatting.
 
@@ -78,13 +78,11 @@ pytest --disable-pytest-warnings -k your_test_name_here
 
 ### Linting
 
-We are using the [`pyink` package](https://github.com/google/pyink) to format code according to [Google Python Style Guidelines](https://google.github.io/styleguide/pyguide.html).
+We are using the [`pyink` formatter](https://github.com/google/pyink) to format code according to [Google Python Style Guidelines](https://google.github.io/styleguide/pyguide.html). The formatter will automatically update files inplace.
 
-The formatter will automatically update files inplace.
+The formatter will run automatically as a pre-commit hook (see "Pre-commit Hooks" section below for more information and setup instructions).
 
-Formatting will happen automatically as a pre-commit hook (see "Pre-commit Hooks" section below for more information and setup instructions).
-
-Additionally, for contributors using the VS Code text editor, we have added a VS Code workspace settings configuration file to run the formatter on file save. NOTE: this requires the [`ms-python.black-formatter` extension](https://marketplace.visualstudio.com/items?itemName=ms-python.black-formatter) for VS Code.
+Additionally, for contributors using the VS Code text editor, we have added a VS Code workspace [settings configuration file](.vscode/settings.json) to run the formatter on file save. NOTE: this requires the [`ms-python.black-formatter` extension](https://marketplace.visualstudio.com/items?itemName=ms-python.black-formatter) for VS Code.
 
 If you would like to run the formatter manually:
 
@@ -122,3 +120,5 @@ pre-commit run --all-files
 # run for a specific set of file(s):
 pre-commit run --files path/to/my_file.py path/to/other_file.py
 ```
+
+## [License](LICENSE)
