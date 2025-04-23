@@ -13,3 +13,9 @@ repos:
         # NOTE: commenting out the language version resolves error:
         # cannot format /path/to/file.py: module 'blib2to3.pygram' has no attribute
         # ... 'python_grammar_no_print_statement_no_exec_statement_async_keywords'
+
+  #- repo: https://github.com/pycqa/isort
+  #    rev: 5.6.4
+  #    hooks:
+  #      - id: isort
+  #        #args: ["--profile", "black", "--filter-files"]

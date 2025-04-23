@@ -20,6 +20,7 @@ limitations under the License.
 import abc
 from typing import Sequence
 import pandas as pd
+
 from smart_control.proto import smart_control_building_pb2
 from smart_control.proto import smart_control_reward_pb2
 
