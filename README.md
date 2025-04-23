@@ -109,6 +109,19 @@ If you would like to prevent certain lines of code from being formatted (for exa
   + addding a trailing comment of `# fmt: skip` to the right of the line, or
   + wrapping multiple lines of code between `# fmt: off` and `# fmt: on` comments
 
+#### Sorting Imports
+
+The `pyink` formatter doesn't properly sort local module imports, so for that we are using `isort`.
+
+```sh
+# sort all the files:
+isort .
+
+# sort a specific file:
+isort /path/to/file.py
+```
+
+
 ### Pre-commit Hooks
 
 We are using a pre-commit hook to perform code formatting. This will take place on each commit.

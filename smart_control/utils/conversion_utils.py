@@ -27,6 +27,7 @@ from google.protobuf import timestamp_pb2
 import holidays
 import numpy as np
 import pandas as pd
+
 from smart_control.proto import smart_control_reward_pb2
 
 _COUNTRY = 'US'

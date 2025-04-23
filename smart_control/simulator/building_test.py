@@ -16,13 +16,11 @@ limitations under the License.
 """
 
 import random
-from absl.testing import absltest
-from absl.testing import parameterized
+
+from absl.testing import absltest, parameterized
 import numpy as np
-from smart_control.simulator import building
-from smart_control.simulator import building_utils
-from smart_control.simulator import constants
-from smart_control.simulator import stochastic_convection_simulator
+
+from smart_control.simulator import building, building_utils, constants, stochastic_convection_simulator  # NOQA
 
 
 def _create_dummy_floor_plan():

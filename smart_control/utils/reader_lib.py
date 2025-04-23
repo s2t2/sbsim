@@ -21,9 +21,8 @@ from typing import Final, Mapping, NewType, Sequence, TypeVar
 from absl import logging
 import gin
 import pandas as pd
-from smart_control.proto import smart_control_building_pb2
-from smart_control.proto import smart_control_normalization_pb2
-from smart_control.proto import smart_control_reward_pb2
+
+from smart_control.proto import smart_control_building_pb2, smart_control_normalization_pb2, smart_control_reward_pb2  # NOQA
 
 VariableId = NewType('VariableId', str)
 

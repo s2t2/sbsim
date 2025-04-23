@@ -1,14 +1,13 @@
 from typing import Optional, Sequence
 
-from smart_control.reinforcement_learning.agents.networks.sac_networks import (
-    create_sequential_actor_network,
-    create_sequential_critic_network,
-)
 import tensorflow as tf
 from tf_agents.agents import tf_agent
 from tf_agents.agents.sac import sac_agent
 from tf_agents.networks import network
 from tf_agents.typing import types
+
+from smart_control.reinforcement_learning.agents.networks.sac_networks import create_sequential_actor_network  # NOQA
+from smart_control.reinforcement_learning.agents.networks.sac_networks import create_sequential_critic_network  # NOQA
 
 
 def create_sac_agent(

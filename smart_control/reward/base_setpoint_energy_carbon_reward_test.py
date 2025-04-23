@@ -15,9 +15,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from absl.testing import absltest
-from absl.testing import parameterized
+from absl.testing import absltest, parameterized
 import pandas as pd
+
 from smart_control.models.base_energy_cost import BaseEnergyCost
 from smart_control.proto import smart_control_reward_pb2
 from smart_control.reward import base_setpoint_energy_carbon_reward

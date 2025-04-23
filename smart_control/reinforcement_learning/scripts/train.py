@@ -10,8 +10,8 @@ import os
 # https://github.com/tensorflow/tensorflow/issues/63548#issuecomment-2008941537
 os.environ['WRAPT_DISABLE_EXTENSIONS'] = 'true'
 
-import logging
 from datetime import datetime
+import logging
 
 import tensorflow as tf
 from tf_agents.environments import tf_py_environment
@@ -20,24 +20,13 @@ from tf_agents.policies import greedy_policy, py_tf_eager_policy
 from tf_agents.train import actor, learner, triggers
 from tf_agents.train.utils import spec_utils
 
-from smart_control.reinforcement_learning.agents.sac_agent import create_sac_agent
-from smart_control.reinforcement_learning.observers.composite_observer import (
-    CompositeObserver,
-)
-from smart_control.reinforcement_learning.observers.print_status_observer import (
-    PrintStatusObserver,
-)
-from smart_control.reinforcement_learning.replay_buffer.replay_buffer import (
-    ReplayBufferManager,
-)
-from smart_control.reinforcement_learning.utils.config import (
-    CONFIG_PATH,
-    EXPERIMENT_RESULTS_PATH,
-)
-from smart_control.reinforcement_learning.utils.environment import (
-    create_and_setup_environment,
-)
-
+from smart_control.reinforcement_learning.agents.sac_agent import create_sac_agent  # NOQA
+from smart_control.reinforcement_learning.observers.composite_observer import CompositeObserver  # NOQA
+from smart_control.reinforcement_learning.observers.print_status_observer import PrintStatusObserver  # NOQA
+from smart_control.reinforcement_learning.replay_buffer.replay_buffer import ReplayBufferManager  # NOQA
+from smart_control.reinforcement_learning.utils.config import CONFIG_PATH
+from smart_control.reinforcement_learning.utils.config import EXPERIMENT_RESULTS_PATH  # NOQA
+from smart_control.reinforcement_learning.utils.environment import create_and_setup_environment  # NOQA
 
 # Configure logging
 logging.basicConfig(

@@ -18,14 +18,12 @@ limitations under the License.
 from typing import Sequence
 
 from absl import logging
-from absl.testing import absltest
-from absl.testing import parameterized
+from absl.testing import absltest, parameterized
 import numpy as np
 import pandas as pd
-from smart_control.proto import smart_control_building_pb2
-from smart_control.proto import smart_control_reward_pb2
-from smart_control.utils import histogram_reducer
-from smart_control.utils import reader_lib
+
+from smart_control.proto import smart_control_building_pb2, smart_control_reward_pb2  # NOQA
+from smart_control.utils import histogram_reducer, reader_lib
 
 
 class TestReader(reader_lib.BaseReader):

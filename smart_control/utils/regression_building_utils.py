@@ -24,9 +24,9 @@ from absl import logging
 import gin
 import numpy as np
 import pandas as pd
+
 from smart_control.models.base_occupancy import BaseOccupancy
-from smart_control.proto import smart_control_building_pb2
-from smart_control.proto import smart_control_reward_pb2
+from smart_control.proto import smart_control_building_pb2, smart_control_reward_pb2  # NOQA
 from smart_control.simulator.setpoint_schedule import SetpointSchedule
 from smart_control.utils import conversion_utils
 

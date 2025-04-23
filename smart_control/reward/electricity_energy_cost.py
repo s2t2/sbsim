@@ -22,6 +22,7 @@ import gin
 import numpy as np
 import pandas as pd
 import pint
+
 from smart_control.models.base_energy_cost import BaseEnergyCost
 from smart_control.utils import conversion_utils
 

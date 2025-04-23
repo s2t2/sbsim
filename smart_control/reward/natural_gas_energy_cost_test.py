@@ -15,9 +15,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from absl.testing import absltest
-from absl.testing import parameterized
+from absl.testing import absltest, parameterized
 import pandas as pd
+
 from smart_control.reward import natural_gas_energy_cost
 from smart_control.utils import constants
 

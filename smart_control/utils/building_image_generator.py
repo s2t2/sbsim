@@ -24,18 +24,19 @@ import pathlib
 import sys
 from typing import TypeAlias
 
+from PIL import Image
 from absl import logging
 import gin
 import numpy as np
-from PIL import Image
+
 from smart_control.proto import smart_control_building_pb2
 from smart_control.utils import building_renderer
-from smart_control.utils import real_building_temperature_array_generator as temp_array_gen
+from smart_control.utils import real_building_temperature_array_generator as temp_array_gen  # NOQA
 
 if sys.version_info >= (3, 11):
-  from importlib.resources.abc import Traversable  # pylint: disable=g-import-not-at-top
+  from importlib.resources.abc import Traversable  # pylint: disable=g-import-not-at-top  # NOQA
 else:
-  from importlib_resources.abc import Traversable  # pylint: disable=g-import-not-at-top
+  from importlib_resources.abc import Traversable  # pylint: disable=g-import-not-at-top  # NOQA
 
 PathLocation: TypeAlias = Traversable | os.PathLike[str] | str
 

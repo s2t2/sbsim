@@ -15,10 +15,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from absl.testing import absltest
-from absl.testing import parameterized
+from absl.testing import absltest, parameterized
 import pandas as pd
 import pytz
+
 from smart_control.simulator import setpoint_schedule
 
 

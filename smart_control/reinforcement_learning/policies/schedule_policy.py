@@ -5,8 +5,6 @@ from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
-from smart_control.reinforcement_learning.utils.constants import DEFAULT_TIME_ZONE
-from smart_control.reinforcement_learning.utils.time_utils import to_dow, to_hod
 import tensorflow as tf
 from tf_agents.environments import tf_py_environment as tf_env
 from tf_agents.policies import tf_policy
@@ -14,6 +12,8 @@ from tf_agents.train.utils import spec_utils
 from tf_agents.trajectories import policy_step
 from tf_agents.typing import types
 
+from smart_control.reinforcement_learning.utils.constants import DEFAULT_TIME_ZONE  # NOQA
+from smart_control.reinforcement_learning.utils.time_utils import to_dow, to_hod  # NOQA
 
 logger = logging.getLogger(__name__)
 

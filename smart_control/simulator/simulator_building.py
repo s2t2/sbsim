@@ -24,14 +24,12 @@ import uuid
 from absl import logging
 import gin
 import pandas as pd
+
 from smart_control.models.base_building import BaseBuilding
 from smart_control.models.base_occupancy import BaseOccupancy
-from smart_control.proto import smart_control_building_pb2
-from smart_control.proto import smart_control_reward_pb2
+from smart_control.proto import smart_control_building_pb2, smart_control_reward_pb2  # NOQA
 from smart_control.simulator import simulator as simulator_py
-from smart_control.simulator import simulator_flexible_floor_plan
-from smart_control.simulator import smart_device
-from smart_control.simulator import tf_simulator
+from smart_control.simulator import simulator_flexible_floor_plan, smart_device, tf_simulator  # NOQA
 from smart_control.utils import conversion_utils
 
 _ValueType = smart_control_building_pb2.DeviceInfo.ValueType

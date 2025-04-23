@@ -16,8 +16,8 @@ limitations under the License.
 """
 
 from absl.testing import absltest
-from smart_control.proto import smart_control_building_pb2
-from smart_control.proto import smart_control_normalization_pb2
+
+from smart_control.proto import smart_control_building_pb2, smart_control_normalization_pb2  # NOQA
 from smart_control.utils import observation_normalizer
 
 _DEVICES = ['a', 'a', 'b', 'b', 'c', 'c']

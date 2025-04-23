@@ -20,15 +20,15 @@ import functools
 import io
 from typing import List, Optional, Tuple
 
+import PIL
+from PIL import ImageDraw
 import matplotlib.pyplot as plt
 import mediapy as media
 import numpy as np
 import pandas as pd
-import PIL
-from PIL import ImageDraw
 import seaborn as sn
-from smart_control.simulator import building_utils
-from smart_control.simulator import constants
+
+from smart_control.simulator import building_utils, constants
 
 
 class BuildingRenderer:

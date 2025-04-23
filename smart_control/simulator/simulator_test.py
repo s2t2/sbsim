@@ -17,9 +17,9 @@ limitations under the License.
 
 from unittest import mock
 
-from absl.testing import absltest
-from absl.testing import parameterized
+from absl.testing import absltest, parameterized
 import pandas as pd
+
 from smart_control.proto import smart_control_reward_pb2
 from smart_control.simulator import air_handler as air_handler_py
 from smart_control.simulator import boiler as boiler_py

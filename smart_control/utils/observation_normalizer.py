@@ -17,10 +17,11 @@ limitations under the License.
 
 import math
 from typing import Callable, Mapping, NewType
+
 import gin
+
 from smart_control.models import base_normalizer
-from smart_control.proto import smart_control_building_pb2
-from smart_control.proto import smart_control_normalization_pb2
+from smart_control.proto import smart_control_building_pb2, smart_control_normalization_pb2  # NOQA
 
 FieldNameKeyword = NewType('FieldNameKeyword', str)
 FieldName = NewType('FieldName', str)

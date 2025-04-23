@@ -18,11 +18,11 @@ limitations under the License.
 import sys
 
 from absl import flags
-from absl.testing import absltest
-from absl.testing import parameterized
+from absl.testing import absltest, parameterized
 import numpy as np
 import pandas as pd
-from smart_control.simulator.stochastic_occupancy import LIGHTSWITCHOccupancy, OccupancyStateEnum, ZoneOccupant
+
+from smart_control.simulator.stochastic_occupancy import LIGHTSWITCHOccupancy, OccupancyStateEnum, ZoneOccupant  # NOQA
 
 _EXPECTED_ZONE_OCCUPANCIES_UTC = [
     0.0,

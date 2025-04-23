@@ -15,13 +15,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from absl.testing import absltest
-from absl.testing import parameterized
+from absl.testing import absltest, parameterized
 import pandas as pd
-from smart_control.simulator import boiler
-from smart_control.simulator import setpoint_schedule
-from smart_control.simulator import thermostat
-from smart_control.simulator import vav
+
+from smart_control.simulator import boiler, setpoint_schedule, thermostat, vav
 from smart_control.utils import constants
 
 
