@@ -51,7 +51,8 @@ import pandas as pd
 
 from smart_control.proto import smart_control_building_pb2
 from smart_control.utils import reader_lib
-from smart_control.utils.reducer import BaseReducedSequence, BaseReducer
+from smart_control.utils.reducer import BaseReducedSequence
+from smart_control.utils.reducer import BaseReducer
 
 Feature = str  # Measurement name
 Device = str  # Device Identity

@@ -17,7 +17,8 @@ limitations under the License.
 
 from unittest import mock
 
-from absl.testing import absltest, parameterized
+from absl.testing import absltest
+from absl.testing import parameterized
 import bidict
 import numpy as np
 import pandas as pd
@@ -26,10 +27,17 @@ from tf_agents.environments import utils
 from tf_agents.specs import array_spec
 from tf_agents.trajectories import time_step as ts
 
-from smart_control.environment import environment, environment_test_utils
-from smart_control.models import base_building, base_reward_function
-from smart_control.proto import smart_control_building_pb2, smart_control_normalization_pb2  # NOQA
-from smart_control.utils import bounded_action_normalizer, conversion_utils, histogram_reducer, observation_normalizer, test_utils  # NOQA
+from smart_control.environment import environment
+from smart_control.environment import environment_test_utils
+from smart_control.models import base_building
+from smart_control.models import base_reward_function
+from smart_control.proto import smart_control_building_pb2
+from smart_control.proto import smart_control_normalization_pb2
+from smart_control.utils import bounded_action_normalizer
+from smart_control.utils import conversion_utils
+from smart_control.utils import histogram_reducer
+from smart_control.utils import observation_normalizer
+from smart_control.utils import test_utils
 
 
 def _get_histogram_reducer():

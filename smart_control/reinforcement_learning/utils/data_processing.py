@@ -7,7 +7,8 @@ import pandas as pd
 
 from smart_control.reinforcement_learning.utils.constants import DEFAULT_TIME_ZONE  # NOQA
 from smart_control.reinforcement_learning.utils.constants import KELVIN_TO_CELSIUS  # NOQA
-from smart_control.utils import controller_reader, conversion_utils
+from smart_control.utils import controller_reader
+from smart_control.utils import conversion_utils
 
 logger = logging.getLogger(__name__)
 

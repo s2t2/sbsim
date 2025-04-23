@@ -20,8 +20,10 @@ from typing import Sequence
 
 import pandas as pd
 
-from smart_control.models import base_building, base_reward_function
-from smart_control.proto import smart_control_building_pb2, smart_control_reward_pb2  # NOQA
+from smart_control.models import base_building
+from smart_control.models import base_reward_function
+from smart_control.proto import smart_control_building_pb2
+from smart_control.proto import smart_control_reward_pb2
 from smart_control.utils import conversion_utils
 
 

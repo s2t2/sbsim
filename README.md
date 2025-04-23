@@ -111,7 +111,7 @@ If you would like to prevent certain lines of code from being formatted (for exa
 
 #### Sorting Imports
 
-The `pyink` formatter doesn't properly sort local module imports, so for that we are using `isort`.
+The `pyink` formatter doesn't properly sort local module imports (it mixes them in with packages), so for proper sorting of the "smart_control" imports, we are using `isort`:
 
 ```sh
 # sort all the files:
@@ -119,12 +119,16 @@ isort .
 
 # sort a specific file:
 isort /path/to/file.py
+
+# sort with verbose outputs (helpful for troubleshooting):
+isort -v .
 ```
 
+FYI - if there is a single import statement that exceeds the line length, based on the current configuration, `isort` will insert a trailing `# NOQA` comment to keep the import on a single line.
 
 ### Pre-commit Hooks
 
-We are using a pre-commit hook to perform code formatting. This will take place on each commit.
+We are using a pre-commit hook to perform code formatting and import sorting. These actions will take place on each commit.
 
 To enable the pre-commit hooks, you must perform a one-time setup by running `pre-commit install`. This will update ".git/hooks/pre-commit".
 

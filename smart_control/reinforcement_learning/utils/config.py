@@ -18,7 +18,8 @@ from smart_control.simulator.simulator_building import SimulatorBuilding
 from smart_control.simulator.stochastic_convection_simulator import StochasticConvectionSimulator  # NOQA
 from smart_control.simulator.tf_simulator import TFSimulator
 from smart_control.simulator.weather_controller import ReplayWeatherController
-from smart_control.utils import controller_reader, histogram_reducer
+from smart_control.utils import controller_reader
+from smart_control.utils import histogram_reducer
 from smart_control.utils.controller_writer import ProtoWriterFactory
 from smart_control.utils.environment_utils import to_timestamp
 from smart_control.utils.observation_normalizer import StandardScoreObservationNormalizer  # NOQA

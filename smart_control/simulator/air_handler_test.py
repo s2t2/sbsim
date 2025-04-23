@@ -15,10 +15,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from absl.testing import absltest, parameterized
+from absl.testing import absltest
+from absl.testing import parameterized
 import pandas as pd
 
-from smart_control.simulator import air_handler, weather_controller
+from smart_control.simulator import air_handler
+from smart_control.simulator import weather_controller
 from smart_control.utils import constants
 
 

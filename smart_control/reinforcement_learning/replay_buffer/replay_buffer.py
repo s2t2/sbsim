@@ -3,7 +3,8 @@ from typing import Optional, Tuple
 
 import reverb
 import tensorflow as tf
-from tf_agents.replay_buffers import reverb_replay_buffer, reverb_utils
+from tf_agents.replay_buffers import reverb_replay_buffer
+from tf_agents.replay_buffers import reverb_utils
 
 logger = logging.getLogger(__name__)
 

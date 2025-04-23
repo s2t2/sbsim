@@ -21,7 +21,8 @@ import uuid
 import gin
 
 from smart_control.proto import smart_control_building_pb2
-from smart_control.simulator import smart_device, weather_controller
+from smart_control.simulator import smart_device
+from smart_control.simulator import weather_controller
 from smart_control.utils import constants
 
 

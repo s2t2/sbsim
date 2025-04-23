@@ -22,7 +22,9 @@ from typing import Mapping, NewType, Sequence, TypeAlias
 
 import pandas as pd
 
-from smart_control.proto import smart_control_building_pb2, smart_control_normalization_pb2, smart_control_reward_pb2  # NOQA
+from smart_control.proto import smart_control_building_pb2
+from smart_control.proto import smart_control_normalization_pb2
+from smart_control.proto import smart_control_reward_pb2
 
 if sys.version_info >= (3, 11):
   from importlib.resources.abc import Traversable  # pylint: disable=g-import-not-at-top  # NOQA

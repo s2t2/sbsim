@@ -24,10 +24,10 @@ import pathlib
 import sys
 from typing import TypeAlias
 
-from PIL import Image
 from absl import logging
 import gin
 import numpy as np
+from PIL import Image
 
 from smart_control.proto import smart_control_building_pb2
 from smart_control.utils import building_renderer

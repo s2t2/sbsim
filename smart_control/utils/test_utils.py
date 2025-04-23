@@ -20,7 +20,8 @@ from typing import Sequence, Tuple
 import pandas as pd
 
 from smart_control.environment.environment import ActionConfig
-from smart_control.proto import smart_control_building_pb2, smart_control_reward_pb2  # NOQA
+from smart_control.proto import smart_control_building_pb2
+from smart_control.proto import smart_control_reward_pb2
 from smart_control.simulator import setpoint_schedule
 from smart_control.utils import conversion_utils
 from smart_control.utils.bounded_action_normalizer import BoundedActionNormalizer  # NOQA

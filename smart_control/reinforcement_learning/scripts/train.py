@@ -16,8 +16,11 @@ import logging
 import tensorflow as tf
 from tf_agents.environments import tf_py_environment
 from tf_agents.metrics import tf_metrics
-from tf_agents.policies import greedy_policy, py_tf_eager_policy
-from tf_agents.train import actor, learner, triggers
+from tf_agents.policies import greedy_policy
+from tf_agents.policies import py_tf_eager_policy
+from tf_agents.train import actor
+from tf_agents.train import learner
+from tf_agents.train import triggers
 from tf_agents.train.utils import spec_utils
 
 from smart_control.reinforcement_learning.agents.sac_agent import create_sac_agent  # NOQA

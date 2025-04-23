@@ -42,7 +42,8 @@ from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
 
 from smart_control.proto import smart_control_building_pb2
-from smart_control.utils import conversion_utils, reader_lib
+from smart_control.utils import conversion_utils
+from smart_control.utils import reader_lib
 
 _SEED = 191
 _TEST_PROPORTION = 0.1
