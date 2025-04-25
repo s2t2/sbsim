@@ -46,7 +46,7 @@ jobs:
     - name: Run the import sorter
       run: |
         #source .venv/bin/activate
-        isort .
+        poetry run isort .
 
     - name: Run tests
       run: |
