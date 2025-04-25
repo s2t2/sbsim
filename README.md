@@ -108,7 +108,7 @@ pyink . --check
 pyink . --diff
 ```
 
-If you would like to prevent certain lines of code from being formatted (for example to leave a long line as-is), it is possible to [ignore formatting](https://black.readthedocs.io/en/stable/usage_and_configuration/the_basics.html#ignoring-sections) by addding a trailing comment of `# fmt: skip` to the right of the line, or wrapping multiple lines of code between `# fmt: off` and `# fmt: on` comments.
+If you would like to prevent certain lines of code from being formatted (for example to leave a long line as-is), it is possible to [ignore formatting](https://black.readthedocs.io/en/stable/usage_and_configuration/the_basics.html#ignoring-sections) by addding a trailing comment of `# fmt: skip` to the right of the line / at the end of the expression, or by wrapping multiple lines of code between `# fmt: off` and `# fmt: on` comments.
 
 #### Import Sorting
 

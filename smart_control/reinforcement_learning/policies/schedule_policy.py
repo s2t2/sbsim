@@ -136,18 +136,12 @@ class SchedulePolicy(tf_policy.TFPolicy):
     observation = time_step.observation
 
     # Denormalize the time signals
-    dow_sin = (
-        observation[0][self.dow_sin_index] * self.norm_std
-    ) + self.norm_mean
-    dow_cos = (
-        observation[0][self.dow_cos_index] * self.norm_std
-    ) + self.norm_mean
-    hod_sin = (
-        observation[0][self.hod_sin_index] * self.norm_std
-    ) + self.norm_mean
-    hod_cos = (
-        observation[0][self.hod_cos_index] * self.norm_std
-    ) + self.norm_mean
+    # fmt: off
+    dow_sin = (observation[0][self.dow_sin_index] * self.norm_std) + self.norm_mean
+    dow_cos = (observation[0][self.dow_cos_index] * self.norm_std) + self.norm_mean
+    hod_sin = (observation[0][self.hod_sin_index] * self.norm_std) + self.norm_mean
+    hod_cos = (observation[0][self.hod_cos_index] * self.norm_std) + self.norm_mean
+    # fmt: on
 
     # Convert to day of week and hour of day
     dow = to_dow(dow_sin, dow_cos)
@@ -163,11 +157,9 @@ class SchedulePolicy(tf_policy.TFPolicy):
 
     # Get active setpoints for each device/setpoint pair
     return {
-        (device, setpoint): get_active_setpoint(
-            schedule, device, setpoint, timestamp
-        )
-        for device, setpoint in self.action_sequence
-    }
+      (device, setpoint): get_active_setpoint(schedule, device, setpoint, timestamp)
+      for device, setpoint in self.action_sequence
+    }  # fmt: skip
 
   def _action(self, time_step, policy_state, seed):
     """Generate the policy action"""
