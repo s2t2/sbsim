@@ -621,7 +621,7 @@ absl-py = ">=0.6.1"
 attrs = ">=18.2.0"
 numpy = [
     {version = ">=1.23.3", markers = "python_version >= \"3.11\""},
-    {version = ">=1.21.2", markers = "python_version == \"3.10\""},
+    {version = ">=1.21.2", markers = "python_version >= \"3.10\""},
 ]
 wrapt = ">=1.11.2"
 
@@ -1087,6 +1087,27 @@ files = [
 
 [package.extras]
 all = ["flake8 (>=7.1.1)", "mypy (>=1.11.2)", "pytest (>=8.3.2)", "ruff (>=0.6.2)"]
+
+[[package]]
+name = "importlib-resources"
+version = "6.5.2"
+description = "Read resources from Python packages"
+optional = false
+python-versions = ">=3.9"
+groups = ["main"]
+markers = "python_version == \"3.10\""
+files = [
+    {file = "importlib_resources-6.5.2-py3-none-any.whl", hash = "sha256:789cfdc3ed28c78b67a06acb8126751ced69a3d5f79c095a98298cd8a760ccec"},
+    {file = "importlib_resources-6.5.2.tar.gz", hash = "sha256:185f87adef5bcc288449d98fb4fba07cea78bc036455dd44c5fc4a2fe78fed2c"},
+]
+
+[package.extras]
+check = ["pytest-checkdocs (>=2.4)", "pytest-ruff (>=0.2.1) ; sys_platform != \"cygwin\""]
+cover = ["pytest-cov"]
+doc = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "rst.linker (>=1.9)", "sphinx (>=3.5)", "sphinx-lint"]
+enabler = ["pytest-enabler (>=2.2)"]
+test = ["jaraco.test (>=5.4)", "pytest (>=6,!=8.1.*)", "zipp (>=3.17)"]
+type = ["pytest-mypy"]
 
 [[package]]
 name = "iniconfig"
@@ -1723,8 +1744,8 @@ files = [
 [package.dependencies]
 numpy = [
     {version = ">=1.23.5", markers = "python_version >= \"3.11\""},
-    {version = ">=1.21.4", markers = "python_version >= \"3.10\" and platform_system == \"Darwin\""},
-    {version = ">=1.21.2", markers = "platform_system != \"Darwin\" and python_version >= \"3.10\""},
+    {version = ">=1.21.4", markers = "python_version == \"3.10\" and platform_system == \"Darwin\""},
+    {version = ">=1.21.2", markers = "platform_system != \"Darwin\" and python_version == \"3.10\""},
 ]
 
 [[package]]
@@ -3425,4 +3446,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10.12,<3.12"
-content-hash = "cd9a280c57a23a776910b507b547b26bceb92501f9bbe391c9ee78314eb4fd89"
+content-hash = "7f18995d919a5fd788b9086b44142519e9e43d92d43800d1412e4e865301a8f9"
