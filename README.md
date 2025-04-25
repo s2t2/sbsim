@@ -48,7 +48,9 @@ In addition to our calibrated simulator, we released 6 years of data on 3 buildi
 
 ## Contributing
 
-We encourage and welcome your contributions to this repository. All open source contributors will need to sign Google's [Contributor License Agreement (CLA)](https://cla.developers.google.com/).
+We welcome your contributions to this repository!
+
+All open source contributors will need to sign Google's [Contributor License Agreement (CLA)](https://cla.developers.google.com/).
 
 Contributors are encouraged to consult the sections below for more information about code documenation, testing, and formatting.
 
@@ -66,13 +68,13 @@ Running tests:
 # run all tests:
 pytest
 
-# or, to disable warnings:
+# disable warnings:
 pytest --disable-pytest-warnings
 
-# or, to run specific test files:
+# run specific test files:
 pytest --disable-pytest-warnings path/to/your/test.py
 
-# or, to run specific tests:
+# run specific tests:
 pytest --disable-pytest-warnings -k your_test_name_here
 ```
 
@@ -111,7 +113,13 @@ If you would like to prevent certain lines of code from being formatted (for exa
 
 #### Sorting Imports
 
-The `pyink` formatter doesn't properly sort local module imports (it mixes them in with packages), so for proper sorting of the "smart_control" imports, we are using `isort`:
+The `pyink` formatter doesn't properly sort local module imports (it mixes them in with packages), so for proper sorting of the "smart_control" imports, we are using `isort`.
+
+The import sorter will run automatically as a pre-commit hook (see "Pre-commit Hooks" section below for more information and setup instructions).
+
+Additionally, for contributors using the VS Code text editor, we have added a VS Code workspace [settings configuration file](.vscode/settings.json) to run the import sorter on file save. NOTE: this requires the [`ms-python.isort` extension](https://marketplace.visualstudio.com/items?itemName=ms-python.isort) for VS Code.
+
+If you would like to run the import sorter manually:
 
 ```sh
 # sort all the files:
