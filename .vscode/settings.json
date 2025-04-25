@@ -5,19 +5,20 @@
   "files.insertFinalNewline": true,
   "files.trimFinalNewlines": true,
   "files.trimTrailingWhitespace": true,
-  // using pyink to perform formatting on file save...
-  // https://github.com/google/pyink?tab=readme-ov-file#is-there-a-vs-code-extension-for-pyink
-  // requires installation of the "ms-python.black-formatter" extension
-  // https://marketplace.visualstudio.com/items?itemName=ms-python.black-formatter
   "[python]": {
+    // using pyink to perform formatting on file save...
+    // requires installation of the "ms-python.black-formatter" extension:
+    // https://marketplace.visualstudio.com/items?itemName=ms-python.black-formatter
     "editor.defaultFormatter": "ms-python.black-formatter",
-    //"editor.formatOnSave": true,
+    // using isort to perform import sorting on file save...
+    // requires installation of the "ms-python.black-formatter" extension:
+    // https://marketplace.visualstudio.com/items?itemName=ms-python.isort
     "editor.codeActionsOnSave": {
       "source.organizeImports": "explicit"
     },
   },
   "black-formatter.path": [
+    // using pyink instead of black:
     ".venv/bin/pyink"
   ],
-  //"isort.args":["--profile", "black"],
 }
