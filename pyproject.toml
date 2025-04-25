@@ -50,6 +50,9 @@ pyink-annotation-pragmas = [
   "pyright:",
   "pyre-",
 ]
+#exclude = '*/*/*_pb2.py'
+#extend-exclude = '.*_pb2.py'
+force-exclude = ".*_pb2.py"
 
 [tool.isort]
 lexicographical = true
@@ -60,6 +63,7 @@ force_single_line = true
 line_length = 200
 single_line_exclusions = ['typing']
 known_first_party = ["smart_control"]
+skip_glob = ['smart_control/proto/*']
 
 [build-system]
 requires = ["poetry-core"]
