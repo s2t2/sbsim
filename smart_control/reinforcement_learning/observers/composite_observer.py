@@ -2,7 +2,7 @@ from typing import Sequence
 
 from tf_agents.trajectories import trajectory as trajectory_lib
 
-from smart_control.reinforcement_learning.observers.base_observer import Observer  # NOQA
+from smart_control.reinforcement_learning.observers.base_observer import Observer
 
 
 class CompositeObserver(Observer):

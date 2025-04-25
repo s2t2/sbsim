@@ -52,13 +52,15 @@ pyink-annotation-pragmas = [
 
 [tool.isort]
 force_sort_within_sections = true
-force_single_line = true
 single_line_exclusions = ['typing']
-multi_line_output = 7
 lexicographical = true
 group_by_package = true
 order_by_type = false
 known_first_party = ["smart_control"]
+#multi_line_output = 7
+#honor_noqa = true
+force_single_line = true
+line_length = 200
 
 [build-system]
 requires = ["poetry-core"]

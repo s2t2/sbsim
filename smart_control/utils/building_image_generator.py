@@ -31,12 +31,12 @@ from PIL import Image
 
 from smart_control.proto import smart_control_building_pb2
 from smart_control.utils import building_renderer
-from smart_control.utils import real_building_temperature_array_generator as temp_array_gen  # NOQA
+from smart_control.utils import real_building_temperature_array_generator as temp_array_gen
 
 if sys.version_info >= (3, 11):
-  from importlib.resources.abc import Traversable  # pylint: disable=g-import-not-at-top  # NOQA
+  from importlib.resources.abc import Traversable  # pylint: disable=g-import-not-at-top
 else:
-  from importlib_resources.abc import Traversable  # pylint: disable=g-import-not-at-top  # NOQA
+  from importlib_resources.abc import Traversable  # pylint: disable=g-import-not-at-top
 
 PathLocation: TypeAlias = Traversable | os.PathLike[str] | str
 

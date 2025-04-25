@@ -3,8 +3,8 @@ import logging
 import pandas as pd
 from tf_agents.trajectories import trajectory as trajectory_lib
 
-from smart_control.reinforcement_learning.observers.base_observer import Observer  # NOQA
-from smart_control.reinforcement_learning.utils.constants import DEFAULT_TIME_ZONE  # NOQA
+from smart_control.reinforcement_learning.observers.base_observer import Observer
+from smart_control.reinforcement_learning.utils.constants import DEFAULT_TIME_ZONE
 
 logger = logging.getLogger(__name__)
 

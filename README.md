@@ -124,7 +124,7 @@ isort /path/to/file.py
 isort -v .
 ```
 
-FYI - if there is a single import statement that exceeds the line length, based on the current configuration, `isort` will insert a trailing `# NOQA` comment to keep the import on a single line.
+FYI - if there is a single import statement that exceeds the line length, based on the current configuration, `isort` will insert a trailing `` comment to keep the import on a single line.
 
 ### Pre-commit Hooks
 
