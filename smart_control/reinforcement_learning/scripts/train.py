@@ -1,7 +1,6 @@
-"""Script to train a reinforcement learning agent using a pre-populated replay buffer.
-
-This script sets up the training process with separate collection and evaluation
-components.
+"""
+Script to train a reinforcement learning agent using a pre-populated replay buffer.
+This script sets up the training process with separate collection and evaluation components.
 """
 
 import os
@@ -52,21 +51,20 @@ def train_agent(
     checkpoint_interval=1000,  # New parameter for checkpointing frequency
     learner_iterations=200,  # New parameter for learner iterations per loop
 ):
-  """Trains a reinforcement learning agent using a pre-populated replay buffer.
+  """
+  Trains a reinforcement learning agent using a pre-populated replay buffer.
 
   Args:
       starter_buffer_path: Path to the pre-populated replay buffer
       agent_type: Type of agent to train ('sac' or 'td3')
       train_iterations: Number of training iterations
-      collect_steps_per_iteration: Number of collection steps per training
-        iteration
+      collect_steps_per_iteration: Number of collection steps per training iteration
       batch_size: Batch size for training
       log_interval: Interval for logging training metrics
       eval_interval: Interval for evaluating the agent
       num_eval_episodes: Number of episodes for evaluation
       checkpoint_interval: Interval for checkpointing the replay buffer
-      learner_iterations: Number of iterations to run the agent learner per
-        training loop
+      learner_iterations: Number of iterations to run the agent learner per training loop
   """
   # Set up scenario config path
   scenario_config_path = os.path.join(CONFIG_PATH, 'sim_config_1_day.gin')
@@ -332,8 +330,7 @@ if __name__ == '__main__':
       type=int,
       default=256,
       help=(
-          'Batch size for training (each gradient update uses                  '
-          '                                                    this many'
+          'Batch size for training (each gradient update uses this many'
           ' elements from the replay buffer batched)'
       ),
   )
@@ -360,11 +357,7 @@ if __name__ == '__main__':
       '--experiment-name',
       type=str,
       required=True,
-      help=(
-          'Name of the experiment. This be used to                             '
-          '                                                save TensorBoard'
-          ' summaries'
-      ),
+      help='Name of the experiment. This be used to save TensorBoard summaries',
   )
   parser.add_argument(
       '--checkpoint-interval',
@@ -377,9 +370,8 @@ if __name__ == '__main__':
       type=int,
       default=200,
       help=(
-          'Number of iterations (gradient updates)                             '
-          '                                                 to run the agent'
-          ' learner per training loop'
+          'Number of iterations (gradient updates) to run the agent learner per'
+          ' training loop'
       ),
   )
 
