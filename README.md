@@ -80,11 +80,13 @@ pytest --disable-pytest-warnings -k your_test_name_here
 
 ### Linting
 
+#### Style Formatting
+
 We are using the [`pyink` formatter](https://github.com/google/pyink) to format code according to [Google Python Style Guidelines](https://google.github.io/styleguide/pyguide.html). The formatter will automatically update files inplace.
 
 The formatter will run automatically as a pre-commit hook (see "Pre-commit Hooks" section below for more information and setup instructions).
 
-Additionally, for contributors using the VS Code text editor, we have added a VS Code workspace [settings configuration file](.vscode/settings.json) to run the formatter on file save. NOTE: this requires the [`ms-python.black-formatter` extension](https://marketplace.visualstudio.com/items?itemName=ms-python.black-formatter) for VS Code.
+Additionally, for contributors using the VS Code text editor, we have configured a VS Code workspace settings file to run the formatter whenever a file is saved. NOTE: this requires the [`ms-python.black-formatter` extension](https://marketplace.visualstudio.com/items?itemName=ms-python.black-formatter) for VS Code.
 
 If you would like to run the formatter manually:
 
@@ -111,13 +113,13 @@ If you would like to prevent certain lines of code from being formatted (for exa
   + addding a trailing comment of `# fmt: skip` to the right of the line, or
   + wrapping multiple lines of code between `# fmt: off` and `# fmt: on` comments
 
-#### Sorting Imports
+#### Import Sorting
 
-The `pyink` formatter doesn't properly sort local module imports (it mixes them in with packages), so for proper sorting of the "smart_control" imports, we are using `isort`.
+We are using [`isort`](https://pycqa.github.io/isort/) to control the sort order of import statements, specifically grouping the "smart_control" local module imports separately in their own section below the package imports.
 
 The import sorter will run automatically as a pre-commit hook (see "Pre-commit Hooks" section below for more information and setup instructions).
 
-Additionally, for contributors using the VS Code text editor, we have added a VS Code workspace [settings configuration file](.vscode/settings.json) to run the import sorter on file save. NOTE: this requires the [`ms-python.isort` extension](https://marketplace.visualstudio.com/items?itemName=ms-python.isort) for VS Code.
+Additionally, for contributors using the VS Code text editor, we have configured a VS Code workspace settings file to run the import sorter whenever a file is saved. NOTE: this requires the [`ms-python.isort` extension](https://marketplace.visualstudio.com/items?itemName=ms-python.isort) for VS Code.
 
 If you would like to run the import sorter manually:
 
@@ -132,11 +134,10 @@ isort /path/to/file.py
 isort -v .
 ```
 
-FYI - if there is a single import statement that exceeds the line length, based on the current configuration, `isort` will insert a trailing `` comment to keep the import on a single line.
 
 ### Pre-commit Hooks
 
-We are using a pre-commit hook to perform code formatting and import sorting. These actions will take place on each commit.
+We are using pre-commit hooks to perform code formatting and import sorting. These actions will take place on each commit.
 
 To enable the pre-commit hooks, you must perform a one-time setup by running `pre-commit install`. This will update ".git/hooks/pre-commit".
 
