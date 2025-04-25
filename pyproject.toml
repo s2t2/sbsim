@@ -53,18 +53,18 @@ pyink-annotation-pragmas = [
 [tool.isort]
 # don't group "from" and "import" statements separately:
 force_sort_within_sections = true
-# don't use parentheses over multiple lines:
+# don't split imports over multiple lines using parentheses:
 force_single_line = true
 # ... except for the typing module (can be on single line):
 single_line_exclusions = ['typing']
-# really don't break long imports onto the next line though:
+# really don't break long imports onto the next line though (inserts NOQA comment):
 multi_line_output = 7
-# sort alphabetically:
+# sort alphabetically (default setting):
 lexicographical = true
-# don't sort based on what is being imported (class vs func):
-order_by_type = false
-# sort by top level package:
+# sort based on the package being imported from:
 group_by_package = true
+# don't sort differently based on what is being imported (treat modules vs classes vs functions the same)
+order_by_type = false
 # group local modules separately, below packages:
 known_first_party = ["smart_control"]
 

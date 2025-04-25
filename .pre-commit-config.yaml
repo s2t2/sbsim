@@ -1,6 +1,8 @@
-# https://github.com/google/pyink?tab=readme-ov-file#can-i-use-pyink-with-the-pre-commit-framework
-# run pyink on each commit
+
 repos:
+
+  # run pyink on each commit:
+  # https://github.com/google/pyink?tab=readme-ov-file#can-i-use-pyink-with-the-pre-commit-framework
   - repo: https://github.com/google/pyink
     rev: 24.10.1
     hooks:
@@ -14,8 +16,11 @@ repos:
         # cannot format /path/to/file.py: module 'blib2to3.pygram' has no attribute
         # ... 'python_grammar_no_print_statement_no_exec_statement_async_keywords'
 
+  # run isort on each commit:
+  # https://pycqa.github.io/isort/docs/configuration/pre-commit.html
+  # https://smhk.net/note/2023/09/poetry-pre-commit-hooks/#extend-configuration-to-support-isort
   #- repo: https://github.com/pycqa/isort
-  #    rev: 5.6.4
-  #    hooks:
-  #      - id: isort
-  #        #args: ["--profile", "black", "--filter-files"]
+  #  rev: 5.11.2
+  #  hooks:
+  #    - id: isort
+  #      args: ["--settings-file", "pyproject.toml"]
