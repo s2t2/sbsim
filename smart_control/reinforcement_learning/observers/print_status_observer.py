@@ -31,9 +31,7 @@ class PrintStatusObserver(Observer):
     self._time_zone = time_zone
 
     self._start_time = None
-    self._num_timesteps_in_episode = self._environment.pyenv.envs[
-        0
-    ]._num_timesteps_in_episode
+    self._num_timesteps_in_episode = self._environment.pyenv.envs[0]._num_timesteps_in_episode  # fmt: skip
     self._environment.pyenv.envs[0]._end_timestamp
 
   def __call__(self, trajectory: trajectory_lib.Trajectory) -> None:
@@ -48,12 +46,8 @@ class PrintStatusObserver(Observer):
       execution_time = pd.Timestamp.now() - self._start_time
       mean_execution_time = execution_time.total_seconds() / self._counter
 
-      sim_time = self._environment.pyenv.envs[
-          0
-      ].current_simulation_timestamp.tz_convert(self._time_zone)
-      percent_complete = int(
-          100.0 * (self._counter / self._num_timesteps_in_episode)
-      )
+      sim_time = self._environment.pyenv.envs[0].current_simulation_timestamp.tz_convert(self._time_zone)  # fmt: skip
+      percent_complete = int(100.0 * (self._counter / self._num_timesteps_in_episode))  # fmt: skip
 
       rb_string = ""
       if self._replay_buffer is not None:
@@ -61,8 +55,7 @@ class PrintStatusObserver(Observer):
         rb_string = "Replay Buffer Size: %d" % rb_size
 
       logger.info(
-          "[Step %d of %d %d%%] [Sim Time: %s] [Reward: %.2f] [Cum Reward:"
-          " %.2f]"
+          "[Step %d of %d %d%%] [Sim Time: %s] [Reward: %.2f] [Cum Reward: %.2f]"  # fmt: skip
           % (
               self._environment.pyenv.envs[0]._step_count,
               self._num_timesteps_in_episode,
