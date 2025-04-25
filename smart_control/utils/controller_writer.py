@@ -23,6 +23,7 @@ from absl import logging
 import gin
 from google.protobuf import message
 import pandas as pd
+
 from smart_control.proto import smart_control_building_pb2
 from smart_control.proto import smart_control_normalization_pb2
 from smart_control.proto import smart_control_reward_pb2

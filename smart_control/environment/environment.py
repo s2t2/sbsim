@@ -29,6 +29,12 @@ import bidict
 import gin
 import numpy as np
 import pandas as pd
+import tensorflow as tf
+from tf_agents.environments import py_environment
+from tf_agents.specs import array_spec
+from tf_agents.trajectories import time_step as ts
+from tf_agents.typing import types
+
 from smart_control.models import base_building
 from smart_control.models import base_normalizer
 from smart_control.models import base_reward_function
@@ -42,12 +48,6 @@ from smart_control.utils import plot_utils
 from smart_control.utils import regression_building_utils
 from smart_control.utils import run_command_predictor
 from smart_control.utils import writer_lib
-import tensorflow as tf
-from tf_agents.environments import py_environment
-from tf_agents.specs import array_spec
-from tf_agents.trajectories import time_step as ts
-from tf_agents.typing import types
-
 
 ACTION_REJECTION_REWARD: Final[float] = -np.inf
 

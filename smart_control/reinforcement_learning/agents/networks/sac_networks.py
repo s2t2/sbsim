@@ -10,7 +10,8 @@ from typing import Sequence
 import tensorflow as tf
 from tf_agents.agents.sac import tanh_normal_projection_network
 from tf_agents.keras_layers import inner_reshape
-from tf_agents.networks import nest_map, sequential
+from tf_agents.networks import nest_map
+from tf_agents.networks import sequential
 from tf_agents.typing import types
 
 # Utility to create dense layers with consistent initialization and activation

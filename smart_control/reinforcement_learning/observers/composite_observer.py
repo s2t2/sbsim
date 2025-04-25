@@ -1,7 +1,8 @@
 from typing import Sequence
 
-from smart_control.reinforcement_learning.observers.base_observer import Observer
 from tf_agents.trajectories import trajectory as trajectory_lib
+
+from smart_control.reinforcement_learning.observers.base_observer import Observer
 
 
 class CompositeObserver(Observer):

@@ -43,7 +43,12 @@ jobs:
         source .venv/bin/activate
         pyink .
 
+    - name: Run the import sorter
+      run: |
+        source .venv/bin/activate
+        isort .
+
     - name: Run tests
       run: |
         source .venv/bin/activate
-        pytest
+        pytest --disable-pytest-warnings

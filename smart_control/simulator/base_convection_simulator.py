@@ -20,6 +20,7 @@ a building.
 
 import abc
 from typing import MutableSequence
+
 import numpy as np
 
 

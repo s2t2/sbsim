@@ -21,6 +21,7 @@ from absl import logging
 import gin
 import numpy as np
 import pandas as pd
+
 from smart_control.models.base_occupancy import BaseOccupancy
 from smart_control.proto import smart_control_reward_pb2
 from smart_control.simulator import building as building_py
@@ -31,7 +32,6 @@ from smart_control.simulator import weather_controller as weather_controller_py
 from smart_control.utils import building_renderer
 from smart_control.utils import conversion_utils
 from smart_control.utils import visual_logger
-
 
 CVCoordinates = Tuple[int, int]
 ZoneId = Tuple[int, int]

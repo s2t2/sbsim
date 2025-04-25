@@ -13,22 +13,20 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 import pandas as pd
 import pytz
+from tf_agents.trajectories import trajectory as trajectory_lib
+
 from smart_control.environment import environment
 from smart_control.reinforcement_learning.observers.base_observer import Observer
 from smart_control.reinforcement_learning.utils.config import RENDERS_PATH
 from smart_control.reinforcement_learning.utils.constants import DEFAULT_TIME_ZONE
 from smart_control.reinforcement_learning.utils.constants import KELVIN_TO_CELSIUS as _KELVIN_TO_CELSIUS
-from smart_control.reinforcement_learning.utils.data_processing import (
-    get_action_timeseries,
-    get_energy_timeseries,
-    get_latest_episode_reader,
-    get_outside_air_temperature_timeseries,
-    get_reward_timeseries,
-    get_zone_timeseries,
-)
+from smart_control.reinforcement_learning.utils.data_processing import get_action_timeseries
+from smart_control.reinforcement_learning.utils.data_processing import get_energy_timeseries
+from smart_control.reinforcement_learning.utils.data_processing import get_latest_episode_reader
+from smart_control.reinforcement_learning.utils.data_processing import get_outside_air_temperature_timeseries
+from smart_control.reinforcement_learning.utils.data_processing import get_reward_timeseries
+from smart_control.reinforcement_learning.utils.data_processing import get_zone_timeseries
 from smart_control.utils import building_renderer
-from tf_agents.trajectories import trajectory as trajectory_lib
-
 
 logger = logging.getLogger(__name__)
 

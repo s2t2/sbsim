@@ -16,6 +16,7 @@ limitations under the License.
 """
 
 from typing import Final
+
 # --------- Thermal Constants ---------------
 
 AIR_HEAT_CAPACITY = 1006.0  # J/kg/K, standard atmosphere

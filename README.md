@@ -48,7 +48,9 @@ In addition to our calibrated simulator, we released 6 years of data on 3 buildi
 
 ## Contributing
 
-We encourage and welcome your contributions to this repository. All open source contributors will need to sign Google's [Contributor License Agreement (CLA)](https://cla.developers.google.com/).
+We welcome your contributions to this repository!
+
+All open source contributors will need to sign Google's [Contributor License Agreement (CLA)](https://cla.developers.google.com/).
 
 Contributors are encouraged to consult the sections below for more information about code documenation, testing, and formatting.
 
@@ -66,13 +68,13 @@ Running tests:
 # run all tests:
 pytest
 
-# or, to disable warnings:
+# disable warnings:
 pytest --disable-pytest-warnings
 
-# or, to run specific test files:
+# run specific test files:
 pytest --disable-pytest-warnings path/to/your/test.py
 
-# or, to run specific tests:
+# run specific tests:
 pytest --disable-pytest-warnings -k your_test_name_here
 ```
 
@@ -104,9 +106,37 @@ pyink . --check
 pyink . --diff
 ```
 
+If you would like to prevent certain lines of code from being formatted (for example to leave a long line as-is), it is possible to [ignore formatting](https://black.readthedocs.io/en/stable/usage_and_configuration/the_basics.html#ignoring-sections) by:
+
+  + addding a trailing comment of `# fmt: skip` to the right of the line, or
+  + wrapping multiple lines of code between `# fmt: off` and `# fmt: on` comments
+
+#### Sorting Imports
+
+The `pyink` formatter doesn't properly sort local module imports (it mixes them in with packages), so for proper sorting of the "smart_control" imports, we are using `isort`.
+
+The import sorter will run automatically as a pre-commit hook (see "Pre-commit Hooks" section below for more information and setup instructions).
+
+Additionally, for contributors using the VS Code text editor, we have added a VS Code workspace [settings configuration file](.vscode/settings.json) to run the import sorter on file save. NOTE: this requires the [`ms-python.isort` extension](https://marketplace.visualstudio.com/items?itemName=ms-python.isort) for VS Code.
+
+If you would like to run the import sorter manually:
+
+```sh
+# sort all the files:
+isort .
+
+# sort a specific file:
+isort /path/to/file.py
+
+# sort with verbose outputs (helpful for troubleshooting):
+isort -v .
+```
+
+FYI - if there is a single import statement that exceeds the line length, based on the current configuration, `isort` will insert a trailing `` comment to keep the import on a single line.
+
 ### Pre-commit Hooks
 
-We are using a pre-commit hook to perform code formatting. This will take place on each commit.
+We are using a pre-commit hook to perform code formatting and import sorting. These actions will take place on each commit.
 
 To enable the pre-commit hooks, you must perform a one-time setup by running `pre-commit install`. This will update ".git/hooks/pre-commit".
 
@@ -119,6 +149,12 @@ pre-commit run --all-files
 
 # run for a specific set of file(s):
 pre-commit run --files path/to/my_file.py path/to/other_file.py
+```
+
+If you run into issues and need to clear the cache:
+
+```sh
+pre-commit clean
 ```
 
 ## [License](LICENSE)

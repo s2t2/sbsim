@@ -10,9 +10,14 @@
   // requires installation of the "ms-python.black-formatter" extension
   // https://marketplace.visualstudio.com/items?itemName=ms-python.black-formatter
   "[python]": {
-    "editor.defaultFormatter": "ms-python.black-formatter"
+    "editor.defaultFormatter": "ms-python.black-formatter",
+    //"editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit"
+    },
   },
   "black-formatter.path": [
     ".venv/bin/pyink"
-  ]
+  ],
+  //"isort.args":["--profile", "black"],
 }

@@ -16,6 +16,7 @@ limitations under the License.
 """
 
 import abc
+
 from smart_control.proto import smart_control_reward_pb2
 
 

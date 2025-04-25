@@ -1,15 +1,49 @@
-# https://github.com/google/pyink?tab=readme-ov-file#can-i-use-pyink-with-the-pre-commit-framework
-# run pyink on each commit
+#repos:
+
+  # run pyink on each commit:
+  # https://github.com/google/pyink?tab=readme-ov-file#can-i-use-pyink-with-the-pre-commit-framework
+  #- repo: https://github.com/google/pyink
+  #  rev: 24.10.1
+  #  hooks:
+  #    - id: pyink
+  #      # It is recommended to specify the latest version of Python
+  #      # supported by your project here, or alternatively use
+  #      # pre-commit's default_language_version, see
+  #      # https://pre-commit.com/#top_level-default_language_version
+  #      #language_version: python3.11
+  #      # NOTE: commenting out the language version resolves error:
+  #      # cannot format /path/to/file.py: module 'blib2to3.pygram' has no attribute
+  #      # ... 'python_grammar_no_print_statement_no_exec_statement_async_keywords'
+
+
+  # run isort on each commit:
+  # https://pycqa.github.io/isort/docs/configuration/pre-commit.html
+  # https://python-poetry.org/docs/pre-commit-hooks/
+  # https://smhk.net/note/2023/09/poetry-pre-commit-hooks/#extend-configuration-to-support-isort
+  #- repo: https://github.com/pycqa/isort
+  #  rev: 5.11.2
+  #  hooks:
+  #    - id: isort
+  #      name: isort (python)
+  #      #args: ["--settings-file", "pyproject.toml"]
+  #      # args: ["--settings-path=pyproject.toml"]
+
+
+fail_fast: true
 repos:
-  - repo: https://github.com/google/pyink
-    rev: 24.10.1
-    hooks:
-      - id: pyink
-        # It is recommended to specify the latest version of Python
-        # supported by your project here, or alternatively use
-        # pre-commit's default_language_version, see
-        # https://pre-commit.com/#top_level-default_language_version
-        #language_version: python3.11
-        # NOTE: commenting out the language version resolves error:
-        # cannot format /path/to/file.py: module 'blib2to3.pygram' has no attribute
-        # ... 'python_grammar_no_print_statement_no_exec_statement_async_keywords'
+- repo: local
+  hooks:
+
+    - id: pyink
+      name: pyink
+      entry: poetry run pyink
+      language: system
+      types: [file, python]
+      files: '^smart_control/'
+
+    - id: isort
+      name: isort
+      entry: poetry run isort
+      language: system
+      types: [file, python]
+      files: '^smart_control/'

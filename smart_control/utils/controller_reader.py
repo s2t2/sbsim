@@ -24,12 +24,12 @@ from typing import Callable, Mapping, Sequence, TypeVar, Union
 from absl import logging
 import gin
 import pandas as pd
+
 from smart_control.proto import smart_control_building_pb2
 from smart_control.proto import smart_control_normalization_pb2
 from smart_control.proto import smart_control_reward_pb2
 from smart_control.utils import constants
 from smart_control.utils import reader_lib
-
 
 T = TypeVar('T')
 

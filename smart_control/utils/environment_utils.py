@@ -1,7 +1,10 @@
 from typing import Sequence
+
 import gin
 import pandas as pd
-from smart_control.proto import smart_control_building_pb2, smart_control_normalization_pb2
+
+from smart_control.proto import smart_control_building_pb2
+from smart_control.proto import smart_control_normalization_pb2
 from smart_control.utils import bounded_action_normalizer
 
 
