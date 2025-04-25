@@ -83,9 +83,7 @@ class RenderingObserver(Observer):
     if self._environment is not None:
       # Store environment properties if available
       if hasattr(self._environment.pyenv.envs[0], '_num_timesteps_in_episode'):
-        self._num_timesteps_in_episode = self._environment.pyenv.envs[
-            0
-        ]._num_timesteps_in_episode
+        self._num_timesteps_in_episode = self._environment.pyenv.envs[0]._num_timesteps_in_episode  # fmt: skip
 
   def _format_plot(
       self, ax1, xlabel: str, start_time: int, end_time: int, time_zone: str
@@ -136,24 +134,15 @@ class RenderingObserver(Observer):
       hwh_power = kw_power * step_interval / pd.Timedelta(1, unit='hour')
       return hwh_power.cumsum()
 
-    timeseries = energy_timeseries[
-        energy_timeseries['device_type'] == 'air_handler'
-    ]
-
+    timeseries = energy_timeseries[energy_timeseries['device_type'] == 'air_handler']  # fmt: skip
+    # fmt: off
     if cumulative:
-      feature_timeseries_ac = _to_kwh(
-          timeseries['air_handler_air_conditioner_energy_rate']
-      )
-      feature_timeseries_blower = _to_kwh(
-          timeseries['air_handler_blower_electrical_energy_rate']
-      )
+      feature_timeseries_ac = _to_kwh(timeseries['air_handler_air_conditioner_energy_rate'])
+      feature_timeseries_blower = _to_kwh(timeseries['air_handler_blower_electrical_energy_rate'])
     else:
-      feature_timeseries_ac = (
-          timeseries['air_handler_air_conditioner_energy_rate'] / 1000.0
-      )
-      feature_timeseries_blower = (
-          timeseries['air_handler_blower_electrical_energy_rate'] / 1000.0
-      )
+      feature_timeseries_ac = (timeseries['air_handler_air_conditioner_energy_rate'] / 1000.0)
+      feature_timeseries_blower = (timeseries['air_handler_blower_electrical_energy_rate'] / 1000.0)
+    # fmt: on
 
     ax1.plot(
         timeseries['start_time'],
@@ -178,21 +167,14 @@ class RenderingObserver(Observer):
     )
 
     timeseries = energy_timeseries[energy_timeseries['device_type'] == 'boiler']
-
+    # fmt: off
     if cumulative:
-      feature_timeseries_gas = _to_kwh(
-          timeseries['boiler_natural_gas_heating_energy_rate']
-      )
-      feature_timeseries_pump = _to_kwh(
-          timeseries['boiler_pump_electrical_energy_rate']
-      )
+      feature_timeseries_gas = _to_kwh(timeseries['boiler_natural_gas_heating_energy_rate'])
+      feature_timeseries_pump = _to_kwh(timeseries['boiler_pump_electrical_energy_rate'])
     else:
-      feature_timeseries_gas = (
-          timeseries['boiler_natural_gas_heating_energy_rate'] / 1000.0
-      )
-      feature_timeseries_pump = (
-          timeseries['boiler_pump_electrical_energy_rate'] / 1000.0
-      )
+      feature_timeseries_gas = (timeseries['boiler_natural_gas_heating_energy_rate'] / 1000.0)
+      feature_timeseries_pump = (timeseries['boiler_pump_electrical_energy_rate'] / 1000.0)
+    # fmt: on
 
     ax1.plot(
         timeseries['start_time'],
@@ -239,9 +221,7 @@ class RenderingObserver(Observer):
     local_times = [ts.tz_convert(time_zone) for ts in reward_timeseries.index]
 
     if cumulative:
-      feature_timeseries_cost = reward_timeseries[
-          'electricity_energy_cost'
-      ].cumsum()
+      feature_timeseries_cost = reward_timeseries['electricity_energy_cost'].cumsum()  # fmt: skip
     else:
       feature_timeseries_cost = reward_timeseries['electricity_energy_cost']
 
@@ -423,14 +403,9 @@ class RenderingObserver(Observer):
         & (action_timeseries['setpoint_name'] == action_tuple[1])
     ]
 
-    single_action_timeseries = single_action_timeseries.sort_values(
-        by='timestamp'
-    )
+    single_action_timeseries = single_action_timeseries.sort_values(by='timestamp')  # fmt: skip
 
-    if action_tuple[1] in [
-        'supply_water_setpoint',
-        'supply_air_heating_temperature_setpoint',
-    ]:
+    if action_tuple[1] in ['supply_water_setpoint', 'supply_air_heating_temperature_setpoint']:  # fmt: skip
       single_action_timeseries['setpoint_value'] = (
           single_action_timeseries['setpoint_value'] - self.KELVIN_TO_CELSIUS
       )
@@ -457,16 +432,12 @@ class RenderingObserver(Observer):
   def _plot_timeseries_charts(self, reader, time_zone, step_count):
     """Plots timeseries charts and saves to file."""
 
-    observation_responses = reader.read_observation_responses(
-        pd.Timestamp.min, pd.Timestamp.max
-    )
-    action_responses = reader.read_action_responses(
-        pd.Timestamp.min, pd.Timestamp.max
-    )
+    # fmt: off
+    observation_responses = reader.read_observation_responses(pd.Timestamp.min, pd.Timestamp.max)
+    action_responses = reader.read_action_responses(pd.Timestamp.min, pd.Timestamp.max)
     reward_infos = reader.read_reward_infos(pd.Timestamp.min, pd.Timestamp.max)
-    reward_responses = reader.read_reward_responses(
-        pd.Timestamp.min, pd.Timestamp.max
-    )
+    reward_responses = reader.read_reward_responses(pd.Timestamp.min, pd.Timestamp.max)
+    # fmt: on
 
     if len(reward_infos) == 0 or len(reward_responses) == 0:
       logger.info('No reward data available for plotting')
@@ -523,9 +494,7 @@ class RenderingObserver(Observer):
       )
 
     # Save figure instead of displaying
-    fig_path = os.path.join(
-        self._save_path, f'timeseries_step_{step_count}.png'
-    )
+    fig_path = os.path.join(self._save_path, f'timeseries_step_{step_count}.png')  # fmt: skip
     fig.savefig(fig_path, bbox_inches='tight', dpi=100)
     plt.close(fig)
     logger.info(f'Saved timeseries plot to {fig_path}')
@@ -557,9 +526,7 @@ class RenderingObserver(Observer):
 
     # Save image instead of displaying
     timestamp = env.current_simulation_timestamp.strftime('%Y%m%d_%H%M%S')
-    img_path = os.path.join(
-        self._save_path, f'env_render_{step_count}_{timestamp}.png'
-    )
+    img_path = os.path.join(self._save_path, f'env_render_{step_count}_{timestamp}.png')  # fmt: skip
     image.save(img_path)
     logger.info(f'Saved environment render to {img_path}')
 
