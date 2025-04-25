@@ -59,12 +59,11 @@ def populate_replay_buffer(
   try:
     os.makedirs(
         os.path.dirname(buffer_path + '/anything-here'), exist_ok=False
-    )  # added '/anything-here' such that
-    # the path is a directory
+    )  # added '/anything-here' such that the path is a directory
   except FileExistsError:
     logger.exception(
         'This buffer path already exists. This would override the existing'
-        ' buffer.                           Please use another name'
+        ' buffer. Please use another name'
     )
     raise FileExistsError('Buffer name already exists, would be overriden')
 
