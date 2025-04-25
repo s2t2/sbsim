@@ -28,6 +28,7 @@ from absl import logging
 import gin
 import numpy as np
 from PIL import Image
+
 from smart_control.proto import smart_control_building_pb2
 from smart_control.utils import building_renderer
 from smart_control.utils import real_building_temperature_array_generator as temp_array_gen

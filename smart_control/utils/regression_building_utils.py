@@ -13,7 +13,6 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
 """
 
 import collections
@@ -25,6 +24,7 @@ from absl import logging
 import gin
 import numpy as np
 import pandas as pd
+
 from smart_control.models.base_occupancy import BaseOccupancy
 from smart_control.proto import smart_control_building_pb2
 from smart_control.proto import smart_control_reward_pb2
@@ -557,7 +557,7 @@ def create_action_response(
 
 
 def split_output_into_observations_and_reward_info_mapping(
-    output_mapping: Mapping[Tuple[str, ...], float]
+    output_mapping: Mapping[Tuple[str, ...], float],
 ) -> Tuple[
     Mapping[Tuple[str, str], float], Mapping[Tuple[str, str, str], float]
 ]:
@@ -572,7 +572,7 @@ def split_output_into_observations_and_reward_info_mapping(
 
 
 def get_reward_info_devices(
-    reward_info_mapping: Mapping[Tuple[str, str, str], float]
+    reward_info_mapping: Mapping[Tuple[str, str, str], float],
 ) -> Mapping[str, Mapping[str, float]]:
   """Combines the reward infos by device (e.g., by air handler).
 
@@ -628,7 +628,7 @@ def action_request_to_action_mapping(
 
 
 def get_boiler_reward_infos(
-    reward_info_devices: Mapping[str, Mapping[str, float]]
+    reward_info_devices: Mapping[str, Mapping[str, float]],
 ) -> Mapping[str, smart_control_reward_pb2.RewardInfo.BoilerRewardInfo]:
   """Converts the reward info devices in to a map of BoilerRewardInfos.
 
@@ -670,7 +670,7 @@ def get_boiler_reward_infos(
 
 
 def get_air_handler_reward_infos(
-    reward_info_devices: Mapping[str, Mapping[str, float]]
+    reward_info_devices: Mapping[str, Mapping[str, float]],
 ) -> Mapping[str, smart_control_reward_pb2.RewardInfo.AirHandlerRewardInfo]:
   """Converts the reward_info_devices into a map of AirHandlerRewardInfos.
 

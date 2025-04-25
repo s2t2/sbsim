@@ -13,13 +13,13 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
 """
 
 from typing import Mapping, Sequence
 
 import numpy as np
 import pandas as pd
+
 from smart_control.proto import smart_control_building_pb2
 from smart_control.utils import conversion_utils as utils
 

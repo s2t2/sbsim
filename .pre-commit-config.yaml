@@ -1,0 +1,19 @@
+fail_fast: true
+repos:
+- repo: local
+  hooks:
+
+    - id: pyink
+      name: pyink
+      entry: poetry run pyink
+      language: system
+      types: [file, python]
+      files: '^smart_control/'
+
+    - id: isort
+      name: isort
+      entry: poetry run isort
+      language: system
+      types: [file, python]
+      files: '^smart_control/'
+      exclude: '^smart_control/proto/'
