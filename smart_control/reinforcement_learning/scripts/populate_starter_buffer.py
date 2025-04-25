@@ -174,40 +174,15 @@ if __name__ == '__main__':
 
   config_filepath = os.path.join(CONFIG_PATH, 'sim_config_1_day.gin')
 
-  parser = argparse.ArgumentParser(
-      description='Populate a replay buffer with initial exploration data'
-  )
-  parser.add_argument(
-      '--buffer-name',
-      type=str,
-      required=True,
-      help='Name to identify the saved replay buffer',
-  )
-  parser.add_argument(
-      '--capacity', type=int, default=50000, help='Replay buffer capacity'
-  )
-  parser.add_argument(
-      '--steps-per-run',
-      type=int,
-      default=100,
-      help='Number of steps per actor run',
-  )
-  parser.add_argument(
-      '--num-runs', type=int, default=5, help='Number of actor runs to perform'
-  )
-  parser.add_argument(
-      '--sequence-length',
-      type=int,
-      default=2,
-      help='Sequence length for the replay buffer',
-  )
-  parser.add_argument(
-      '--env-gin-config-file-path',
-      type=str,
-      default=config_filepath,
-      help='Environment config file',
-  )
-
+  # fmt: off
+  parser = argparse.ArgumentParser(description='Populate a replay buffer with initial exploration data')
+  parser.add_argument('--buffer-name', type=str, required=True, help='Name to identify the saved replay buffer')
+  parser.add_argument('--capacity', type=int, default=50000, help='Replay buffer capacity')
+  parser.add_argument('--steps-per-run', type=int, default=100, help='Number of steps per actor run')
+  parser.add_argument('--num-runs', type=int, default=5, help='Number of actor runs to perform')
+  parser.add_argument('--sequence-length', type=int, default=2, help='Sequence length for the replay buffer')
+  parser.add_argument('--env-gin-config-file-path', type=str, default=config_filepath, help='Environment config file')
+  # fmt: on
   args = parser.parse_args()
 
   populate_replay_buffer(
