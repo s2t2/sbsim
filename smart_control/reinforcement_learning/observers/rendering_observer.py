@@ -420,7 +420,7 @@ class RenderingObserver(Observer):
         linestyle='-',
         label=action_tuple[1],
     )
-    # title = '%s %s' % (action_tuple[0], action_tuple[1])
+
     self._format_plot(
         ax1,
         'Action',
@@ -445,16 +445,12 @@ class RenderingObserver(Observer):
 
     action_timeseries = get_action_timeseries(action_responses)
 
-    action_tuples = list(
-        set([
-            (row['device_id'], row['setpoint_name'])
-            for _, row in action_timeseries.iterrows()
-        ])
-    )
+    action_tuples = list(set([
+      (row['device_id'], row['setpoint_name'])
+      for _, row in action_timeseries.iterrows()
+    ]))  # fmt: skip
 
-    reward_timeseries = get_reward_timeseries(
-        reward_infos, reward_responses, time_zone
-    ).sort_index()
+    reward_timeseries = get_reward_timeseries(reward_infos, reward_responses, time_zone).sort_index()  # fmt: skip
 
     outside_air_temperature_timeseries = get_outside_air_temperature_timeseries(
         observation_responses, time_zone
@@ -472,21 +468,15 @@ class RenderingObserver(Observer):
     )
     fig.set_size_inches(24, 25)
 
+    # fmt: off
     energy_timeseries = get_energy_timeseries(reward_infos, time_zone)
     self._plot_reward_timeline(axes[0], reward_timeseries, time_zone)
-    self._plot_energy_timeline(
-        axes[1], energy_timeseries, time_zone, cumulative=True
-    )
-    self._plot_energy_cost_timeline(
-        axes[2], reward_timeseries, time_zone, cumulative=True
-    )
-    self._plot_carbon_timeline(
-        axes[3], reward_timeseries, time_zone, cumulative=True
-    )
+    self._plot_energy_timeline(axes[1], energy_timeseries, time_zone, cumulative=True)
+    self._plot_energy_cost_timeline(axes[2], reward_timeseries, time_zone, cumulative=True)
+    self._plot_carbon_timeline(axes[3], reward_timeseries, time_zone, cumulative=True)
     self._plot_occupancy_timeline(axes[4], reward_timeseries, time_zone)
-    self._plot_temperature_timeline(
-        axes[5], zone_timeseries, outside_air_temperature_timeseries, time_zone
-    )
+    self._plot_temperature_timeline(axes[5], zone_timeseries, outside_air_temperature_timeseries, time_zone)
+    # fmt: on
 
     for i, action_tuple in enumerate(action_tuples):
       self._plot_action_timeline(
@@ -550,16 +540,14 @@ class RenderingObserver(Observer):
       mean_execution_time = execution_time.total_seconds() / self._counter
 
       logger.info(
-          f'Step {self._counter}: Cumulative reward ='
-          f' {float(self._cumulative_reward):.2f}, Mean execution time ='
-          f' {mean_execution_time:.2f}s'
+          f'Step {self._counter}: '
+          f'Cumulative reward = {float(self._cumulative_reward):.2f}, '
+          f'Mean execution time = {mean_execution_time:.2f}s'
       )
 
       if self._environment.pyenv.envs[0]._metrics_path is not None:
         logger.warning('Plotting timeseries charts...')
-        reader = get_latest_episode_reader(
-            self._environment.pyenv.envs[0]._metrics_path
-        )
+        reader = get_latest_episode_reader(self._environment.pyenv.envs[0]._metrics_path)  # fmt: skip
         self._plot_timeseries_charts(reader, self._time_zone, self._counter)
 
       self._render_env(self._environment.pyenv.envs[0], self._counter)
