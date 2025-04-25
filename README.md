@@ -143,4 +143,10 @@ pre-commit run --all-files
 pre-commit run --files path/to/my_file.py path/to/other_file.py
 ```
 
+If you run into issues and need to clear the cache:
+
+```sh
+pre-commit clean
+```
+
 ## [License](LICENSE)
