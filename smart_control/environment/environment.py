@@ -1217,12 +1217,6 @@ class Environment(py_environment.PyEnvironment):
   def observation_spec(self) -> types.NestedArraySpec:
     return self._observation_spec
 
-  def _format_action(
-      self, action: types.NestedArray, action_names: Sequence[str]
-  ) -> types.NestedArray:
-    """Enables extension classes to reformat actions into base format."""
-    return action
-
   def _step(self, action: types.NestedArray) -> ts.TimeStep:
     """Individual time step calculations.
 
@@ -1253,9 +1247,6 @@ class Environment(py_environment.PyEnvironment):
     t0 = time.time()
     reward_value = 0.0
     observation = None
-
-    # Reformat actions if necessary.
-    action = self._format_action(action, self._action_names)
 
     # Convert the action from normalized to native values.
     action_request = self._create_action_request(action)
