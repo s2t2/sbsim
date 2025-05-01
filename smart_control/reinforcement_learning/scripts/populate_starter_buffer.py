@@ -11,7 +11,6 @@ import tensorflow as tf
 from tf_agents.environments import tf_py_environment
 from tf_agents.policies import py_tf_eager_policy
 from tf_agents.train import actor
-from tf_agents.train.utils import spec_utils
 from tf_agents.trajectories import trajectory
 
 from smart_control.reinforcement_learning.observers.composite_observer import CompositeObserver

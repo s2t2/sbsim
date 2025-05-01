@@ -6,6 +6,7 @@ from typing import Any
 import gin
 import numpy as np
 
+# pylint: disable=unused-import
 # the following imports are necessary for proper gin setup, even if they aren't referenced
 # do not remove
 from smart_control.reward.electricity_energy_cost import ElectricityEnergyCost
@@ -25,6 +26,8 @@ from smart_control.utils import histogram_reducer
 from smart_control.utils.controller_writer import ProtoWriterFactory
 from smart_control.utils.environment_utils import to_timestamp
 from smart_control.utils.observation_normalizer import StandardScoreObservationNormalizer
+
+# pylint: enable=unused-import
 
 # Path to the root directory of the project:
 ROOT_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "..")
