@@ -1,3 +1,5 @@
+"""Reinforcement learning schedule policies."""
+
 from dataclasses import dataclass
 import enum
 import logging
@@ -33,7 +35,7 @@ ActionSequence = List[Tuple[DeviceType, SetpointName]]
 
 @dataclass
 class ScheduleEvent:
-  """An event that sets a specific value at a specific time"""
+  """An event that sets a specific value at a specific time."""
 
   start_time: pd.Timedelta
   device: DeviceType
@@ -51,7 +53,7 @@ def get_active_setpoint(
     setpoint_name: SetpointName,
     timestamp: pd.Timedelta,
 ) -> SetpointValue:
-  """Find the active setpoint value at a given time"""
+  """Find the active setpoint value at a given time."""
   logger.debug('Getting active setpoint...')
 
   # Create a dictionary of {time: value} for the specific device and setpoint
@@ -79,7 +81,7 @@ def get_active_setpoint(
 
 
 class SchedulePolicy(tf_policy.TFPolicy):
-  """Policy that selects actions based on time-dependent schedules"""
+  """Policy that selects actions based on time-dependent schedules."""
 
   def __init__(
       self,

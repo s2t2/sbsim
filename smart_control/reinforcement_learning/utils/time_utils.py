@@ -1,8 +1,10 @@
+"""Reinforcement learning time utils."""
+
 import numpy as np
 
 
 def time_from_sin_cos(sin_theta: float, cos_theta: float) -> float:
-  """Converts sin/cos representation to radians (time angle)"""
+  """Converts sin/cos representation to radians (time angle)."""
   if sin_theta >= 0:
     return (
         cos_theta >= 0 and np.arccos(cos_theta) or np.pi - np.arcsin(sin_theta)

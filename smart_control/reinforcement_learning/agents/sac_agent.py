@@ -1,3 +1,5 @@
+"""Reinforcement learning - Soft Actor Critic (SAC) agent."""
+
 from typing import Optional, Sequence
 
 import tensorflow as tf

@@ -1,3 +1,5 @@
+"""Reinforcement learning environment."""
+
 import gin
 
 from smart_control.environment.environment import Environment
