@@ -123,7 +123,7 @@ class SchedulePolicy(tf_policy.TFPolicy):
   def _normalize_actions(
       self, action_map: Dict[Tuple[DeviceType, SetpointName], SetpointValue]
   ) -> Dict:
-    """Normalize action values using the provided normalizers"""
+    """Normalize action values using the provided normalizers."""
     normalized = {}
     for (device, setpoint_name), value in action_map.items():
       # Find the matching normalizer for this setpoint
@@ -134,7 +134,7 @@ class SchedulePolicy(tf_policy.TFPolicy):
     return normalized
 
   def _get_action_map(self, time_step) -> Dict:
-    """Determine the appropriate actions based on time"""
+    """Determine the appropriate actions based on time."""
     observation = time_step.observation
 
     # Denormalize the time signals
@@ -164,7 +164,7 @@ class SchedulePolicy(tf_policy.TFPolicy):
     }  # fmt: skip
 
   def _action(self, time_step, policy_state, seed):
-    """Generate the policy action"""
+    """Generate the policy action."""
     del seed, policy_state
 
     # Get and normalize actions

@@ -18,12 +18,12 @@ def time_from_sin_cos(sin_theta: float, cos_theta: float) -> float:
 
 
 def to_dow(sin_theta: float, cos_theta: float) -> int:
-  """Converts sin/cos to day of week (0-6)"""
+  """Converts sin/cos to day of week (0-6)."""
   theta = time_from_sin_cos(sin_theta, cos_theta)
   return int(np.floor(7 * theta / (2 * np.pi)))
 
 
 def to_hod(sin_theta: float, cos_theta: float) -> int:
-  """Converts sin/cos to hour of day (0-23)"""
+  """Converts sin/cos to hour of day (0-23)."""
   theta = time_from_sin_cos(sin_theta, cos_theta)
   return int(np.floor(24 * theta / (2 * np.pi)))
