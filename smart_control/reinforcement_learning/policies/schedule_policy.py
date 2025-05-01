@@ -186,8 +186,12 @@ class SchedulePolicy(tf_policy.TFPolicy):
     return policy_step.PolicyStep(tf.convert_to_tensor(action_array), (), ())
 
 
-# This is the baseline default policy that we use for benchmarking/initial data collection
 def create_baseline_schedule_policy(tf_env: tf_env.TFPyEnvironment):
+  """Create baseline schedule policy.
+
+  This is the baseline default policy that we use for benchmarking /
+  initial data collection.
+  """
   env = tf_env.pyenv.envs[0]
 
   _, action_spec, time_step_spec = spec_utils.get_tensor_specs(tf_env)

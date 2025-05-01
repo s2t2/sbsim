@@ -32,6 +32,7 @@ class ReplayBufferManager:
     self.observer = None
 
   def create_replay_buffer(self):
+    """Create the replay buffer."""
     # Create the table
     table = reverb.Table(
         self.table_name,
