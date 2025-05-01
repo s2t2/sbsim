@@ -112,7 +112,7 @@ class _TanhNormalProjectionNetworkWrapper(
     super(_TanhNormalProjectionNetworkWrapper, self).__init__(sample_spec)
     self.predefined_outer_rank = predefined_outer_rank
 
-  def call(self, inputs, network_state=(), **kwargs):
+  def call(self, inputs, **kwargs):
     kwargs['outer_rank'] = self.predefined_outer_rank
     if 'step_type' in kwargs:
       del kwargs['step_type']

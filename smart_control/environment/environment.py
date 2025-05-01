@@ -1207,12 +1207,6 @@ class Environment(py_environment.PyEnvironment):
   def observation_spec(self) -> types.NestedArraySpec:
     return self._observation_spec
 
-  def _format_action(
-      self, action: types.NestedArray, action_names: Sequence[str]
-  ) -> types.NestedArray:
-    """Enables extension classes to reformat actions into base format."""
-    return action
-
   def _step(self, action: types.NestedArray) -> ts.TimeStep:
     """Individual time step calculations.
 
@@ -1243,10 +1237,6 @@ class Environment(py_environment.PyEnvironment):
     t0 = time.time()
     reward_value = 0.0
     observation = None
-    last_timestamp = self.current_simulation_timestamp
-
-    # Reformat actions if necessary.
-    action = self._format_action(action, self._action_names)
 
     # Convert the action from normalized to native values.
     action_request = self._create_action_request(action)
@@ -1296,7 +1286,7 @@ class Environment(py_environment.PyEnvironment):
 
     # Exit when the episode has ended and return terminal step information.
     # We still need to get the final observation to add to the transition.
-    self._episode_ended = self._has_episode_ended(last_timestamp)
+    self._episode_ended = self._has_episode_ended()
 
     self._episode_cumulative_reward += reward_value
 
@@ -1348,7 +1338,7 @@ class Environment(py_environment.PyEnvironment):
   def render(self, mode: str = "rgb_array") -> Optional[types.NestedArray]:
     raise NotImplementedError("Rendering not supported yet.")
 
-  def _has_episode_ended(self, last_timestamp: pd.Timestamp) -> bool:
+  def _has_episode_ended(self) -> bool:
     """Flag to indicate the episode has ended."""
 
     return self._step_count >= self._num_timesteps_in_episode

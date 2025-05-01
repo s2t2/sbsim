@@ -57,7 +57,6 @@ def compute_avg_return(
       policy: Policy to evaluate.
       num_episodes: Total number of episodes to run.
       time_zone: Time zone for timestamps.
-      render_interval_steps: Number of steps between renderings.
       trajectory_observers: List of trajectory observers.
       num_steps: Number of steps to take per episode.
 

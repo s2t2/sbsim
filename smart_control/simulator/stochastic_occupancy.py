@@ -126,7 +126,6 @@ class ZoneOccupant:
     return values[index]
 
   def _sample_lunch_duration(self):
-    duration_minutes = np.arange(30, 91, 5)
     values, cumulative_probabilities = self._generate_cpf(30, 90)
     random_value = self._random_state.rand()
     index = np.searchsorted(cumulative_probabilities, random_value)
