@@ -1,3 +1,5 @@
+"""Reinforcement learning replay buffers."""
+
 import logging
 from typing import Optional, Tuple
 
@@ -13,9 +15,9 @@ class ReplayBufferManager:
   """Manager for creating and interacting with Reverb replay buffers.
 
   This class simplifies the setup, interaction, and checkpointing of Reverb
-  replay
-  buffers for reinforcement learning agents. It provides methods to create a new
-  buffer, add data, sample from the buffer, and save/restore buffer state.
+  replay buffers for reinforcement learning agents.
+  It provides methods to create a new buffer, add data, sample from the buffer,
+  and save/restore buffer state.
   """
 
   def __init__(self, data_spec, capacity, checkpoint_dir, sequence_length=2):
@@ -30,6 +32,7 @@ class ReplayBufferManager:
     self.observer = None
 
   def create_replay_buffer(self):
+    """Create the replay buffer."""
     # Create the table
     table = reverb.Table(
         self.table_name,

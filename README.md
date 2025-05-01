@@ -131,6 +131,27 @@ isort /path/to/file.py
 isort -v .
 ```
 
+### Style Checking
+
+We are using `pylint` to check for style formatting issues that `pyink` doesn't fix, to more closely follow [Google Python style guidelines](https://google.github.io/styleguide/pyguide.html) and pass pre-submit linting checks when merging code into Google's codebase.
+
+If you would like to run the style checker manually:
+
+```sh
+# check all files:
+pylint --rcfile=.pylintrc smart_control
+
+# check a specific file:
+pylint --rcfile=.pylintrc smart_control/path/to/file.py
+```
+
+To check for a specific issue (e.g. "missing-module-docstring"), using the corresponding [message code](https://pylint.pycqa.org/en/stable/user_guide/messages/messages_overview.html) (e.g. "C0114"):
+
+```sh
+pylint --disable=all --enable=C0114 --ignore=proto smart_control
+```
+
+
 
 ### Pre-commit Hooks
 

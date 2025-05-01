@@ -1,3 +1,5 @@
+"""Reinforcement learning composite observer."""
+
 from typing import Sequence
 
 from tf_agents.trajectories import trajectory as trajectory_lib

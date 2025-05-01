@@ -54,6 +54,7 @@ class OccupancyStateEnum(enum.Enum):
 
 
 class ZoneOccupant:
+  """Zone Occupant."""
 
   def __init__(
       self,
@@ -208,6 +209,11 @@ class ZoneOccupant:
 
 @gin.configurable
 class LIGHTSWITCHOccupancy(BaseOccupancy):
+  """Light Switch Occupancy.
+
+  Calculates the average occupancy for a zone over a specified time interval,
+  enabling integration with larger building simulation frameworks.
+  """
 
   def __init__(
       self,

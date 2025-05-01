@@ -103,6 +103,8 @@ class RenderingObserver(Observer):
     ax1.legend(prop={'size': 10})
 
   def _plot_reward_timeline(self, ax1, reward_timeseries, time_zone):
+    """Plot reward timeline."""
+
     local_times = [ts.tz_convert(time_zone) for ts in reward_timeseries.index]
 
     ax1.plot(
@@ -126,10 +128,13 @@ class RenderingObserver(Observer):
   def _plot_energy_timeline(
       self, ax1, energy_timeseries, time_zone, cumulative=False
   ):
+    """Plot energy timeline."""
+
     def _to_kwh(
         energy_rate: float,
         step_interval: pd.Timedelta = pd.Timedelta(5, unit='minute'),
     ) -> float:
+      """Convert to kwh."""
       kw_power = energy_rate / 1000.0
       hwh_power = kw_power * step_interval / pd.Timedelta(1, unit='hour')
       return hwh_power.cumsum()
@@ -218,6 +223,8 @@ class RenderingObserver(Observer):
       time_zone: str,
       cumulative: bool = False,
   ):
+    """Plot energy cost timeline."""
+
     local_times = [ts.tz_convert(time_zone) for ts in reward_timeseries.index]
 
     if cumulative:
@@ -276,6 +283,8 @@ class RenderingObserver(Observer):
   def _plot_occupancy_timeline(
       self, ax1, reward_timeseries: pd.DataFrame, time_zone: str
   ):
+    """Plot occupancy timeline."""
+
     local_times = [ts.tz_convert(time_zone) for ts in reward_timeseries.index]
 
     ax1.plot(
@@ -300,6 +309,8 @@ class RenderingObserver(Observer):
   def _plot_temperature_timeline(
       self, ax1, zone_timeseries, outside_air_temperature_timeseries, time_zone
   ):
+    """Plot temperature timeline."""
+
     zone_temps = pd.pivot_table(
         zone_timeseries,
         index=zone_timeseries['start_time'],

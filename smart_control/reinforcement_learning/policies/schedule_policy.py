@@ -1,3 +1,5 @@
+"""Reinforcement learning schedule policies."""
+
 from dataclasses import dataclass
 import enum
 import logging
@@ -33,7 +35,7 @@ ActionSequence = List[Tuple[DeviceType, SetpointName]]
 
 @dataclass
 class ScheduleEvent:
-  """An event that sets a specific value at a specific time"""
+  """An event that sets a specific value at a specific time."""
 
   start_time: pd.Timedelta
   device: DeviceType
@@ -51,7 +53,7 @@ def get_active_setpoint(
     setpoint_name: SetpointName,
     timestamp: pd.Timedelta,
 ) -> SetpointValue:
-  """Find the active setpoint value at a given time"""
+  """Find the active setpoint value at a given time."""
   logger.debug('Getting active setpoint...')
 
   # Create a dictionary of {time: value} for the specific device and setpoint
@@ -79,7 +81,7 @@ def get_active_setpoint(
 
 
 class SchedulePolicy(tf_policy.TFPolicy):
-  """Policy that selects actions based on time-dependent schedules"""
+  """Policy that selects actions based on time-dependent schedules."""
 
   def __init__(
       self,
@@ -121,7 +123,7 @@ class SchedulePolicy(tf_policy.TFPolicy):
   def _normalize_actions(
       self, action_map: Dict[Tuple[DeviceType, SetpointName], SetpointValue]
   ) -> Dict:
-    """Normalize action values using the provided normalizers"""
+    """Normalize action values using the provided normalizers."""
     normalized = {}
     for (device, setpoint_name), value in action_map.items():
       # Find the matching normalizer for this setpoint
@@ -132,7 +134,7 @@ class SchedulePolicy(tf_policy.TFPolicy):
     return normalized
 
   def _get_action_map(self, time_step) -> Dict:
-    """Determine the appropriate actions based on time"""
+    """Determine the appropriate actions based on time."""
     observation = time_step.observation
 
     # Denormalize the time signals
@@ -162,7 +164,7 @@ class SchedulePolicy(tf_policy.TFPolicy):
     }  # fmt: skip
 
   def _action(self, time_step, policy_state, seed):
-    """Generate the policy action"""
+    """Generate the policy action."""
     del seed, policy_state
 
     # Get and normalize actions
@@ -184,8 +186,12 @@ class SchedulePolicy(tf_policy.TFPolicy):
     return policy_step.PolicyStep(tf.convert_to_tensor(action_array), (), ())
 
 
-# This is the baseline default policy that we use for benchmarking/initial data collection
 def create_baseline_schedule_policy(tf_env: tf_env.TFPyEnvironment):
+  """Create baseline schedule policy.
+
+  This is the baseline default policy that we use for benchmarking /
+  initial data collection.
+  """
   env = tf_env.pyenv.envs[0]
 
   _, action_spec, time_step_spec = spec_utils.get_tensor_specs(tf_env)
