@@ -47,7 +47,6 @@ def compute_avg_return(
     policy: py_policy.PyPolicy,
     num_episodes: int = 1,
     time_zone: str = DEFAULT_TIME_ZONE,
-    render_interval_steps: int = 24,
     trajectory_observers: Optional[List[Callable]] = None,
     num_steps: int = 6,
 ) -> Tuple[float, List[List[Any]]]:
@@ -58,7 +57,6 @@ def compute_avg_return(
       policy: Policy to evaluate.
       num_episodes: Total number of episodes to run.
       time_zone: Time zone for timestamps.
-      render_interval_steps: Number of steps between renderings.
       trajectory_observers: List of trajectory observers.
       num_steps: Number of steps to take per episode.
 

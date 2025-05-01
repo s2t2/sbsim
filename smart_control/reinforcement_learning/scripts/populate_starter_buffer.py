@@ -78,9 +78,8 @@ def populate_replay_buffer(
 
   # Create policy for collection
   train_step = tf.Variable(0, trainable=False, dtype=tf.int64)
-  observation_spec, action_spec, time_step_spec = spec_utils.get_tensor_specs(
-      collect_tf_env
-  )
+
+  _, action_spec, time_step_spec = spec_utils.get_tensor_specs(collect_tf_env)
 
   collection_policy = create_baseline_schedule_policy(collect_tf_env)
 

@@ -123,7 +123,6 @@ The `environment` module provides the reinforcement learning environment where t
 
             *   `_get_action_spec_and_normalizers(...)`: Defines the action space and normalizers based on the building devices and action configurations.
             *   `_get_observation_spec(...)`: Defines the observation space based on the building devices and observation configurations.
-            *   `_format_action(action, action_names)`: Reformat actions if necessary (extension point for subclasses).
             *   `render(mode)`: (Not implemented) Intended for rendering the environment state.
         *   **Properties**:
 

@@ -15,9 +15,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import sys
-
-from absl import flags
 from absl.testing import absltest
 from absl.testing import parameterized
 import numpy as np
@@ -95,7 +92,6 @@ class LIGHTSWITCHOccupancyTest(parameterized.TestCase):
 
     while current_time < pd.Timestamp('2021-09-01 23:00', tz=tz):
       state = occupant.peek(current_time=current_time)
-      local_time = occupant._to_local_time(current_time) if tz else current_time
 
       # Debugging information
       # print(f"Current time: {current_time}, Local time: {local_time}")
