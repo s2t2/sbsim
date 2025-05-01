@@ -145,10 +145,10 @@ pylint --rcfile=.pylintrc smart_control
 pylint --rcfile=.pylintrc smart_control/path/to/file.py
 ```
 
-To check for a specific issue (e.g. missing-module-docstring), using the corresponding [message code](https://pylint.pycqa.org/en/stable/user_guide/messages/messages_overview.html) (e.g. "C0114"):
+To check for a specific issue (e.g. "missing-module-docstring"), using the corresponding [message code](https://pylint.pycqa.org/en/stable/user_guide/messages/messages_overview.html) (e.g. "C0114"):
 
 ```sh
-pylint --disable=all --enable=C0114 --msg-template='{path}:{line}:{column}: {msg_id}: {msg}' --ignore=proto smart_control
+pylint --disable=all --enable=C0114 --ignore=proto smart_control
 ```
 
 
