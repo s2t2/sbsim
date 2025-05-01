@@ -11,6 +11,7 @@ import tensorflow as tf
 from tf_agents.environments import tf_py_environment
 from tf_agents.policies import py_tf_eager_policy
 from tf_agents.train import actor
+from tf_agents.train.utils import spec_utils
 from tf_agents.trajectories import trajectory
 
 from smart_control.reinforcement_learning.observers.composite_observer import CompositeObserver
@@ -77,6 +78,8 @@ def populate_replay_buffer(
 
   # Create policy for collection
   train_step = tf.Variable(0, trainable=False, dtype=tf.int64)
+
+  _, action_spec, time_step_spec = spec_utils.get_tensor_specs(collect_tf_env)
 
   collection_policy = create_baseline_schedule_policy(collect_tf_env)
 
