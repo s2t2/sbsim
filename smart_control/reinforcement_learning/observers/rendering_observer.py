@@ -54,7 +54,6 @@ class RenderingObserver(Observer):
     """Initialize the observer.
 
     Args:
-        metrics_path: Path to metrics directory.
         render_interval_steps: Number of steps between renders.
         environment: The environment to render. This must support the
           current_simulation_timestamp property if plot_fn is specified.

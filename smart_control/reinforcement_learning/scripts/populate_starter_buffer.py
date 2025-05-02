@@ -40,13 +40,16 @@ def populate_replay_buffer(
   """Populates a replay buffer with initial exploration data.
 
   Args:
-      buffer_name: Name with which to save replay buffer. Buffer will be at
-        smart_control/reinforcement_learning/data/starter_buffers/{buffer_name}
-      buffer_capacity: Maximum size of the replay buffer
-      steps_per_run: Number of steps per actor run
-      num_runs: Number of actor runs to perform
-      sequence_length: Length of sequences to store in the replay buffer
-      env_gin_config_file_path: Path to the environment configuration file
+    buffer_name: Name with which to save replay buffer. Buffer will be at
+      smart_control/reinforcement_learning/data/starter_buffers/{buffer_name}
+    buffer_capacity: Maximum size of the replay buffer
+    steps_per_run: Number of steps per actor run
+    num_runs: Number of actor runs to perform
+    sequence_length: Length of sequences to store in the replay buffer
+    env_gin_config_file_path: Path to the environment configuration file
+
+  Returns:
+    The replay buffer.
   """
 
   buffer_path = os.path.join(
