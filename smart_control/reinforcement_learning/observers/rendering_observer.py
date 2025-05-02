@@ -546,7 +546,7 @@ class RenderingObserver(Observer):
       self._start_time = pd.Timestamp.now()
 
     if self._counter % self._render_interval_steps == 0 and self._environment:
-      logger.info('Rendering environment at step %s ...', self._counter)
+      logger.info('Rendering environment at step %d ...', self._counter)
       execution_time = pd.Timestamp.now() - self._start_time
       mean_execution_time = execution_time.total_seconds() / self._counter
 
