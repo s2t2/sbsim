@@ -186,7 +186,9 @@ class SchedulePolicy(tf_policy.TFPolicy):
     return policy_step.PolicyStep(tf.convert_to_tensor(action_array), (), ())
 
 
-def create_baseline_schedule_policy(tf_env: tf_env.TFPyEnvironment):
+def create_baseline_schedule_policy(
+    tf_env: tf_env.TFPyEnvironment,
+) -> SchedulePolicy:
   """Create baseline schedule policy.
 
   This is the baseline default policy that we use for benchmarking /
@@ -194,6 +196,9 @@ def create_baseline_schedule_policy(tf_env: tf_env.TFPyEnvironment):
 
   Args:
     tf_env: The TFPyEnvironment to interact with.
+
+  Returns:
+    The schedule policy.
   """
   env = tf_env.pyenv.envs[0]
 

@@ -55,17 +55,20 @@ def train_agent(
   Trains a reinforcement learning agent using a pre-populated replay buffer.
 
   Args:
-      starter_buffer_path: Path to the pre-populated replay buffer
-      experiment_name: Name of the experiment - used to name the experiment results directory
-      agent_type: Type of agent to train ('sac' or 'td3')
-      train_iterations: Number of training iterations
-      collect_steps_per_iteration: Number of collection steps per training iteration
-      batch_size: Batch size for training
-      log_interval: Interval for logging training metrics
-      eval_interval: Interval for evaluating the agent
-      num_eval_episodes: Number of episodes for evaluation
-      checkpoint_interval: Interval for checkpointing the replay buffer
-      learner_iterations: Number of iterations to run the agent learner per training loop
+    starter_buffer_path: Path to the pre-populated replay buffer
+    experiment_name: Name of the experiment - used to name the experiment results directory
+    agent_type: Type of agent to train ('sac' or 'td3')
+    train_iterations: Number of training iterations
+    collect_steps_per_iteration: Number of collection steps per training iteration
+    batch_size: Batch size for training
+    log_interval: Interval for logging training metrics
+    eval_interval: Interval for evaluating the agent
+    num_eval_episodes: Number of episodes for evaluation
+    checkpoint_interval: Interval for checkpointing the replay buffer
+    learner_iterations: Number of iterations to run the agent learner per training loop
+
+  Returns:
+    The trained agent.
   """
   # Set up scenario config path
   scenario_config_path = os.path.join(CONFIG_PATH, 'sim_config_1_day.gin')
