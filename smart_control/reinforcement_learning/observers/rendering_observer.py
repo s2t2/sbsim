@@ -498,7 +498,7 @@ class RenderingObserver(Observer):
     fig_path = os.path.join(self._save_path, f'timeseries_step_{step_count}.png')  # fmt: skip
     fig.savefig(fig_path, bbox_inches='tight', dpi=100)
     plt.close(fig)
-    logger.info(f'Saved timeseries plot to {fig_path}')
+    logger.info('Saved timeseries plot to %s', fig_path)
 
   def _render_env(self, env: environment.Environment, step_count: int):
     """Renders the environment and saves to file."""
@@ -529,7 +529,7 @@ class RenderingObserver(Observer):
     timestamp = env.current_simulation_timestamp.strftime('%Y%m%d_%H%M%S')
     img_path = os.path.join(self._save_path, f'env_render_{step_count}_{timestamp}.png')  # fmt: skip
     image.save(img_path)
-    logger.info(f'Saved environment render to {img_path}')
+    logger.info('Saved environment render to %s', img_path)
 
   def __call__(self, trajectory: trajectory_lib.Trajectory) -> None:
     """Process a trajectory and render/plot if interval is reached.
@@ -546,14 +546,15 @@ class RenderingObserver(Observer):
       self._start_time = pd.Timestamp.now()
 
     if self._counter % self._render_interval_steps == 0 and self._environment:
-      logger.info(f'Rendering environment at step {self._counter}...')
+      logger.info('Rendering environment at step %s ...', self._counter)
       execution_time = pd.Timestamp.now() - self._start_time
       mean_execution_time = execution_time.total_seconds() / self._counter
 
       logger.info(
-          f'Step {self._counter}: '
-          f'Cumulative reward = {float(self._cumulative_reward):.2f}, '
-          f'Mean execution time = {mean_execution_time:.2f}s'
+          'Step %d: Cumulative reward = %.2f, Mean execution time = %.2fs',
+          self._counter,
+          float(self._cumulative_reward),
+          mean_execution_time,
       )
 
       if self._environment.pyenv.envs[0]._metrics_path is not None:

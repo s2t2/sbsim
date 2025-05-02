@@ -184,8 +184,11 @@ def get_reward_timeseries(
     ).tz_convert(time_zone)
     delta_time_sec = (step_end_timestamp - step_start_timestamp).total_seconds()
     logger.debug(
-        f'Step {i} start: {step_start_timestamp}, end: {step_end_timestamp},'
-        f' delta: {delta_time_sec}'
+        'Step %d start: %s, end: %s, delta: %f',
+        i,
+        step_start_timestamp,
+        step_end_timestamp,
+        delta_time_sec,
     )
     occupancy = np.sum([
         reward_infos[i].zone_reward_infos[zone_id].average_occupancy
