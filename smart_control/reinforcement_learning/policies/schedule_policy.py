@@ -191,6 +191,9 @@ def create_baseline_schedule_policy(tf_env: tf_env.TFPyEnvironment):
 
   This is the baseline default policy that we use for benchmarking /
   initial data collection.
+
+  Args:
+    tf_env: The TFPyEnvironment to interact with.
   """
   env = tf_env.pyenv.envs[0]
 

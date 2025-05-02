@@ -56,6 +56,7 @@ def train_agent(
 
   Args:
       starter_buffer_path: Path to the pre-populated replay buffer
+      experiment_name: Name of the experiment - used to name the experiment results directory
       agent_type: Type of agent to train ('sac' or 'td3')
       train_iterations: Number of training iterations
       collect_steps_per_iteration: Number of collection steps per training iteration
@@ -358,7 +359,7 @@ if __name__ == '__main__':
       '--experiment-name',
       type=str,
       required=True,
-      help='Name of the experiment. This be used to save TensorBoard summaries',
+      help='Name of the experiment. This is used to save TensorBoard summaries',
   )
   parser.add_argument(
       '--checkpoint-interval',
