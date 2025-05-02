@@ -74,12 +74,12 @@ def train_agent(
   summary_dir = os.path.join(
       EXPERIMENT_RESULTS_PATH, f'{experiment_name}_{current_time}'
   )
-  logger.info(f'Experiment results will be saved to {summary_dir}')
+  logger.info('Experiment results will be saved to %s', summary_dir)
 
   try:
     os.makedirs(summary_dir, exist_ok=False)
   except FileExistsError:
-    logger.exception(f'Directory {summary_dir} already exists. Exiting.')
+    logger.exception('Directory %s already exists. Exiting.', summary_dir)
     raise FileExistsError(f'Directory {summary_dir} already exists. Exiting.')
 
   # Create train and eval environments
@@ -102,7 +102,7 @@ def train_agent(
   _, action_spec, time_step_spec = spec_utils.get_tensor_specs(train_tf_env)
 
   # Create agent based on type
-  logger.info(f'Creating {agent_type} agent')
+  logger.info('Creating %s agent', agent_type)
   if agent_type.lower() == 'sac':
     logger.info('Creating SAC agent')
     agent = create_sac_agent(
@@ -110,7 +110,7 @@ def train_agent(
     )
   else:
     logger.exception(
-        f"Unsupported agent type: {agent_type}. Choose from 'sac' or 'td3'."
+        "Unsupported agent type: %s. Choose from 'sac' or 'td3'.", agent_type
     )
     raise ValueError(
         f"Unsupported agent type: {agent_type}. Choose from 'sac' or 'td3'."
@@ -142,15 +142,15 @@ def train_agent(
       sequence_length=2,
   )
   logger.info(
-      'Replay buffer size before loading starter buffer:'
-      f' {replay_manager.num_frames()} frames'
+      'Replay buffer size before loading starter buffer: %d frames',
+      replay_manager.num_frames(),
   )
+  logger.info('Loading starter replay buffer from %s', starter_buffer_path)
 
-  logger.info(f'Loading starter replay buffer from {starter_buffer_path}')
   replay_buffer, replay_buffer_observer = replay_manager.load_replay_buffer()
   logger.info(
-      'Replay buffer size after loading starter buffer:'
-      f' {replay_manager.num_frames()} frames'
+      'Replay buffer size after loading starter buffer: %d frames',
+      replay_manager.num_frames(),
   )
 
   # Create dataset for sampling from the buffer
@@ -223,7 +223,7 @@ def train_agent(
   )
 
   # Main training loop
-  logger.info(f'Starting training for {train_iterations} iterations')
+  logger.info('Starting training for %d iterations', train_iterations)
 
   # Reset metrics
   for m in train_metrics:
@@ -234,12 +234,12 @@ def train_agent(
     # Get current training step value before operations
     current_step = train_step.numpy()
     logger.exception(
-        f'Starting training loop iteration {i} (step {current_step})'
+        'Starting training loop iteration %d (step %d)', i, current_step
     )
 
     # Evaluate periodically
     if i % eval_interval == 0:
-      logger.info(f'Evaluating at iteration {i} (step {current_step})')
+      logger.info('Evaluating at iteration %d (step %d)', i, current_step)
       eval_actor.run()
 
       # Write eval summaries with the current global step
@@ -250,8 +250,9 @@ def train_agent(
 
     # Collect experience
     logger.info(
-        f'Starting collection for loop iteration {i} (step {current_step})'
+        'Starting collection for loop iteration %d (step %d)', i, current_step
     )
+
     collect_actor.run()
 
     # Write collect summaries with the current global step
@@ -262,7 +263,7 @@ def train_agent(
 
     # Train the agent using the specified learner iterations
     # This will internally increment the train_step
-    logger.info(f'Training agent for loop iteration {i}')
+    logger.info('Training agent for loop iteration %d', i)
     agent_learner.run(iterations=learner_iterations)
 
     # Checkpoint replay buffer periodically based on the new argument
@@ -284,10 +285,10 @@ def train_agent(
     current_step = train_step.numpy()
     for m in eval_metrics:
       tf.summary.scalar(m.name, m.result(), step=current_step)
-      logger.info(f'Final Eval {m.name}: {m.result()}')
+      logger.info('Final Eval %s: %s', m.name, m.result())
     eval_actor.summary_writer.flush()
 
-  logger.info(f'Agent training completed. Saved models in {summary_dir}')
+  logger.info('Agent training completed. Saved models in %s', summary_dir)
   return agent
 
 
@@ -296,8 +297,8 @@ if __name__ == '__main__':
 
   parser = argparse.ArgumentParser(
       description=(
-          'Train a reinforcement learning agent using a pre-populated replay'
-          ' buffer'
+          'Train a reinforcement learning agent '
+          'using a pre-populated replay buffer'
       )
   )
   parser.add_argument(

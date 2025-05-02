@@ -98,16 +98,14 @@ def compute_avg_return(
       return_by_simtime.append([sim_time, episode_return])
 
       logger.info(
-          "[Step %d] [Sim Time: %s] [Reward: %.2f] [Return: %.2f] [Mean Step"
-          " Time: %.2fs] [Episode Time: %.2fs]"
-          % (
-              step_id,
-              sim_time.strftime("%Y-%m-%d %H:%M"),
-              time_step.reward,
-              episode_return,
-              np.mean(execution_times),
-              episode_seconds,
-          )
+          "[Step %d] [Sim Time: %s] [Reward: %.2f] [Return: %.2f] "
+          "[Mean Step Time: %.2fs] [Episode Time: %.2fs]",
+          step_id,
+          sim_time.strftime("%Y-%m-%d %H:%M"),
+          time_step.reward,
+          episode_return,
+          np.mean(execution_times),
+          episode_seconds,
       )
 
       t0 = t1
