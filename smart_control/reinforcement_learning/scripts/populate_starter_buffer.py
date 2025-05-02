@@ -146,7 +146,10 @@ def populate_replay_buffer(
   for current_run in range(num_runs):
     # Run collection
     logger.info(
-        f'Run {current_run+1}/{num_runs} (total steps so far: {total_steps})'
+        'Run %d/%d (total steps so far: %d)',
+        current_run + 1,
+        num_runs,
+        total_steps,
     )
     collect_actor.run()
 
