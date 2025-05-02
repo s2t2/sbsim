@@ -45,8 +45,8 @@ class RenderingObserver(Observer):
       self,
       render_interval_steps: int = 10,
       environment=None,
-      render_fn: Optional[Callable] = None,
-      plot_fn: Optional[Callable] = None,
+      render_fn: Optional[Callable] = None,  # pylint: disable=g-bare-generic # TODO: use a more specific type hint if possible
+      plot_fn: Optional[Callable] = None,  # pylint: disable=g-bare-generic # TODO: use a more specific type hint if possible
       clear_output_before_render: bool = True,
       time_zone: str = DEFAULT_TIME_ZONE,
       save_path: str = RENDERS_PATH,

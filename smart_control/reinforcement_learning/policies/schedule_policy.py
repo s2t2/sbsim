@@ -94,7 +94,7 @@ class SchedulePolicy(tf_policy.TFPolicy):
       dow_cos_index: int,
       hod_sin_index: int,
       hod_cos_index: int,
-      action_normalizers: dict,
+      action_normalizers: dict,  # pylint: disable=g-bare-generic # TODO: use a more specific type hint if possible
       local_start_time: pd.Timestamp,
       name: Optional[str] = None,
   ):
@@ -122,7 +122,7 @@ class SchedulePolicy(tf_policy.TFPolicy):
 
   def _normalize_actions(
       self, action_map: Dict[Tuple[DeviceType, SetpointName], SetpointValue]
-  ) -> Dict:
+  ) -> Dict:  # pylint: disable=g-bare-generic # TODO: use a more specific type hint if possible
     """Normalize action values using the provided normalizers."""
     normalized = {}
     for (device, setpoint_name), value in action_map.items():
@@ -133,7 +133,7 @@ class SchedulePolicy(tf_policy.TFPolicy):
           break
     return normalized
 
-  def _get_action_map(self, time_step) -> Dict:
+  def _get_action_map(self, time_step) -> Dict:  # pylint: disable=g-bare-generic # TODO: use a more specific type hint if possible
     """Determine the appropriate actions based on time."""
     observation = time_step.observation
 
