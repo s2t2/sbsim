@@ -582,7 +582,7 @@ class ControllerReadWriteTest(absltest.TestCase):
         },
         action_fields={
             'a0': (
-                smart_control_building_pb2.DeviceInfo.ValueType.VALUE_CATEGORICAL
+                smart_control_building_pb2.DeviceInfo.ValueType.VALUE_CATEGORICAL  # pylint: disable=line-too-long
             ),
             'a1': (
                 smart_control_building_pb2.DeviceInfo.ValueType.VALUE_CONTINUOUS
@@ -602,7 +602,7 @@ class ControllerReadWriteTest(absltest.TestCase):
         },
         action_fields={
             'a0': (
-                smart_control_building_pb2.DeviceInfo.ValueType.VALUE_TYPE_UNDEFINED
+                smart_control_building_pb2.DeviceInfo.ValueType.VALUE_TYPE_UNDEFINED  # pylint: disable=line-too-long
             ),
             'a1': (
                 smart_control_building_pb2.DeviceInfo.ValueType.VALUE_CONTINUOUS
