@@ -163,6 +163,9 @@ class ReplayBufferManager:
 
     Returns:
         A TensorFlow dataset that samples from the replay buffer.
+
+    Raises:
+        RuntimeError: If the replay buffer has not been initialized yet.
     """
     if not self._is_initialized:
       raise RuntimeError(
