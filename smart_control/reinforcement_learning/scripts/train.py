@@ -1,5 +1,5 @@
-"""
-Script to train a reinforcement learning agent using a pre-populated replay buffer.
+"""Script to train a reinforcement learning agent using a pre-populated replay buffer.
+
 This script sets up the training process with separate collection and evaluation components.
 """
 
@@ -51,8 +51,7 @@ def train_agent(
     checkpoint_interval=1000,  # New parameter for checkpointing frequency
     learner_iterations=200,  # New parameter for learner iterations per loop
 ):
-  """
-  Trains a reinforcement learning agent using a pre-populated replay buffer.
+  """Trains a reinforcement learning agent using a pre-populated replay buffer.
 
   Args:
     starter_buffer_path: Path to the pre-populated replay buffer
