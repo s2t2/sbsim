@@ -145,13 +145,13 @@ pylint --rcfile=.pylintrc smart_control
 pylint --rcfile=.pylintrc smart_control/path/to/file.py
 ```
 
-To check for a specific issue (e.g. "missing-module-docstring"), using the corresponding [message code](https://pylint.readthedocs.io/en/stable/user_guide/messages/message_control.html#block-disables) (e.g. "C0114"):
+To check for a specific issue (e.g. "missing-module-docstring"), using the corresponding [message code](https://pylint.readthedocs.io/en/stable/user_guide/messages/messages_overview.html) (e.g. "C0114"):
 
 ```sh
 pylint smart_control --ignore=proto --disable=all --enable=W1201
 ```
 
-If you would like to prevent certain lines of code from being checked (for example to leave a long line as-is), it is possible to [ignore formatting](https://pylint.pycqa.org/en/latest/user_guide/messages/message_control.html#block-disables) by adding `pylint` pragma comments like `# pylint: disable=line-too-long`. NOTE: `pylint` and `pyink` (see section above) may each require their own set of separate pragma comments.
+If you would like to prevent certain lines of code from being checked (for example to leave a long line as-is), it is possible to [ignore formatting](hhttps://pylint.readthedocs.io/en/stable/user_guide/messages/message_control.html#block-disables) by adding `pylint` pragma comments like `# pylint: disable=line-too-long`. NOTE: `pylint` and `pyink` (see section above) may each require their own set of separate pragma comments.
 
 
 ### Pre-commit Hooks
