@@ -33,7 +33,7 @@ class PrintStatusObserver(Observer):
     self._time_zone = time_zone
 
     self._start_time = None
-    self._num_timesteps_in_episode = self._environment.pyenv.envs[0]._num_timesteps_in_episode  # fmt: skip
+    self._num_timesteps_in_episode = self._environment.pyenv.envs[0]._num_timesteps_in_episode  # pylint: disable=line-too-long
     self._environment.pyenv.envs[0]._end_timestamp
 
   def __call__(self, trajectory: trajectory_lib.Trajectory) -> None:
@@ -48,8 +48,8 @@ class PrintStatusObserver(Observer):
       execution_time = pd.Timestamp.now() - self._start_time
       mean_execution_time = execution_time.total_seconds() / self._counter
 
-      sim_time = self._environment.pyenv.envs[0].current_simulation_timestamp.tz_convert(self._time_zone)  # fmt: skip
-      percent_complete = int(100.0 * (self._counter / self._num_timesteps_in_episode))  # fmt: skip
+      sim_time = self._environment.pyenv.envs[0].current_simulation_timestamp.tz_convert(self._time_zone)  # pylint: disable=line-too-long
+      percent_complete = int(100.0 * (self._counter / self._num_timesteps_in_episode))  # pylint: disable=line-too-long
 
       rb_string = ""
       if self._replay_buffer is not None:
@@ -57,20 +57,21 @@ class PrintStatusObserver(Observer):
         rb_string = "Replay Buffer Size: %d" % rb_size
 
       logger.info(
-          "[Step %d of %d %d%%] [Sim Time: %s] [Reward: %.2f] [Cum Reward: %.2f]"  # fmt: skip
-          % (
-              self._environment.pyenv.envs[0]._step_count,
-              self._num_timesteps_in_episode,
-              percent_complete,
-              sim_time.strftime("%Y-%m-%d %H:%M"),
-              reward,
-              self._cumulative_reward,
-          )
+          "[Step %d of %d %d%%] [Sim Time: %s] [Reward: %.2f] "
+          "[Cum Reward: %.2f]",
+          self._environment.pyenv.envs[0]._step_count,
+          self._num_timesteps_in_episode,
+          percent_complete,
+          sim_time.strftime("%Y-%m-%d %H:%M"),
+          reward,
+          self._cumulative_reward,
       )
 
       logger.info(
-          "[Exec Time: %s] [Mean Exec Time: %.2fs] [%s]"
-          % (execution_time, mean_execution_time, rb_string)
+          "[Exec Time: %s] [Mean Exec Time: %.2fs] [%s]",
+          execution_time,
+          mean_execution_time,
+          rb_string,
       )
 
   def reset(self) -> None:
