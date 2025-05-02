@@ -108,7 +108,7 @@ pyink . --check
 pyink . --diff
 ```
 
-If you would like to prevent certain lines of code from being formatted (for example to leave a long line as-is), it is possible to [ignore formatting](https://black.readthedocs.io/en/stable/usage_and_configuration/the_basics.html#ignoring-sections) by addding a trailing comment of `# fmt: skip` to the right of the line / at the end of the expression, or by wrapping multiple lines of code between `# fmt: off` and `# fmt: on` comments.
+If you would like to prevent certain lines of code from being formatted (for example to leave a long line as-is), it is possible to [ignore formatting](https://black.readthedocs.io/en/stable/usage_and_configuration/the_basics.html#ignoring-sections) by adding a trailing pragma comment of `# fmt: skip` to the right of the line / at the end of the expression, or by wrapping multiple lines of code between `# fmt: off` and `# fmt: on` pragma comments. NOTE: `pyink` and `pylint` (see section below) may each require their own set of separate pragma comments.
 
 #### Import Sorting
 
@@ -151,6 +151,7 @@ To check for a specific issue (e.g. "missing-module-docstring"), using the corre
 pylint smart_control --ignore=proto --disable=all --enable=W1201
 ```
 
+If you would like to prevent certain lines of code from being checked (for example to leave a long line as-is), it is possible to [ignore formatting](https://pylint.pycqa.org/en/latest/user_guide/messages/message_control.html#block-disables) by adding `pylint` pragma comments like `# pylint: disable=line-too-long`. NOTE: `pylint` and `pyink` (see section above) may each require their own set of separate pragma comments.
 
 
 ### Pre-commit Hooks
