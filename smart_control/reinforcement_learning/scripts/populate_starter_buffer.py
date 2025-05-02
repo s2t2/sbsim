@@ -84,9 +84,11 @@ def populate_replay_buffer(
   collection_policy = create_baseline_schedule_policy(collect_tf_env)
 
   # Initialize replay buffer
-  logger.info(f'Creating replay buffer at: {buffer_path}')
+  logger.info('Creating replay buffer at: %s', buffer_path)
   logger.info(
-      f'Buffer capacity: {buffer_capacity}, Sequence length: {sequence_length}'
+      'Buffer capacity: %d, Sequence length: %d',
+      buffer_capacity,
+      sequence_length,
   )
 
   # Get the policy's info spec
@@ -135,7 +137,9 @@ def populate_replay_buffer(
 
   # Run collection
   logger.info(
-      f'Starting collection for {num_runs} runs of {steps_per_run} steps each'
+      'Starting collection for %d runs of %d steps each',
+      num_runs,
+      steps_per_run,
   )
   total_steps = 0
 
@@ -151,17 +155,23 @@ def populate_replay_buffer(
 
     # Checkpoint buffer periodically
     logger.info(
-        f'Completed run {current_run+1}/{num_runs}. Checkpointing buffer...'
+        'Run %d/%d (total steps so far: %d)',
+        current_run + 1,
+        num_runs,
+        total_steps,
     )
+
     replay_buffer.py_client.checkpoint()
 
   # Final checkpoint and stats
   logger.info(
-      f'Completed all runs, total steps: {total_steps}. Checkpointing buffer'
-      ' one last time...'
+      'Completed all runs, total steps: %d. '
+      'Checkpointing buffer one last time...',
+      total_steps,
   )
+
   replay_buffer.py_client.checkpoint()
-  logger.info(f'Final replay buffer size: {replay_buffer.num_frames()} frames')
+  logger.info('Final replay buffer size: %d frames', replay_buffer.num_frames())
 
   return replay_buffer
 
@@ -174,6 +184,7 @@ if __name__ == '__main__':
   config_filepath = os.path.join(CONFIG_PATH, 'sim_config_1_day.gin')
 
   # fmt: off
+  # pylint: disable=line-too-long
   parser = argparse.ArgumentParser(description='Populate a replay buffer with initial exploration data')
   parser.add_argument('--buffer-name', type=str, required=True, help='Name to identify the saved replay buffer')
   parser.add_argument('--capacity', type=int, default=50000, help='Replay buffer capacity')
@@ -181,6 +192,7 @@ if __name__ == '__main__':
   parser.add_argument('--num-runs', type=int, default=5, help='Number of actor runs to perform')
   parser.add_argument('--sequence-length', type=int, default=2, help='Sequence length for the replay buffer')
   parser.add_argument('--env-gin-config-file-path', type=str, default=config_filepath, help='Environment config file')
+  # pylint: enable=line-too-long
   # fmt: on
   args = parser.parse_args()
 
