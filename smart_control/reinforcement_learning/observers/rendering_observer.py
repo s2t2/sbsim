@@ -455,10 +455,12 @@ class RenderingObserver(Observer):
 
     action_timeseries = get_action_timeseries(action_responses)
 
-    action_tuples = list(set([
-      (row['device_id'], row['setpoint_name'])
-      for _, row in action_timeseries.iterrows()
-    ]))  # fmt: skip
+    action_tuples = list(
+        set([
+            (row['device_id'], row['setpoint_name'])
+            for _, row in action_timeseries.iterrows()
+        ])
+    )
 
     reward_timeseries = get_reward_timeseries(reward_infos, reward_responses, time_zone).sort_index()  # fmt: skip
 

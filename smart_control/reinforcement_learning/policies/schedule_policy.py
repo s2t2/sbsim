@@ -159,9 +159,11 @@ class SchedulePolicy(tf_policy.TFPolicy):
 
     # Get active setpoints for each device/setpoint pair
     return {
-      (device, setpoint): get_active_setpoint(schedule, device, setpoint, timestamp)
-      for device, setpoint in self.action_sequence
-    }  # fmt: skip
+        (device, setpoint): get_active_setpoint(
+            schedule, device, setpoint, timestamp
+        )
+        for device, setpoint in self.action_sequence
+    }
 
   def _action(self, time_step, policy_state, seed):
     """Generate the policy action."""
