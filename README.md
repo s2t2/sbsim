@@ -108,7 +108,7 @@ pyink . --check
 pyink . --diff
 ```
 
-If you would like to prevent certain lines of code from being formatted (for example to leave a long line as-is), it is possible to [ignore formatting](https://black.readthedocs.io/en/stable/usage_and_configuration/the_basics.html#ignoring-sections) by addding a trailing comment of `# fmt: skip` to the right of the line / at the end of the expression, or by wrapping multiple lines of code between `# fmt: off` and `# fmt: on` comments.
+If you would like to prevent certain lines of code from being formatted (for example to leave a long line as-is), it is possible to [ignore formatting](https://black.readthedocs.io/en/stable/usage_and_configuration/the_basics.html#ignoring-sections) by adding a trailing pragma comment of `# fmt: skip` to the right of the line / at the end of the expression, or by wrapping multiple lines of code between `# fmt: off` and `# fmt: on` pragma comments. NOTE: `pyink` and `pylint` (see section below) may each require their own set of separate pragma comments.
 
 #### Import Sorting
 
@@ -145,12 +145,13 @@ pylint --rcfile=.pylintrc smart_control
 pylint --rcfile=.pylintrc smart_control/path/to/file.py
 ```
 
-To check for a specific issue (e.g. "missing-module-docstring"), using the corresponding [message code](https://pylint.pycqa.org/en/stable/user_guide/messages/messages_overview.html) (e.g. "C0114"):
+To check for a specific issue (e.g. "missing-module-docstring"), using the corresponding [message code](https://pylint.readthedocs.io/en/stable/user_guide/messages/messages_overview.html) (e.g. "C0114"):
 
 ```sh
-pylint --disable=all --enable=C0114 --ignore=proto smart_control
+pylint smart_control --ignore=proto --disable=all --enable=C0114
 ```
 
+If you would like to prevent certain lines of code from being checked (for example to leave a long line as-is), it is possible to [ignore formatting](hhttps://pylint.readthedocs.io/en/stable/user_guide/messages/message_control.html#block-disables) by adding `pylint` pragma comments like `# pylint: disable=line-too-long`. NOTE: `pylint` and `pyink` (see section above) may each require their own set of separate pragma comments.
 
 
 ### Pre-commit Hooks
