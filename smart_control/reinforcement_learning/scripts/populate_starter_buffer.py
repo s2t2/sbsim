@@ -158,12 +158,10 @@ def populate_replay_buffer(
 
     # Checkpoint buffer periodically
     logger.info(
-        'Run %d/%d (total steps so far: %d)',
+        'Completed run %d/%d. Checkpointing buffer...',
         current_run + 1,
         num_runs,
-        total_steps,
     )
-
     replay_buffer.py_client.checkpoint()
 
   # Final checkpoint and stats
