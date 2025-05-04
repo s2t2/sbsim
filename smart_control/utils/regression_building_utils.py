@@ -214,7 +214,10 @@ def get_feature_map(
 def get_action_tuples(
     action_response: smart_control_building_pb2.ActionResponse,
 ) -> Set[Tuple[str, str, str]]:
-  """Returns the tuples (_ACTION_PREFIX, device_id, setpoint) from ActionResponse."""
+  """Returns the tuples from ActionResponse.
+
+  The tuples are formatted as (_ACTION_PREFIX, device_id, setpoint).
+  """
   action_tuples = set()
   for request in action_response.request.single_action_requests:
     action_tuples.add(
@@ -428,7 +431,10 @@ def get_action_sequence(
 def get_device_action_tuples(
     devices: Sequence[smart_control_building_pb2.DeviceInfo],
 ) -> Sequence[Tuple[str, str, str]]:
-  """Converts DeviceInfos into action tuples: (_ACTION_PREFIX, device, setpoint)."""
+  """Converts DeviceInfos into action tuples.
+
+  The tuples are formatted as (_ACTION_PREFIX, device, setpoint).
+  """
   device_action_tuples = []
   for device_info in devices:
     device_id = device_info.device_id
@@ -561,7 +567,7 @@ def split_output_into_observations_and_reward_info_mapping(
 ) -> Tuple[
     Mapping[Tuple[str, str], float], Mapping[Tuple[str, str, str], float]
 ]:
-  """Splits the prediction output into a reward_info and observation mappings."""
+  """Splits the prediction output into reward_info and observation mappings."""
   reward_info_mapping = {
       k: output_mapping[k] for k in output_mapping if k[0] == _REWARD_INFO
   }
@@ -703,9 +709,9 @@ def get_air_handler_reward_infos(
     if not np.isnan(air_conditioning_electrical_energy_rate) and not np.isnan(
         blower_electrical_energy_rate
     ):
-      air_handler_reward_info = smart_control_reward_pb2.RewardInfo.AirHandlerRewardInfo(
+      air_handler_reward_info = smart_control_reward_pb2.RewardInfo.AirHandlerRewardInfo(  # pylint: disable=line-too-long
           blower_electrical_energy_rate=blower_electrical_energy_rate,
-          air_conditioning_electrical_energy_rate=air_conditioning_electrical_energy_rate,
+          air_conditioning_electrical_energy_rate=air_conditioning_electrical_energy_rate,  # pylint: disable=line-too-long
       )
       air_handler_reward_infos[device_id] = air_handler_reward_info
 
@@ -739,7 +745,10 @@ def get_zone_reward_infos(
     zone_infos: Sequence[smart_control_building_pb2.ZoneInfo],
     device_infos: Sequence[smart_control_building_pb2.DeviceInfo],
 ) -> Mapping[str, smart_control_reward_pb2.RewardInfo.ZoneRewardInfo]:
-  """Returns a map of messages with zone data to compute the instantaneous reward."""
+  """Returns a mapping of messages with zone data.
+
+  This is used to compute the instantaneous reward.
+  """
   zone_reward_infos = {}
   zone_device_mapping = {
       zone_info.zone_id: zone_info.devices for zone_info in zone_infos
@@ -809,8 +818,8 @@ def get_zone_reward_infos(
 
         zone_reward_infos[zone_id] = (
             smart_control_reward_pb2.RewardInfo.ZoneRewardInfo(
-                heating_setpoint_temperature=zone_air_heating_temperature_setpoint,
-                cooling_setpoint_temperature=zone_air_cooling_temperature_setpoint,
+                heating_setpoint_temperature=zone_air_heating_temperature_setpoint,  # pylint: disable=line-too-long
+                cooling_setpoint_temperature=zone_air_cooling_temperature_setpoint,  # pylint: disable=line-too-long
                 zone_air_temperature=zone_air_temperature,
                 average_occupancy=average_occupancy,
             )

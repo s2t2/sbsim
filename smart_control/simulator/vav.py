@@ -169,7 +169,9 @@ class Vav(smart_device.SmartDevice):
   def compute_zone_supply_temp(
       self, supply_air_temp: float, input_water_temp: float
   ) -> float:
-    """Returns temperature in K of air output from the VAV, supplied to the zone.
+    """Returns temperature of air output from the VAV, supplied to the zone.
+
+    Temperatures are measured in Kelvin.
 
     Args:
       supply_air_temp: Temperature in K of input air.

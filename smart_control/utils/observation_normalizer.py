@@ -132,7 +132,7 @@ class StandardScoreObservationNormalizer(
 
     for single_observation_response in obs_out.single_observation_responses:
       field_name = (
-          single_observation_response.single_observation_request.measurement_name
+          single_observation_response.single_observation_request.measurement_name  # pylint: disable=line-too-long
       )
       value = single_observation_response.continuous_value
       single_observation_response.continuous_value = transform_func(

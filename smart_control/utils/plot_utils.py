@@ -29,7 +29,9 @@ import pandas as pd
 
 
 def get_temp_colors(min_k, max_k):
-  """Returns a color gradient for the temps between min and max_k, measured in Kelvin.
+  """Returns a color gradient for the temps between min and max_k.
+
+  Temperatures are measured in Kelvin.
 
   Args:
     min_k: min temp in kelvin
@@ -81,7 +83,7 @@ def render_building_subplot(
     return temp_color
 
   def render_ambient(temp):
-    """Draws an exterior rectangle around the building based on the ambient temp."""
+    """Draws an exterior rectangle around the building based on ambient temp."""
 
     temp_color = get_temp_color(temp)
     width = (

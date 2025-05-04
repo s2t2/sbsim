@@ -47,8 +47,7 @@ def compute_avg_return(
     policy: py_policy.PyPolicy,
     num_episodes: int = 1,
     time_zone: str = DEFAULT_TIME_ZONE,
-    render_interval_steps: int = 24,
-    trajectory_observers: Optional[List[Callable]] = None,
+    trajectory_observers: Optional[List[Callable]] = None,  # pylint: disable=g-bare-generic
     num_steps: int = 6,
 ) -> Tuple[float, List[List[Any]]]:
   """Computes the average return of the policy on the environment.

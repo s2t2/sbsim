@@ -1,4 +1,4 @@
-"""Helper classes for mapping normalized agent actions to native setpoint values.
+"""Helpers for mapping normalized agent actions to native setpoint values.
 
 Copyright 2023 Google LLC
 
