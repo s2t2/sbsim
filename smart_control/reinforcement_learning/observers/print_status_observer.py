@@ -34,7 +34,6 @@ class PrintStatusObserver(Observer):
 
     self._start_time = None
     self._num_timesteps_in_episode = self._environment.pyenv.envs[0]._num_timesteps_in_episode  # pylint: disable=line-too-long
-    self._environment.pyenv.envs[0]._end_timestamp
 
   def __call__(self, trajectory: trajectory_lib.Trajectory) -> None:
     reward = trajectory.reward
