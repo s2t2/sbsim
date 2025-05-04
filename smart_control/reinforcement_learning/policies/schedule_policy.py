@@ -139,10 +139,12 @@ class SchedulePolicy(tf_policy.TFPolicy):
 
     # Denormalize the time signals
     # fmt: off
+    # pylint: disable=line-too-long
     dow_sin = (observation[0][self.dow_sin_index] * self.norm_std) + self.norm_mean
     dow_cos = (observation[0][self.dow_cos_index] * self.norm_std) + self.norm_mean
     hod_sin = (observation[0][self.hod_sin_index] * self.norm_std) + self.norm_mean
     hod_cos = (observation[0][self.hod_cos_index] * self.norm_std) + self.norm_mean
+    # pylint: enable=line-too-long
     # fmt: on
 
     # Convert to day of week and hour of day

@@ -7,7 +7,7 @@ import gin
 import numpy as np
 
 # pylint: disable=unused-import
-# the following imports are necessary for proper gin setup, even if they aren't referenced
+# these imports are necessary for proper gin setup, even if not referenced
 # do not remove
 from smart_control.reward.electricity_energy_cost import ElectricityEnergyCost
 from smart_control.reward.natural_gas_energy_cost import NaturalGasEnergyCost
@@ -32,12 +32,14 @@ from smart_control.utils.observation_normalizer import StandardScoreObservationN
 # Path to the root directory of the project:
 ROOT_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "..")
 # fmt: off
+#pylint: disable=line-too-long
 DATA_PATH = os.path.join(ROOT_DIR, "smart_control", "configs", "resources", "sb1")
 CONFIG_PATH = os.path.join(ROOT_DIR, "smart_control", "configs", "resources", "sb1", "train_sim_configs")
 METRICS_PATH = os.path.join(ROOT_DIR, "smart_control", "reinforcement_learning", "experiment_results", "metrics")
 RENDERS_PATH = os.path.join(ROOT_DIR, "smart_control", "reinforcement_learning", "experiment_results", "renders")
 OUTPUT_DATA_PATH = os.path.join(ROOT_DIR, "smart_control", "reinforcement_learning", "data", "starter_buffers")
 EXPERIMENT_RESULTS_PATH = os.path.join(ROOT_DIR, "smart_control", "reinforcement_learning", "experiment_results")
+# pylint: enable=line-too-long
 # fmt: on
 
 
