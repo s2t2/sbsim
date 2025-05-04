@@ -94,7 +94,7 @@ class SchedulePolicy(tf_policy.TFPolicy):
       dow_cos_index: int,
       hod_sin_index: int,
       hod_cos_index: int,
-      action_normalizers: dict,
+      action_normalizers: dict,  # pylint: disable=g-bare-generic # TODO: use a more specific type hint if possible
       local_start_time: pd.Timestamp,
       name: Optional[str] = None,
   ):
@@ -122,7 +122,7 @@ class SchedulePolicy(tf_policy.TFPolicy):
 
   def _normalize_actions(
       self, action_map: Dict[Tuple[DeviceType, SetpointName], SetpointValue]
-  ) -> Dict:
+  ) -> Dict:  # pylint: disable=g-bare-generic # TODO: use a more specific type hint if possible
     """Normalize action values using the provided normalizers."""
     normalized = {}
     for (device, setpoint_name), value in action_map.items():
@@ -133,16 +133,18 @@ class SchedulePolicy(tf_policy.TFPolicy):
           break
     return normalized
 
-  def _get_action_map(self, time_step) -> Dict:
+  def _get_action_map(self, time_step) -> Dict:  # pylint: disable=g-bare-generic # TODO: use a more specific type hint if possible
     """Determine the appropriate actions based on time."""
     observation = time_step.observation
 
     # Denormalize the time signals
     # fmt: off
+    # pylint: disable=line-too-long
     dow_sin = (observation[0][self.dow_sin_index] * self.norm_std) + self.norm_mean
     dow_cos = (observation[0][self.dow_cos_index] * self.norm_std) + self.norm_mean
     hod_sin = (observation[0][self.hod_sin_index] * self.norm_std) + self.norm_mean
     hod_cos = (observation[0][self.hod_cos_index] * self.norm_std) + self.norm_mean
+    # pylint: enable=line-too-long
     # fmt: on
 
     # Convert to day of week and hour of day
@@ -159,9 +161,11 @@ class SchedulePolicy(tf_policy.TFPolicy):
 
     # Get active setpoints for each device/setpoint pair
     return {
-      (device, setpoint): get_active_setpoint(schedule, device, setpoint, timestamp)
-      for device, setpoint in self.action_sequence
-    }  # fmt: skip
+        (device, setpoint): get_active_setpoint(
+            schedule, device, setpoint, timestamp
+        )
+        for device, setpoint in self.action_sequence
+    }
 
   def _action(self, time_step, policy_state, seed):
     """Generate the policy action."""

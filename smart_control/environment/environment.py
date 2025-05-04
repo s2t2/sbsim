@@ -51,8 +51,16 @@ from smart_control.utils import writer_lib
 
 ACTION_REJECTION_REWARD: Final[float] = -np.inf
 
-ValueType = smart_control_building_pb2.DeviceInfo.ValueType
 DeviceInfo = smart_control_building_pb2.DeviceInfo
+ValueType = smart_control_building_pb2.DeviceInfo.ValueType
+
+ActionRequest = smart_control_building_pb2.ActionRequest
+ActionResponse = smart_control_building_pb2.ActionResponse
+ObservationRequest = smart_control_building_pb2.ObservationRequest
+ObservationResponse = smart_control_building_pb2.ObservationResponse
+SingleActionRequest = smart_control_building_pb2.SingleActionRequest
+SingleActionResponse = smart_control_building_pb2.SingleActionResponse
+SingleObservationResponse = smart_control_building_pb2.SingleObservationResponse
 
 DeviceFieldId = NewType("DeviceFieldId", str)
 DeviceId = NewType("DeviceId", str)
@@ -79,24 +87,19 @@ DeviceActionTuple = Tuple[DeviceCode, Setpoint]
 DeviceMeasurementTuple = Tuple[DeviceCode, MeasurementName]
 
 
-def all_actions_accepted(
-    action_response: smart_control_building_pb2.ActionResponse,
-) -> bool:
+def all_actions_accepted(action_response: ActionResponse) -> bool:
   """Returns true if all single action requests have response code ACCEPTED."""
 
   return all(
-      single_action_response.response_type
-      == smart_control_building_pb2.SingleActionResponse.ACCEPTED
+      single_action_response.response_type == SingleActionResponse.ACCEPTED
       for single_action_response in action_response.single_action_responses
   )
 
 
 def replace_missing_observations_past(
-    current_observation_response: smart_control_building_pb2.ObservationResponse,
-    past_observation_response: Optional[
-        smart_control_building_pb2.ObservationResponse
-    ],
-) -> smart_control_building_pb2.ObservationResponse:
+    current_observation_response: ObservationResponse,
+    past_observation_response: Optional[ObservationResponse],
+) -> ObservationResponse:
   """Replaces any missing observations with a past ObservationResponse.
 
   Sometimes, the building doesn't report all the observations; however,
@@ -117,7 +120,7 @@ def replace_missing_observations_past(
   """
 
   def get_observation_request_tuples(
-      observation_request: smart_control_building_pb2.ObservationRequest,
+      observation_request: ObservationRequest,
   ) -> set[DeviceMeasurementTuple]:
     return set([
         (request.device_id, request.measurement_name)
@@ -125,10 +128,10 @@ def replace_missing_observations_past(
     ])
 
   def get_observation_response_mapping(
-      observation_response: smart_control_building_pb2.ObservationResponse,
+      observation_response: ObservationResponse,
   ) -> dict[
       DeviceMeasurementTuple,
-      smart_control_building_pb2.SingleObservationResponse,
+      SingleObservationResponse,
   ]:
     """Converts an ObservationResponse into a dict of single observations."""
     # pylint: disable=g-complex-comprehension
@@ -142,9 +145,7 @@ def replace_missing_observations_past(
     }
 
   def check_valid_past_observation(
-      past_observation_response: Optional[
-          smart_control_building_pb2.ObservationResponse
-      ],
+      past_observation_response: Optional[ObservationResponse],
       missing_observations: set[DeviceMeasurementTuple],
   ) -> None:
     """Checks that the past observation is available, and raises ValueError."""
@@ -165,7 +166,7 @@ def replace_missing_observations_past(
       )
 
   def get_missing_observations(
-      observation_response: smart_control_building_pb2.ObservationResponse,
+      observation_response: ObservationResponse,
   ) -> set[DeviceMeasurementTuple]:
     """Returns device/measurements set for requests that weren't provided."""
 
@@ -178,21 +179,18 @@ def replace_missing_observations_past(
     return observation_request_tuples - set(observation_response_map.keys())
 
   def update_single_observation_response(
-      single_observation_response: smart_control_building_pb2.SingleObservationResponse,
+      single_observation_response: SingleObservationResponse,
       past_observation_response_mapping: dict[
-          DeviceMeasurementTuple,
-          smart_control_building_pb2.SingleObservationResponse,
+          DeviceMeasurementTuple, SingleObservationResponse
       ],
-  ) -> smart_control_building_pb2.SingleObservationResponse:
+  ) -> SingleObservationResponse:
     """Checks a single observation response and fills in when invalid."""
     if single_observation_response.observation_valid:
       updated_single_observation_response = single_observation_response
     # If it's not valid, then use the past observation to fill in the gap.
     else:
-      missing_observation = (
-          single_observation_response.single_observation_request.device_id,
-          single_observation_response.single_observation_request.measurement_name,
-      )
+      request = single_observation_response.single_observation_request
+      missing_observation = (request.device_id, request.measurement_name)
       updated_single_observation_response = past_observation_response_mapping[
           missing_observation
       ]
@@ -454,9 +452,7 @@ class Environment(py_environment.PyEnvironment):
     self._num_dow_features = num_dow_features
     self._num_hod_features = num_hod_features
     # Retain the last observation to fill in missing or invalid values.
-    self._last_observation_response: Optional[
-        smart_control_building_pb2.ObservationResponse
-    ] = None
+    self._last_observation_response: Optional[ObservationResponse] = None
 
     if self.discount_factor <= 0 or self.discount_factor > 1:
       raise ValueError("Discount factor must be in (0,1]")
@@ -539,9 +535,9 @@ class Environment(py_environment.PyEnvironment):
     return self._default_policy_values
 
   def _get_observation_request(
-      self, devices: Sequence[smart_control_building_pb2.DeviceInfo]
-  ) -> smart_control_building_pb2.ObservationRequest:
-    observation_request = smart_control_building_pb2.ObservationRequest()
+      self, devices: Sequence[DeviceInfo]
+  ) -> ObservationRequest:
+    observation_request = ObservationRequest()
     for device in sorted(devices, key=lambda x: x.device_id):
       for measurement_name in sorted(device.observable_fields):
         device_id = device.device_id
@@ -589,7 +585,7 @@ class Environment(py_environment.PyEnvironment):
   def _get_action_spec_and_normalizers(
       self,
       action_config: ActionConfig,
-      devices: Sequence[smart_control_building_pb2.DeviceInfo],
+      devices: Sequence[DeviceInfo],
   ) -> Tuple[types.ArraySpec, ActionNormalizerMap, Sequence[str]]:
     """Returns an action spec, action normalizers, and the order of actions.
 
@@ -705,7 +701,7 @@ class Environment(py_environment.PyEnvironment):
     return action_spec, action_normalizers, action_names
 
   def _get_observation_spec(
-      self, devices: Sequence[smart_control_building_pb2.DeviceInfo]
+      self, devices: Sequence[DeviceInfo]
   ) -> tuple[types.ArraySpec, Sequence[str]]:
     """Returns an observation spec and a list of field names."""
 
@@ -727,7 +723,7 @@ class Environment(py_environment.PyEnvironment):
     return obs_spec, observable_fields
 
   def _get_observation_spec_histogram_reducer(
-      self, devices: Sequence[smart_control_building_pb2.DeviceInfo]
+      self, devices: Sequence[DeviceInfo]
   ) -> tuple[types.ArraySpec, Sequence[str]]:
     """Returns an observation spec and a list of field names as histogram."""
 
@@ -779,7 +775,7 @@ class Environment(py_environment.PyEnvironment):
     return obs_spec, observable_fields
 
   def _get_observation_spec_single_timeseries(
-      self, devices: Sequence[smart_control_building_pb2.DeviceInfo]
+      self, devices: Sequence[DeviceInfo]
   ) -> tuple[types.ArraySpec, Sequence[str]]:
     """Returns an observation spec and a list of field names."""
 
@@ -829,15 +825,11 @@ class Environment(py_environment.PyEnvironment):
     # categorical not supported
     return ValueType.VALUE_TYPE_UNDEFINED
 
-  def _create_action_request(
-      self, action_array
-  ) -> smart_control_building_pb2.ActionRequest:
+  def _create_action_request(self, action_array) -> ActionRequest:
     timestamp = conversion_utils.pandas_to_proto_timestamp(
         self.building.current_timestamp
     )
-    action_request = smart_control_building_pb2.ActionRequest(
-        timestamp=timestamp
-    )
+    action_request = ActionRequest(timestamp=timestamp)
 
     action = {}
     for i in range(len(self._action_names)):
@@ -858,7 +850,7 @@ class Environment(py_environment.PyEnvironment):
 
       action_value = action_normalizer.setpoint_value(agent_action)
 
-      single_action_request = smart_control_building_pb2.SingleActionRequest(
+      single_action_request = SingleActionRequest(
           device_id=device_id,
           setpoint_name=setpoint_name,
           continuous_value=action_value,
@@ -872,7 +864,7 @@ class Environment(py_environment.PyEnvironment):
     timestamp = conversion_utils.pandas_to_proto_timestamp(
         self.building.current_timestamp
     )
-    observation_request = smart_control_building_pb2.ObservationRequest()
+    observation_request = ObservationRequest()
     observation_request.CopyFrom(self._observation_request)
     observation_request.timestamp.CopyFrom(timestamp)
 
@@ -903,11 +895,11 @@ class Environment(py_environment.PyEnvironment):
     )
 
     if self._observation_histogram_reducer is None:
-      observation = self._normalized_observation_response_to_observation_map_single_timeseries(
+      observation = self._normalized_observation_response_to_observation_map_single_timeseries(  # pylint: disable=line-too-long
           normalized_observation_response
       )
     else:
-      observation = self._normalized_observation_response_to_observation_map_histogram_reducer(
+      observation = self._normalized_observation_response_to_observation_map_histogram_reducer(  # pylint: disable=line-too-long
           normalized_observation_response
       )
 
@@ -984,7 +976,7 @@ class Environment(py_environment.PyEnvironment):
 
   def _normalized_observation_response_to_observation_map_single_timeseries(
       self,
-      normalized_observation_response: smart_control_building_pb2.ObservationResponse,
+      normalized_observation_response: ObservationResponse,
   ) -> dict[str, np.ndarray]:
     """Converts an ObservationResponse to (device, field): measurement.
 
@@ -998,15 +990,11 @@ class Environment(py_environment.PyEnvironment):
       Dict of (device, field): measurement
     """
     observation_map = {}
-    for (
-        single_observation_response
-    ) in normalized_observation_response.single_observation_responses:
-      device_id = (
-          single_observation_response.single_observation_request.device_id
-      )
-      measurement_name = (
-          single_observation_response.single_observation_request.measurement_name
-      )
+    responses = normalized_observation_response.single_observation_responses
+    for single_observation_response in responses:
+      request = single_observation_response.single_observation_request
+      device_id = request.device_id
+      measurement_name = request.measurement_name
       continuous_value = single_observation_response.continuous_value
 
       if not single_observation_response.observation_valid:
@@ -1029,7 +1017,7 @@ class Environment(py_environment.PyEnvironment):
 
   def _normalized_observation_response_to_observation_map_histogram_reducer(
       self,
-      normalized_observation_response: smart_control_building_pb2.ObservationResponse,
+      normalized_observation_response: ObservationResponse,
   ) -> dict[str, np.ndarray]:
     """Converts an ObservationResponse to (device, field): measurement.
 
@@ -1228,7 +1216,7 @@ class Environment(py_environment.PyEnvironment):
     """
 
     def _action_strings(
-        action_request: smart_control_building_pb2.ActionRequest,
+        action_request: ActionRequest,
     ) -> Sequence[str]:
       """Create a list of actions from an ActionRequest for logging."""
       action_strings = []
@@ -1263,7 +1251,7 @@ class Environment(py_environment.PyEnvironment):
       action_response = _apply_action_response(
           action_request,
           response_timestamp=self.current_simulation_timestamp,
-          action_response_type=smart_control_building_pb2.SingleActionResponse.ActionResponseType.REJECTED_NOT_ENABLED_OR_AVAILABLE,
+          action_response_type=SingleActionResponse.ActionResponseType.REJECTED_NOT_ENABLED_OR_AVAILABLE,  # pylint: disable=line-too-long
           additional_info=str(err),
       )
       logging.exception(
@@ -1357,11 +1345,11 @@ class Environment(py_environment.PyEnvironment):
 
 
 def _apply_action_response(
-    action_request: smart_control_building_pb2.ActionRequest,
-    action_response_type: smart_control_building_pb2.SingleActionResponse.ActionResponseType,
+    action_request: ActionRequest,
+    action_response_type: SingleActionResponse.ActionResponseType,
     response_timestamp: pd.Timestamp,
     additional_info: Optional[str] = None,
-) -> smart_control_building_pb2.ActionResponse:
+) -> ActionResponse:
   """Returns an ActionResponse if not passed by the Building."""
 
   single_action_responses = [
@@ -1370,7 +1358,7 @@ def _apply_action_response(
       )
       for single_action_request in action_request.single_action_requests
   ]
-  return smart_control_building_pb2.ActionResponse(
+  return ActionResponse(
       timestamp=conversion_utils.pandas_to_proto_timestamp(response_timestamp),
       request=action_request,
       single_action_responses=single_action_responses,
@@ -1378,12 +1366,12 @@ def _apply_action_response(
 
 
 def _apply_single_action_response(
-    single_action_request: smart_control_building_pb2.SingleActionRequest,
-    action_response_type: smart_control_building_pb2.SingleActionResponse.ActionResponseType,
+    single_action_request: SingleActionRequest,
+    action_response_type: SingleActionResponse.ActionResponseType,
     additional_info: Optional[str] = None,
-) -> smart_control_building_pb2.SingleActionResponse:
+) -> SingleActionResponse:
   """Creates a SingleActionResponse if not passed by the Building."""
-  return smart_control_building_pb2.SingleActionResponse(
+  return SingleActionResponse(
       request=single_action_request,
       response_type=action_response_type,
       additional_info=additional_info,

@@ -394,7 +394,7 @@ class EnvironmentTest(parameterized.TestCase, tf.test.TestCase):
       ) -> smart_control_building_pb2.ActionResponse:
         action_response = super().request_action(action_request)
         action_response.single_action_responses[0].response_type = (
-            smart_control_building_pb2.SingleActionResponse.REJECTED_INVALID_DEVICE
+            smart_control_building_pb2.SingleActionResponse.REJECTED_INVALID_DEVICE  # pylint: disable=line-too-long
         )
         return action_response
 
@@ -601,12 +601,10 @@ class EnvironmentTest(parameterized.TestCase, tf.test.TestCase):
                 self, observation_request
             )
         )
-        bad_observation_response = smart_control_building_pb2.ObservationResponse(
+        bad_observation_response = smart_control_building_pb2.ObservationResponse(  # pylint: disable=line-too-long
             timestamp=observation_response.timestamp,
             request=observation_response.request,
-            single_observation_responses=observation_response.single_observation_responses[
-                :3
-            ],
+            single_observation_responses=observation_response.single_observation_responses[:3],  # pylint: disable=line-too-long
         )
         return bad_observation_response
 

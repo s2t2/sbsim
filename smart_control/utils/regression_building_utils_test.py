@@ -284,13 +284,13 @@ class RegressionBuildingUtilsTest(absltest.TestCase):
     reward_info.air_handler_reward_infos[air_handler0].CopyFrom(
         smart_control_reward_pb2.RewardInfo.AirHandlerRewardInfo(
             blower_electrical_energy_rate=blower_electrical_energy_rate_d0,
-            air_conditioning_electrical_energy_rate=air_conditioning_electrical_energy_rate_d0,
+            air_conditioning_electrical_energy_rate=air_conditioning_electrical_energy_rate_d0,  # pylint: disable=line-too-long
         )
     )
     reward_info.air_handler_reward_infos[air_handler1].CopyFrom(
         smart_control_reward_pb2.RewardInfo.AirHandlerRewardInfo(
             blower_electrical_energy_rate=blower_electrical_energy_rate_d1,
-            air_conditioning_electrical_energy_rate=air_conditioning_electrical_energy_rate_d1,
+            air_conditioning_electrical_energy_rate=air_conditioning_electrical_energy_rate_d1,  # pylint: disable=line-too-long
         )
     )
 
@@ -420,7 +420,7 @@ class RegressionBuildingUtilsTest(absltest.TestCase):
     input_mapping = expected_observation_mapping.copy()
     input_mapping.update(expected_reward_info_mapping)
     observation_mapping, reward_info_mapping = (
-        regression_building_utils.split_output_into_observations_and_reward_info_mapping(
+        regression_building_utils.split_output_into_observations_and_reward_info_mapping(  # pylint: disable=line-too-long
             input_mapping
         )
     )
@@ -517,11 +517,11 @@ class RegressionBuildingUtilsTest(absltest.TestCase):
     expected_air_handler_reward_infos = {
         device0: smart_control_reward_pb2.RewardInfo.AirHandlerRewardInfo(
             blower_electrical_energy_rate=blower_electrical_energy_rate_d0,
-            air_conditioning_electrical_energy_rate=air_conditioning_electrical_energy_rate_d0,
+            air_conditioning_electrical_energy_rate=air_conditioning_electrical_energy_rate_d0,  # pylint: disable=line-too-long
         ),
         device1: smart_control_reward_pb2.RewardInfo.AirHandlerRewardInfo(
             blower_electrical_energy_rate=blower_electrical_energy_rate_d1,
-            air_conditioning_electrical_energy_rate=air_conditioning_electrical_energy_rate_d1,
+            air_conditioning_electrical_energy_rate=air_conditioning_electrical_energy_rate_d1,  # pylint: disable=line-too-long
         ),
     }
     reward_info_devices = {
@@ -745,7 +745,7 @@ class RegressionBuildingUtilsTest(absltest.TestCase):
         },
         action_fields={
             'a0': (
-                smart_control_building_pb2.DeviceInfo.ValueType.VALUE_CATEGORICAL
+                smart_control_building_pb2.DeviceInfo.ValueType.VALUE_CATEGORICAL  # pylint: disable=line-too-long
             ),
             'a1': (
                 smart_control_building_pb2.DeviceInfo.ValueType.VALUE_CONTINUOUS
@@ -765,7 +765,7 @@ class RegressionBuildingUtilsTest(absltest.TestCase):
         },
         action_fields={
             'a0': (
-                smart_control_building_pb2.DeviceInfo.ValueType.VALUE_TYPE_UNDEFINED
+                smart_control_building_pb2.DeviceInfo.ValueType.VALUE_TYPE_UNDEFINED  # pylint: disable=line-too-long
             ),
             'a1': (
                 smart_control_building_pb2.DeviceInfo.ValueType.VALUE_CONTINUOUS

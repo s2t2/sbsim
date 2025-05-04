@@ -148,7 +148,7 @@ pylint --rcfile=.pylintrc smart_control/path/to/file.py
 To check for a specific issue (e.g. "missing-module-docstring"), using the corresponding [message code](https://pylint.readthedocs.io/en/stable/user_guide/messages/messages_overview.html) (e.g. "C0114"):
 
 ```sh
-pylint smart_control --ignore=proto --disable=all --enable=C0114
+pylint smart_control --rcfile=.pylintrc --ignore=proto --disable=all --enable=C0114
 ```
 
 > NOTE: some error messages beginning with "g-" are additional Google-specific errors that may need to be checked using internal tools (`gpylint`), and may not be able to be checked by open source contributors at this time.

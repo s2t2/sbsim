@@ -29,6 +29,8 @@ from smart_control.simulator import hvac as hvac_py
 from smart_control.simulator import weather_controller as weather_controller_py
 from smart_control.utils import conversion_utils
 
+RewardInfo = smart_control_reward_pb2.RewardInfo
+
 CVCoordinates = Tuple[int, int]
 ZoneId = Tuple[int, int]
 
@@ -461,7 +463,7 @@ class Simulator:
       zone_coords: Tuple[int, int],
       zone_id: str,
       zone_air_temperature: float,
-  ) -> smart_control_reward_pb2.RewardInfo.ZoneRewardInfo:
+  ) -> RewardInfo.ZoneRewardInfo:
     """Returns a messagde with zone data to compute the instantaneous reward."""
     schedule = self._hvac.vavs[zone_coords].thermostat.get_setpoint_schedule()
     heating_setpoint_temperature, cooling_setpoint_temperature = (
@@ -474,7 +476,7 @@ class Simulator:
         self._current_timestamp,
         self._current_timestamp + pd.Timedelta(self._time_step_sec, unit='s'),
     )
-    zone_info = smart_control_reward_pb2.RewardInfo.ZoneRewardInfo(
+    zone_info = RewardInfo.ZoneRewardInfo(
         heating_setpoint_temperature=heating_setpoint_temperature,
         cooling_setpoint_temperature=cooling_setpoint_temperature,
         zone_air_temperature=zone_air_temperature,
@@ -486,8 +488,11 @@ class Simulator:
 
   def _get_zone_reward_infos(
       self, occupancy_function: BaseOccupancy
-  ) -> Mapping[str, smart_control_reward_pb2.RewardInfo.ZoneRewardInfo]:
-    """Returns a map of messages with zone data to compute the instantaneous reward."""
+  ) -> Mapping[str, RewardInfo.ZoneRewardInfo]:
+    """Returns a map of messages with zone data.
+
+    This data is used to compute the instantaneous reward.
+    """
     zone_reward_infos = {}
     for (
         zone_coords,
@@ -501,8 +506,11 @@ class Simulator:
 
   def _get_air_handler_reward_infos(
       self,
-  ) -> Mapping[str, smart_control_reward_pb2.RewardInfo.AirHandlerRewardInfo]:
-    """Returns a map of messages with air handler data to compute the instantaneous reward."""
+  ) -> Mapping[str, RewardInfo.AirHandlerRewardInfo]:
+    """Returns a map of messages with air handler data.
+
+    This data is used to compute the instantaneous reward.
+    """
     air_handler_reward_infos = {}
     air_handler_id = self._hvac.air_handler.device_id()
     blower_electrical_energy_rate = (
@@ -518,17 +526,20 @@ class Simulator:
             recirculation_temp, ambient_temp
         )
     )
-    air_handler_reward_info = smart_control_reward_pb2.RewardInfo.AirHandlerRewardInfo(
+    air_handler_reward_info = RewardInfo.AirHandlerRewardInfo(
         blower_electrical_energy_rate=blower_electrical_energy_rate,
-        air_conditioning_electrical_energy_rate=air_conditioning_electrical_energy_rate,
+        air_conditioning_electrical_energy_rate=air_conditioning_electrical_energy_rate,  # pylint: disable=line-too-long
     )
     air_handler_reward_infos[air_handler_id] = air_handler_reward_info
     return air_handler_reward_infos
 
   def _get_boiler_reward_infos(
       self,
-  ) -> Mapping[str, smart_control_reward_pb2.RewardInfo.BoilerRewardInfo]:
-    """Returns a map of messages with boiler data to compute the instantaneous reward."""
+  ) -> Mapping[str, RewardInfo.BoilerRewardInfo]:
+    """Returns a map of messages with boiler data.
+
+    This data is used to compute the instantaneous reward.
+    """
     boiler_reward_infos = {}
     boiler_id = self._hvac.boiler.device_id()
     return_water_temp = self._hvac.boiler.return_water_temperature_sensor
@@ -539,16 +550,14 @@ class Simulator:
         )
     )
     pump_electrical_energy_rate = self._hvac.boiler.compute_pump_power()
-    boiler_reward_info = smart_control_reward_pb2.RewardInfo.BoilerRewardInfo(
+    boiler_reward_info = RewardInfo.BoilerRewardInfo(
         natural_gas_heating_energy_rate=natural_gas_heating_energy_rate,
         pump_electrical_energy_rate=pump_electrical_energy_rate,
     )
     boiler_reward_infos[boiler_id] = boiler_reward_info
     return boiler_reward_infos
 
-  def reward_info(
-      self, occupancy_function: BaseOccupancy
-  ) -> smart_control_reward_pb2.RewardInfo:
+  def reward_info(self, occupancy_function: BaseOccupancy) -> RewardInfo:
     """Returns a message with data to compute the instantaneous reward."""
     start_time_stamp = self._current_timestamp
     end_time_stamp = start_time_stamp + pd.Timedelta(
@@ -564,7 +573,7 @@ class Simulator:
     # get boiler info
     boiler_reward_infos = self._get_boiler_reward_infos()
 
-    return smart_control_reward_pb2.RewardInfo(
+    return RewardInfo(
         start_timestamp=conversion_utils.pandas_to_proto_timestamp(
             start_time_stamp
         ),

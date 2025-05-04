@@ -120,7 +120,7 @@ def save_images_to_cns_for_debugging(
         ConnectionReadyFloorPlan,
     ],
     path_ending: str,
-    path_to_simulator_cns: str = "/cns/oi-d/home/smart_buildings/control/configs/simulation/",
+    path_to_simulator_cns: str = "/cns/oi-d/home/smart_buildings/control/configs/simulation/",  # pylint: disable=line-too-long
 ) -> None:
   """Saves a .png of a floorplan array to CNS for visual debugging.
 

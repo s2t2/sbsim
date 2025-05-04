@@ -20,7 +20,7 @@ def load_environment(gin_config_file: str):
 def create_and_setup_environment(
     gin_config_file: str,
     metrics_path: str = None,
-    occupancy_normalization_constant: float = DEFAULT_OCCUPANCY_NORMALIZATION_CONSTANT,
+    occupancy_normalization_constant: float = DEFAULT_OCCUPANCY_NORMALIZATION_CONSTANT,  # pylint: disable=line-too-long
 ):
   """Creates and sets up the environment."""
   env = load_environment(gin_config_file)

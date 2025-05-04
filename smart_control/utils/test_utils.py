@@ -466,7 +466,7 @@ def get_test_reward_info(
     ) = air_handler_energy
     air_handler_info = smart_control_reward_pb2.RewardInfo.AirHandlerRewardInfo(
         blower_electrical_energy_rate=blower_electrical_energy_rate,
-        air_conditioning_electrical_energy_rate=air_conditioning_electrical_energy_rate,
+        air_conditioning_electrical_energy_rate=air_conditioning_electrical_energy_rate,  # pylint: disable=line-too-long
     )
     info.air_handler_reward_infos[air_handler_id].CopyFrom(air_handler_info)
 

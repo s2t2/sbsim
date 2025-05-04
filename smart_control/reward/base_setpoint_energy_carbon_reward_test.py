@@ -86,7 +86,7 @@ class BaseSetpointEnergyCarbonRewardTest(parameterized.TestCase):
     productivity_decay_stiffness = 4.3
     productivity_midpoint_delta = 1.5
 
-    return base_setpoint_energy_carbon_reward.BaseSetpointEnergyCarbonRewardFunction(
+    return base_setpoint_energy_carbon_reward.BaseSetpointEnergyCarbonRewardFunction(  # pylint: disable=line-too-long
         max_productivity_personhour_usd=max_productivity_personhour_usd,
         productivity_midpoint_delta=productivity_midpoint_delta,
         productivity_decay_stiffness=productivity_decay_stiffness,

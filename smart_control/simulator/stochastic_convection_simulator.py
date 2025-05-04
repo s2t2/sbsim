@@ -65,7 +65,10 @@ class StochasticConvectionSimulator(
       room_dict: dict[str, MutableSequence[tuple[int, int]]],
       temp: np.ndarray,
   ) -> None:
-    """Applies convection to the temperature array given, splitting up rooms via room_dict."""
+    """Applies convection to the temperature array given.
+
+    Splits up rooms via room_dict.
+    """
     p = self._p
     distance = self._distance
     if p == 0 or distance == 0:
