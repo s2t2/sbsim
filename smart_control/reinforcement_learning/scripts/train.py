@@ -85,9 +85,9 @@ def train_agent(
 
   try:
     os.makedirs(summary_dir, exist_ok=False)
-  except FileExistsError:
+  except FileExistsError as err:
     logger.exception('Directory %s already exists. Exiting.', summary_dir)
-    raise FileExistsError(f'Directory {summary_dir} already exists. Exiting.')
+    raise FileExistsError(f'Directory {summary_dir} already exists. Exiting.') from err  # pylint: disable=line-too-long
 
   # Create train and eval environments
   logger.info('Creating train and eval environments')
