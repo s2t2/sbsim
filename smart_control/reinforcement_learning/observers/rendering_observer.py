@@ -456,7 +456,7 @@ class RenderingObserver(Observer):
     # pylint: enable=line-too-long
     # fmt: on
 
-    if len(reward_infos) == 0 or len(reward_responses) == 0:
+    if not reward_infos or not reward_responses:
       logger.info('No reward data available for plotting')
       return
 
