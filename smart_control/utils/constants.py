@@ -1,4 +1,4 @@
-"""Constants related to the simulation and RL environment.
+"""Single location for constants related to the simulation and RL environment.
 
 Copyright 2022 Google LLC
 
