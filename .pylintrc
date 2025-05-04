@@ -243,28 +243,8 @@ generated-members=
 # Maximum number of characters on a single line.
 max-line-length=80
 
-# TODO(https://github.com/pylint-dev/pylint/issues/3352): Direct pylint to exempt
-# lines made too long by directives to pytype.
-
 # Regexp for a line that is allowed to be longer than the limit.
-#ignore-long-lines=(?x)(
-#  ^\s*(\#\ )?<?https?://\S+>?$|
-#  ^\s*(from\s+\S+\s+)?import\s+.+$)
-
-#ignore-long-lines=(?x)(
-#  ^\s*(\#\ )?<?https?://\S+>?$|
-#  ^\s*(from\s+\S+\s+)?import\s+.+$|
-#  .*(pytype:|pylint:|fmt:).*)
-
-
-# this works in general, however not in edge cases where # TODO: appears after
-#ignore-long-lines=(?x)(
-#  ^\s*(\#\ )?<?https?://\S+>?$|  # Ignore long URLs
-#  ^\s*(from\s+\S+\s+)?import\s+.+$|  # Ignore import statements
-#  .*(pytype:|pylint:|fmt:).* # Ignore lines containing pragma comments
-#  )
-
-# this works to also ignore TODOs
+# see: https://github.com/google/sbsim/issues/43
 ignore-long-lines=(?x)(
   ^\s*(\#\ )?<?https?://\S+>?$|  # Ignore long URLs
   ^\s*(from\s+\S+\s+)?import\s+.+$|  # Ignore import statements

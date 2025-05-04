@@ -66,7 +66,6 @@ DeviceFieldId = NewType("DeviceFieldId", str)
 DeviceId = NewType("DeviceId", str)
 FieldName = NewType("FieldName", str)
 
-
 COMFORT_MODE_NOW: Final[str] = "comfort_mode_now"
 COMFORT_MODE_SOON: Final[str] = "comfort_mode_soon"
 NUM_OCCUPANTS: Final[str] = "num_occupants"
