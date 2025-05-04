@@ -45,8 +45,8 @@ class RenderingObserver(Observer):
       self,
       render_interval_steps: int = 10,
       environment=None,
-      render_fn: Optional[Callable] = None,  # pylint: disable=g-bare-generic # TODO: use a more specific type hint if possible
-      plot_fn: Optional[Callable] = None,  # pylint: disable=g-bare-generic # TODO: use a more specific type hint if possible
+      render_fn: Optional[Callable] = None,  # pylint: disable=g-bare-generic # TODO: use more specific type hint if possible
+      plot_fn: Optional[Callable] = None,  # pylint: disable=g-bare-generic # TODO: use more specific type hint if possible
       clear_output_before_render: bool = True,
       time_zone: str = DEFAULT_TIME_ZONE,
       save_path: str = RENDERS_PATH,
@@ -81,8 +81,9 @@ class RenderingObserver(Observer):
 
     if self._environment is not None:
       # Store environment properties if available
-      if hasattr(self._environment.pyenv.envs[0], '_num_timesteps_in_episode'):
-        self._num_timesteps_in_episode = self._environment.pyenv.envs[0]._num_timesteps_in_episode  # fmt: skip
+      env = self._environment.pyenv.envs[0]
+      if hasattr(env, '_num_timesteps_in_episode'):
+        self._num_timesteps_in_episode = env._num_timesteps_in_episode
 
   def _format_plot(
       self, ax1, xlabel: str, start_time: int, end_time: int, time_zone: str
@@ -138,14 +139,16 @@ class RenderingObserver(Observer):
       hwh_power = kw_power * step_interval / pd.Timedelta(1, unit='hour')
       return hwh_power.cumsum()
 
-    timeseries = energy_timeseries[energy_timeseries['device_type'] == 'air_handler']  # fmt: skip
     # fmt: off
+    # pylint: disable=line-too-long
+    timeseries = energy_timeseries[energy_timeseries['device_type'] == 'air_handler']
     if cumulative:
       feature_timeseries_ac = _to_kwh(timeseries['air_handler_air_conditioner_energy_rate'])
       feature_timeseries_blower = _to_kwh(timeseries['air_handler_blower_electrical_energy_rate'])
     else:
       feature_timeseries_ac = (timeseries['air_handler_air_conditioner_energy_rate'] / 1000.0)
       feature_timeseries_blower = (timeseries['air_handler_blower_electrical_energy_rate'] / 1000.0)
+    # pylint: enable=line-too-long
     # fmt: on
 
     ax1.plot(
@@ -172,12 +175,14 @@ class RenderingObserver(Observer):
 
     timeseries = energy_timeseries[energy_timeseries['device_type'] == 'boiler']
     # fmt: off
+    # pylint: disable=line-too-long
     if cumulative:
       feature_timeseries_gas = _to_kwh(timeseries['boiler_natural_gas_heating_energy_rate'])
       feature_timeseries_pump = _to_kwh(timeseries['boiler_pump_electrical_energy_rate'])
     else:
       feature_timeseries_gas = (timeseries['boiler_natural_gas_heating_energy_rate'] / 1000.0)
       feature_timeseries_pump = (timeseries['boiler_pump_electrical_energy_rate'] / 1000.0)
+    # pylint: enable=line-too-long
     # fmt: on
 
     ax1.plot(
@@ -227,7 +232,7 @@ class RenderingObserver(Observer):
     local_times = [ts.tz_convert(time_zone) for ts in reward_timeseries.index]
 
     if cumulative:
-      feature_timeseries_cost = reward_timeseries['electricity_energy_cost'].cumsum()  # fmt: skip
+      feature_timeseries_cost = reward_timeseries['electricity_energy_cost'].cumsum()  # pylint: disable=line-too-long
     else:
       feature_timeseries_cost = reward_timeseries['electricity_energy_cost']
 
@@ -413,9 +418,9 @@ class RenderingObserver(Observer):
         & (action_timeseries['setpoint_name'] == action_tuple[1])
     ]
 
-    single_action_timeseries = single_action_timeseries.sort_values(by='timestamp')  # fmt: skip
+    single_action_timeseries = single_action_timeseries.sort_values(by='timestamp')  # pylint: disable=line-too-long
 
-    if action_tuple[1] in ['supply_water_setpoint', 'supply_air_heating_temperature_setpoint']:  # fmt: skip
+    if action_tuple[1] in ['supply_water_setpoint', 'supply_air_heating_temperature_setpoint']:  # pylint: disable=line-too-long
       single_action_timeseries['setpoint_value'] = (
           single_action_timeseries['setpoint_value'] - self.KELVIN_TO_CELSIUS
       )
@@ -443,10 +448,12 @@ class RenderingObserver(Observer):
     """Plots timeseries charts and saves to file."""
 
     # fmt: off
+    # pylint: disable=line-too-long
     observation_responses = reader.read_observation_responses(pd.Timestamp.min, pd.Timestamp.max)
     action_responses = reader.read_action_responses(pd.Timestamp.min, pd.Timestamp.max)
     reward_infos = reader.read_reward_infos(pd.Timestamp.min, pd.Timestamp.max)
     reward_responses = reader.read_reward_responses(pd.Timestamp.min, pd.Timestamp.max)
+    # pylint: enable=line-too-long
     # fmt: on
 
     if len(reward_infos) == 0 or len(reward_responses) == 0:
@@ -462,7 +469,7 @@ class RenderingObserver(Observer):
         ])
     )
 
-    reward_timeseries = get_reward_timeseries(reward_infos, reward_responses, time_zone).sort_index()  # fmt: skip
+    reward_timeseries = get_reward_timeseries(reward_infos, reward_responses, time_zone).sort_index()  # pylint: disable=line-too-long
 
     outside_air_temperature_timeseries = get_outside_air_temperature_timeseries(
         observation_responses, time_zone
@@ -481,6 +488,7 @@ class RenderingObserver(Observer):
     fig.set_size_inches(24, 25)
 
     # fmt: off
+    # pylint: disable=line-too-long
     energy_timeseries = get_energy_timeseries(reward_infos, time_zone)
     self._plot_reward_timeline(axes[0], reward_timeseries, time_zone)
     self._plot_energy_timeline(axes[1], energy_timeseries, time_zone, cumulative=True)
@@ -488,6 +496,7 @@ class RenderingObserver(Observer):
     self._plot_carbon_timeline(axes[3], reward_timeseries, time_zone, cumulative=True)
     self._plot_occupancy_timeline(axes[4], reward_timeseries, time_zone)
     self._plot_temperature_timeline(axes[5], zone_timeseries, outside_air_temperature_timeseries, time_zone)
+    # pylint: enable=line-too-long
     # fmt: on
 
     for i, action_tuple in enumerate(action_tuples):
@@ -496,7 +505,9 @@ class RenderingObserver(Observer):
       )
 
     # Save figure instead of displaying
-    fig_path = os.path.join(self._save_path, f'timeseries_step_{step_count}.png')  # fmt: skip
+    fig_path = os.path.join(
+        self._save_path, f'timeseries_step_{step_count}.png'
+    )
     fig.savefig(fig_path, bbox_inches='tight', dpi=100)
     plt.close(fig)
     logger.info('Saved timeseries plot to %s', fig_path)
@@ -528,7 +539,9 @@ class RenderingObserver(Observer):
 
     # Save image instead of displaying
     timestamp = env.current_simulation_timestamp.strftime('%Y%m%d_%H%M%S')
-    img_path = os.path.join(self._save_path, f'env_render_{step_count}_{timestamp}.png')  # fmt: skip
+    img_path = os.path.join(
+        self._save_path, f'env_render_{step_count}_{timestamp}.png'
+    )
     image.save(img_path)
     logger.info('Saved environment render to %s', img_path)
 
@@ -560,7 +573,7 @@ class RenderingObserver(Observer):
 
       if self._environment.pyenv.envs[0]._metrics_path is not None:
         logger.warning('Plotting timeseries charts...')
-        reader = get_latest_episode_reader(self._environment.pyenv.envs[0]._metrics_path)  # fmt: skip
+        reader = get_latest_episode_reader(self._environment.pyenv.envs[0]._metrics_path)  # pylint: disable=line-too-long
         self._plot_timeseries_charts(reader, self._time_zone, self._counter)
 
       self._render_env(self._environment.pyenv.envs[0], self._counter)
