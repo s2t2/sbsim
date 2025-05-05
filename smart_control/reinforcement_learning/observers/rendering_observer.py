@@ -514,7 +514,7 @@ class RenderingObserver(Observer):
 
   def _render_env(self, env: environment.Environment, step_count: int):
     """Renders the environment and saves to file."""
-    building_layout = env.building._simulator._building._floor_plan
+    building_layout = env.building._simulator._building.floor_plan
 
     # Create a renderer
     renderer = building_renderer.BuildingRenderer(building_layout, 1)
