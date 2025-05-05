@@ -33,7 +33,7 @@ SetpointValue = Union[float, int, bool]
 ActionSequence = List[Tuple[DeviceType, SetpointName]]
 
 
-@dataclass.dataclass
+@dataclasses.dataclass
 class ScheduleEvent:
   """An event that sets a specific value at a specific time."""
 
