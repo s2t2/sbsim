@@ -25,6 +25,6 @@ def create_and_setup_environment(
   """Creates and sets up the environment."""
   env = load_environment(gin_config_file)
   env.metrics_path = metrics_path
-  env._occupancy_normalization_constant = occupancy_normalization_constant
+  env.occupancy_normalization_constant = occupancy_normalization_constant
 
   return env
