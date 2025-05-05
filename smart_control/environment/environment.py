@@ -442,7 +442,7 @@ class Environment(py_environment.PyEnvironment):
     if self.discount_factor <= 0 or self.discount_factor > 1:
       raise ValueError("Discount factor must be in (0,1]")
 
-    self._metrics_path: Optional[str] = metrics_path
+    self.metrics_path: Optional[str] = metrics_path
     self._writer_factory: Optional[writer_lib.BaseWriterFactory] = (
         writer_factory
     )
@@ -1164,9 +1164,9 @@ class Environment(py_environment.PyEnvironment):
 
     self._metrics_writer = None
 
-    if self._metrics_path and self._writer_factory:
+    if self.metrics_path and self._writer_factory:
       episode_metrics_id = f"{self._label}_{now:%y%m%d_%H%M%S}"
-      output_dir = os.path.join(self._metrics_path, episode_metrics_id)
+      output_dir = os.path.join(self.metrics_path, episode_metrics_id)
 
       logging.info("Writing metric files to %s", output_dir)
       self._metrics_writer = self._writer_factory.create(output_dir)
