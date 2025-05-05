@@ -4,6 +4,7 @@ This creates a starter buffer with exploration data that can be used to
 bootstrap the training process.
 """
 
+import argparse
 import logging
 import os
 
@@ -18,6 +19,7 @@ from smart_control.reinforcement_learning.observers.composite_observer import Co
 from smart_control.reinforcement_learning.observers.print_status_observer import PrintStatusObserver
 from smart_control.reinforcement_learning.policies.schedule_policy import create_baseline_schedule_policy
 from smart_control.reinforcement_learning.replay_buffer.replay_buffer import ReplayBufferManager
+from smart_control.reinforcement_learning.utils.config import CONFIG_PATH
 from smart_control.reinforcement_learning.utils.config import OUTPUT_DATA_PATH
 from smart_control.reinforcement_learning.utils.environment import create_and_setup_environment
 
@@ -181,9 +183,6 @@ def populate_replay_buffer(
 
 
 if __name__ == '__main__':
-  import argparse
-
-  from smart_control.reinforcement_learning.utils.config import CONFIG_PATH
 
   config_filepath = os.path.join(CONFIG_PATH, 'sim_config_1_day.gin')
 
