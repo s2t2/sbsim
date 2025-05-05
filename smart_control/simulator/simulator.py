@@ -70,7 +70,7 @@ class Simulator:
         be logged.
       start_timestamp: Pandas timestamp representing start time for simulation.
     """
-    self._building = building
+    self.building = building
     self._hvac = hvac
     self._weather_controller = weather_controller
     self._time_step_sec = time_step_sec
@@ -82,7 +82,7 @@ class Simulator:
 
   def reset(self):
     """Resets the simulation to its initial configuration."""
-    self._building.reset()
+    self.building.reset()
     self._hvac.reset()
     self._current_timestamp = self._start_timestamp
 
@@ -118,13 +118,13 @@ class Simulator:
       convection_coefficient: Current wind convection coefficient (W/m2/K).
     """
     x, y = cv_coordinates
-    delta_x = self._building.cv_size_cm / 100.0
+    delta_x = self.building.cv_size_cm / 100.0
     delta_t = self._time_step_sec
-    density = self._building.density[x][y]
-    conductivity = self._building.conductivity[x][y]
-    heat_capacity = self._building.heat_capacity[x][y]
-    last_temp = self._building.temp[x][y]
-    neighbors = self._building.neighbors[x][y]
+    density = self.building.density[x][y]
+    conductivity = self.building.conductivity[x][y]
+    heat_capacity = self.building.heat_capacity[x][y]
+    last_temp = self.building.temp[x][y]
+    neighbors = self.building.neighbors[x][y]
     neighbor_temps = [temperature_estimates[nx][ny] for nx, ny in neighbors]
 
     # Ensure corner CV.
@@ -164,13 +164,13 @@ class Simulator:
       convection_coefficient: Current wind convection coefficient (W/m2/K).
     """
     x, y = cv_coordinates
-    delta_x = self._building.cv_size_cm / 100.0
+    delta_x = self.building.cv_size_cm / 100.0
     delta_t = self._time_step_sec
-    density = self._building.density[x][y]
-    conductivity = self._building.conductivity[x][y]
-    heat_capacity = self._building.heat_capacity[x][y]
-    last_temp = self._building.temp[x][y]
-    neighbors = self._building.neighbors[x][y]
+    density = self.building.density[x][y]
+    conductivity = self.building.conductivity[x][y]
+    heat_capacity = self.building.heat_capacity[x][y]
+    last_temp = self.building.temp[x][y]
+    neighbors = self.building.neighbors[x][y]
     neighbor_temps = [temperature_estimates[nx][ny] for nx, ny in neighbors]
 
     # Ensure edge CV.
@@ -181,7 +181,7 @@ class Simulator:
 
     # Edges and corners are multiplied by 0.5, others by 1.0
     edge_factor = [
-        0.5 if len(self._building.neighbors[nx][ny]) < 4 else 1.0
+        0.5 if len(self.building.neighbors[nx][ny]) < 4 else 1.0
         for nx, ny in neighbors
     ]
 
@@ -211,15 +211,15 @@ class Simulator:
       temperature_estimates: Current temperature estimate for each CV.
     """
     x, y = cv_coordinates
-    delta_x = self._building.cv_size_cm / 100.0
+    delta_x = self.building.cv_size_cm / 100.0
     delta_t = self._time_step_sec
-    z = self._building.floor_height_cm / 100.0
-    density = self._building.density[x][y]
-    conductivity = self._building.conductivity[x][y]
-    heat_capacity = self._building.heat_capacity[x][y]
-    last_temp = self._building.temp[x][y]
-    input_q = self._building.input_q[x][y]
-    neighbors = self._building.neighbors[x][y]
+    z = self.building.floor_height_cm / 100.0
+    density = self.building.density[x][y]
+    conductivity = self.building.conductivity[x][y]
+    heat_capacity = self.building.heat_capacity[x][y]
+    last_temp = self.building.temp[x][y]
+    input_q = self.building.input_q[x][y]
+    neighbors = self.building.neighbors[x][y]
     neighbor_temps = [temperature_estimates[nx][ny] for nx, ny in neighbors]
 
     # Ensure interior CV.
@@ -255,7 +255,7 @@ class Simulator:
       convection_coefficient: Current wind convection coefficient (W/m2/K).
     """
     x, y = cv_coordinates
-    neighbors = self._building.neighbors[x][y]
+    neighbors = self.building.neighbors[x][y]
     if len(neighbors) <= 1:
       # Exterior CVs should always return ambient air temps.
       return ambient_temperature
@@ -345,7 +345,7 @@ class Simulator:
     """
     # Initialize estimates with the last update.
     # TODO(gusatb): Please provide a unit test for convergence.
-    temp_estimate = self._building.temp.copy()
+    temp_estimate = self.building.temp.copy()
 
     converged_successfully = False
     for iteration_count in range(self._iteration_limit):
@@ -369,7 +369,7 @@ class Simulator:
       logging.warning(
           'Max iteration count reached, max_delta = %3.3f', max_delta
       )
-    self._building.temp = temp_estimate
+    self.building.temp = temp_estimate
 
     return converged_successfully
 
@@ -390,7 +390,7 @@ class Simulator:
 
     # Get the average temps in each zone. Assumes that the thermostat reads
     # the average room temperatures.
-    avg_temps = self._building.get_zone_average_temps()
+    avg_temps = self.building.get_zone_average_temps()
 
     for zone, zone_temp in avg_temps.items():
       vav = hvac.vavs[zone]
@@ -405,10 +405,10 @@ class Simulator:
 
     # Get the average temps in each zone. Assumes that the thermostat reads
     # the average room temperatures.
-    avg_temps = self._building.get_zone_average_temps()
+    avg_temps = self.building.get_zone_average_temps()
 
     # Recirculation temperature at the air handler is the global average.
-    recirculation_temp = self._building.temp.mean()
+    recirculation_temp = self.building.temp.mean()
 
     ambient_temperature = self._weather_controller.get_current_temp(current_ts)
 
@@ -448,7 +448,7 @@ class Simulator:
         hvac.boiler.add_demand(vav.reheat_demand)
 
       # Apply the thermal energy to the zone.
-      self._building.apply_thermal_power_zone(zone, q_zone)
+      self.building.apply_thermal_power_zone(zone, q_zone)
 
     hvac.boiler.return_water_temperature_sensor = (
         self._calculate_return_water_temperature(zone_supply_temp_map)
@@ -500,7 +500,7 @@ class Simulator:
     for (
         zone_coords,
         zone_air_temperature,
-    ) in self._building.get_zone_average_temps().items():
+    ) in self.building.get_zone_average_temps().items():
       zone_id = conversion_utils.zone_coordinates_to_id(zone_coords)
       zone_reward_infos[zone_id] = self._get_zone_reward_info(
           occupancy_function, zone_coords, zone_id, zone_air_temperature
@@ -520,7 +520,7 @@ class Simulator:
         self._hvac.air_handler.compute_intake_fan_energy_rate()
         + self._hvac.air_handler.compute_exhaust_fan_energy_rate()
     )
-    recirculation_temp = self._building.temp.mean()
+    recirculation_temp = self.building.temp.mean()
     ambient_temp = self._weather_controller.get_current_temp(
         self._current_timestamp
     )
