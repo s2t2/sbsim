@@ -1268,8 +1268,6 @@ class Environment(py_environment.PyEnvironment):
           action_response, self.current_simulation_timestamp
       )
 
-    last_timestamp = self.current_simulation_timestamp
-
     self.building.wait_time()
 
     observation = self._get_observation()
