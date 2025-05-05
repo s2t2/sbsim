@@ -29,7 +29,7 @@ import numpy as np
 
 from smart_control.simulator import building_utils
 
-Coordinates2D = Union[Tuple[int, int], np.ndarray]
+Coordinates2D = Union[Tuple[int, int], np.ndarray]  # pylint: disable=invalid-name
 RoomIndicesDict = Dict[str, Collection[Coordinates2D]]
 
 
