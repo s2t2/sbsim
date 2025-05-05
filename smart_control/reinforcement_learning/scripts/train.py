@@ -10,6 +10,8 @@ import os
 # https://github.com/tensorflow/tensorflow/issues/63548#issuecomment-2008941537
 os.environ['WRAPT_DISABLE_EXTENSIONS'] = 'true'
 
+# pylint: disable=g-import-not-at-top
+import argparse
 import datetime
 import logging
 
@@ -30,6 +32,8 @@ from smart_control.reinforcement_learning.replay_buffer.replay_buffer import Rep
 from smart_control.reinforcement_learning.utils.config import CONFIG_PATH
 from smart_control.reinforcement_learning.utils.config import EXPERIMENT_RESULTS_PATH
 from smart_control.reinforcement_learning.utils.environment import create_and_setup_environment
+
+# pylint: enable=g-import-not-at-top
 
 # Configure logging
 logging.basicConfig(
@@ -300,7 +304,6 @@ def train_agent(
 
 
 if __name__ == '__main__':
-  import argparse
 
   parser = argparse.ArgumentParser(
       description=(
