@@ -280,7 +280,7 @@ def create_baseline_schedule_policy(
       ],
       weekday_schedule=weekday_schedule_events,
       weekend_schedule=weekend_holiday_schedule_events,
-      action_normalizers=env._action_normalizers,
+      action_normalizers=env.action_normalizers,
       hod_cos_index=hod_cos_index,
       hod_sin_index=hod_sin_index,
       dow_cos_index=dow_cos_index,
