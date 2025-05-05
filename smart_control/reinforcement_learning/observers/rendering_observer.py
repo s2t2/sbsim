@@ -146,8 +146,8 @@ class RenderingObserver(Observer):
       feature_timeseries_ac = _to_kwh(timeseries['air_handler_air_conditioner_energy_rate'])
       feature_timeseries_blower = _to_kwh(timeseries['air_handler_blower_electrical_energy_rate'])
     else:
-      feature_timeseries_ac = (timeseries['air_handler_air_conditioner_energy_rate'] / 1000.0)
-      feature_timeseries_blower = (timeseries['air_handler_blower_electrical_energy_rate'] / 1000.0)
+      feature_timeseries_ac = timeseries['air_handler_air_conditioner_energy_rate'] / 1000.0
+      feature_timeseries_blower = timeseries['air_handler_blower_electrical_energy_rate'] / 1000.0
     # pylint: enable=line-too-long
     # fmt: on
 
@@ -180,8 +180,8 @@ class RenderingObserver(Observer):
       feature_timeseries_gas = _to_kwh(timeseries['boiler_natural_gas_heating_energy_rate'])
       feature_timeseries_pump = _to_kwh(timeseries['boiler_pump_electrical_energy_rate'])
     else:
-      feature_timeseries_gas = (timeseries['boiler_natural_gas_heating_energy_rate'] / 1000.0)
-      feature_timeseries_pump = (timeseries['boiler_pump_electrical_energy_rate'] / 1000.0)
+      feature_timeseries_gas = timeseries['boiler_natural_gas_heating_energy_rate'] / 1000.0
+      feature_timeseries_pump = timeseries['boiler_pump_electrical_energy_rate'] / 1000.0
     # pylint: enable=line-too-long
     # fmt: on
 
