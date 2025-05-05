@@ -19,7 +19,7 @@ persistent=no
 
 # List of plugins (as comma separated values of python modules names) to load,
 # usually to register additional checkers.
-load-plugins=
+load-plugins=pylint_per_file_ignores
 
 # Use multiple processes to speed up Pylint.
 jobs=4
@@ -129,6 +129,37 @@ disable=R,
         wrong-import-order,
         xrange-builtin,
         zip-builtin-not-iterating,
+
+# Ignore "protected-access" errors in test files only.
+#per-file-ignores =
+#    test_.*.py:protected-access
+#    .*_test\.py:protected-access
+
+# Define per-file ignores using the loaded plugin
+# Format is: <file_pattern>:<message_id_or_symbol>[,<message_id_or_symbol>...]
+# Use separate lines for different patterns or groups of messages.
+#per-file-ignores =
+#  test_*.py:W0212   # Ignore protected-access in files starting with test_
+#  *_test.py:W0212   # Ignore protected-access in files ending with _test.py
+
+# this works for specific files:
+#per-file-ignores =
+#  smart_control/environment/environment_test.py:protected-access
+#  smart_control/reward/base_setpoint_energy_carbon_reward_test.py:protected-access
+
+# NOPE:
+
+#per-file-ignores=test_*.py:W0212,*_test.py:W0212
+#> astroid.exceptions.AstroidError
+
+#per-file-ignores = regexp:^(test_.*|.*_test)\.py$:W0212
+#> ValueError: dictionary update sequence element #0 has length 3; 2 is required
+
+#per-file-ignores = **/*_test.py:protected-access
+# valid but not matching
+
+#per-file-ignores = **/*_test\.py:protected-access
+
 
 
 [REPORTS]
