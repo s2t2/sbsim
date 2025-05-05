@@ -208,11 +208,10 @@ def create_baseline_schedule_policy(
 
   _, action_spec, time_step_spec = spec_utils.get_tensor_specs(tf_env)
 
-  hod_cos_index = env._field_names.index('hod_cos_000')
-  hod_sin_index = env._field_names.index('hod_sin_000')
-  dow_cos_index = env._field_names.index('dow_cos_000')
-  dow_sin_index = env._field_names.index('dow_sin_000')
-
+  hod_cos_index = env.field_names.index('hod_cos_000')
+  hod_sin_index = env.field_names.index('hod_sin_000')
+  dow_cos_index = env.field_names.index('dow_cos_000')
+  dow_sin_index = env.field_names.index('dow_sin_000')
   # Note that temperatures are specified in Kelvin:
   weekday_schedule_events = [
       ScheduleEvent(

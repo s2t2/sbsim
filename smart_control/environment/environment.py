@@ -476,13 +476,13 @@ class Environment(py_environment.PyEnvironment):
     )
     logging.info("Auxiliary Features %s", self._auxiliary_features)
 
-    self._observation_spec, self._field_names = self._get_observation_spec(
+    self._observation_spec, self.field_names = self._get_observation_spec(
         building.devices
     )
     logging.info("Observation Spec %s", self._observation_spec)
 
-    logging.info("%s FIELD NAMES (%d)", self._label, len(self._field_names))
-    for i, fn in enumerate(self._field_names):
+    logging.info("%s FIELD NAMES (%d)", self._label, len(self.field_names))
+    for i, fn in enumerate(self.field_names):
       logging.info("Field %d: %s", i, fn)
 
     self._episode_ended = False
@@ -945,30 +945,30 @@ class Environment(py_environment.PyEnvironment):
         dtype=np.float32,
     )
     # Return observation as a flat array.
-    if len(self._field_names) > len(observation):
-      dif_set = set(self._field_names) - observation.keys()
+    if len(self.field_names) > len(observation):
+      dif_set = set(self.field_names) - observation.keys()
       dif_set_str = ", ".join(dif_set)
       logging.error("Difference: %s", dif_set_str)
       raise ValueError(
           f"Observation of length ({len(observation)}) is missing"
           f" {len(dif_set)} fields from expected fields size"
-          f" ({len(self._field_names)})."
+          f" ({len(self.field_names)})."
       )
 
     obsarray = np.array(
-        [observation[field_id] for field_id in self._field_names],
+        [observation[field_id] for field_id in self.field_names],
         dtype=np.float32,
     )
     nan_ix = np.squeeze(np.argwhere(np.isnan(obsarray)), axis=1)
     if nan_ix.size > 0:
-      nan_fields = [self._field_names[i] for i in nan_ix]
+      nan_fields = [self.field_names[i] for i in nan_ix]
       logging.warning(
           "Observation vector contains Nans at %s.", ", ".join(nan_fields)
       )
     inf_ix = np.squeeze(np.argwhere(np.isinf(obsarray)), axis=1)
     # TODO(sipple) Add a unit test for the logging below.
     if inf_ix.size > 0:
-      inf_fields = [self._field_names[i] for i in inf_ix]
+      inf_fields = [self.field_names[i] for i in inf_ix]
       logging.warning(
           "Observation vector contains Infs at %s.", ", ".join(inf_fields)
       )
