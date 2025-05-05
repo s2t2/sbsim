@@ -77,17 +77,17 @@ class SimulatorFlexibleGeometries(simulator.Simulator):
         be logged.
       start_timestamp: Pandas timestamp representing start time for simulation.
     """
-    self._building = building
+    self.building = building
     self._hvac = hvac
 
     logging.info("Constructing the floorplan based simulation.")
 
     if self._hvac.fill_zone_identifier_exogenously:
       logging.info("Filling zones exogenously")
-      self._hvac.initialize_zone_identifier(self._building._room_dict.keys())
+      self._hvac.initialize_zone_identifier(self.building._room_dict.keys())
 
     super().__init__(
-        self._building,
+        self.building,
         self._hvac,
         weather_controller,
         time_step_sec,
@@ -99,7 +99,7 @@ class SimulatorFlexibleGeometries(simulator.Simulator):
 
     logging.info("Constructing the floorplan based simulation.")
 
-    render_zones = np.copy(self._building.floor_plan)
+    render_zones = np.copy(self.building.floor_plan)
     render_zones[render_zones == 2] = 0
 
     renderer = building_renderer.BuildingRenderer(render_zones, 1)
@@ -109,7 +109,7 @@ class SimulatorFlexibleGeometries(simulator.Simulator):
 
   def reset(self):
     """Resets the simulation to its initial configuration."""
-    self._building.reset()
+    self.building.reset()
     self._hvac.reset()
     self._current_timestamp = self._start_timestamp
 
@@ -135,10 +135,10 @@ class SimulatorFlexibleGeometries(simulator.Simulator):
 
     # Get the average temps in each zone. Assumes that the thermostat reads
     # the average room temperatures.
-    avg_temps = self._building.get_zone_average_temps()
+    avg_temps = self.building.get_zone_average_temps()
 
     # Recirculation temperature at the air handler is the global average.
-    recirculation_temp = self._building.temp.mean()
+    recirculation_temp = self.building.temp.mean()
 
     ambient_temperature = self._weather_controller.get_current_temp(current_ts)
 
@@ -157,7 +157,7 @@ class SimulatorFlexibleGeometries(simulator.Simulator):
     )
 
     # Simulate airflow
-    self._building.apply_convection()
+    self.building.apply_convection()
 
     # Reset the air handler and boiler flow rate demand before accumulating.
     hvac.air_handler.reset_demand()
@@ -180,7 +180,7 @@ class SimulatorFlexibleGeometries(simulator.Simulator):
         hvac.boiler.add_demand(vav.reheat_demand)
 
       # Apply the thermal energy to the zone.
-      self._building.apply_thermal_power_zone(zone, q_zone)
+      self.building.apply_thermal_power_zone(zone, q_zone)
 
     hvac.boiler.return_water_temperature_sensor = (
         self._calculate_return_water_temperature(zone_supply_temp_map)
@@ -188,7 +188,7 @@ class SimulatorFlexibleGeometries(simulator.Simulator):
 
     # Increment the timestamp.
     self._current_timestamp += pd.Timedelta(self._time_step_sec, unit="s")
-    self._log_and_plotter.log(self._building.temp)
+    self._log_and_plotter.log(self.building.temp)
 
     if self.current_timestamp == self._start_timestamp + pd.Timedelta(days=4):
       self.get_video(path=constants.VIDEO_PATH_ROOT + video_filename)
@@ -233,7 +233,7 @@ class SimulatorFlexibleGeometries(simulator.Simulator):
     for (
         zone_coords,
         zone_air_temperature,
-    ) in self._building.get_zone_average_temps().items():
+    ) in self.building.get_zone_average_temps().items():
       zone_id = conversion_utils.floor_plan_based_zone_identifier_to_id(
           zone_coords
       )
@@ -255,7 +255,7 @@ class SimulatorFlexibleGeometries(simulator.Simulator):
         self._hvac.air_handler.compute_intake_fan_energy_rate()
         + self._hvac.air_handler.compute_exhaust_fan_energy_rate()
     )
-    recirculation_temp = self._building.temp.mean()
+    recirculation_temp = self.building.temp.mean()
     ambient_temp = self._weather_controller.get_current_temp(
         self._current_timestamp
     )
