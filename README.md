@@ -139,10 +139,10 @@ If you would like to run the style checker manually:
 
 ```sh
 # check all files:
-pylint --rcfile=.pylintrc smart_control
+pylint --rcfile=.pylintrc --ignore=proto smart_control
 
 # check a specific file:
-pylint --rcfile=.pylintrc smart_control/path/to/file.py
+pylint --rcfile=.pylintrc --ignore=proto smart_control/path/to/file.py
 ```
 
 To check for a specific issue (e.g. "missing-module-docstring"), using the corresponding [message code](https://pylint.readthedocs.io/en/stable/user_guide/messages/messages_overview.html) (e.g. "C0114"):
