@@ -514,14 +514,14 @@ class RenderingObserver(Observer):
 
   def _render_env(self, env: environment.Environment, step_count: int):
     """Renders the environment and saves to file."""
-    building_layout = env.building._simulator.building.floor_plan
+    building_layout = env.building.simulator.building.floor_plan
 
     # Create a renderer
     renderer = building_renderer.BuildingRenderer(building_layout, 1)
 
     # Get the current temps to render
-    temps = env.building._simulator.building.temp
-    input_q = env.building._simulator.building.input_q
+    temps = env.building.simulator.building.temp
+    input_q = env.building.simulator.building.input_q
 
     # Render
     vmin = 285
