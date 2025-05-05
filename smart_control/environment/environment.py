@@ -290,7 +290,7 @@ class ActionConfig:
   """
 
   def __init__(self, action_normalizers: ActionNormalizerMap):
-    self._action_normalizers = action_normalizers
+    self.action_normalizers = action_normalizers
 
   def get_action_normalizer(
       self, setpoint_name: FieldName
@@ -300,7 +300,7 @@ class ActionConfig:
     Args:
       setpoint_name: Name of setpoint to get action normalizer for.
     """
-    return self._action_normalizers.get(DeviceFieldId(setpoint_name))
+    return self.action_normalizers.get(DeviceFieldId(setpoint_name))
 
 
 def generate_field_id(
@@ -444,7 +444,7 @@ class Environment(py_environment.PyEnvironment):
     if self.discount_factor <= 0 or self.discount_factor > 1:
       raise ValueError("Discount factor must be in (0,1]")
 
-    self._metrics_path: Optional[str] = metrics_path
+    self.metrics_path: Optional[str] = metrics_path
     self._writer_factory: Optional[writer_lib.BaseWriterFactory] = (
         writer_factory
     )
@@ -460,14 +460,14 @@ class Environment(py_environment.PyEnvironment):
       raise ValueError("Discount factor must be in (0,1]")
 
     if device_action_tuples is not None:
-      self._action_spec, self._action_normalizers, self._action_names = (
+      self._action_spec, self.action_normalizers, self._action_names = (
           self._get_action_spec_and_normalizers_from_device_action_tuples(
               action_config=action_config,
               device_action_tuples=device_action_tuples,
           )
       )
     else:
-      self._action_spec, self._action_normalizers, self._action_names = (
+      self._action_spec, self.action_normalizers, self._action_names = (
           self._get_action_spec_and_normalizers(action_config, building.devices)
       )
 
@@ -478,13 +478,13 @@ class Environment(py_environment.PyEnvironment):
     )
     logging.info("Auxiliary Features %s", self._auxiliary_features)
 
-    self._observation_spec, self._field_names = self._get_observation_spec(
+    self._observation_spec, self.field_names = self._get_observation_spec(
         building.devices
     )
     logging.info("Observation Spec %s", self._observation_spec)
 
-    logging.info("%s FIELD NAMES (%d)", self._label, len(self._field_names))
-    for i, fn in enumerate(self._field_names):
+    logging.info("%s FIELD NAMES (%d)", self._label, len(self.field_names))
+    for i, fn in enumerate(self.field_names):
       logging.info("Field %d: %s", i, fn)
 
     self._episode_ended = False
@@ -501,7 +501,7 @@ class Environment(py_environment.PyEnvironment):
     # Since the request will not change (i.e., feature vector is fixed),
     # just define a single ObservationRequest as a template for all requests.
     self._observation_request = self._get_observation_request(building.devices)
-    self._occupancy_normalization_constant = occupancy_normalization_constant
+    self.occupancy_normalization_constant = occupancy_normalization_constant
     if run_command_predictors is None:
       self._run_command_predictors = None
     else:
@@ -577,7 +577,7 @@ class Environment(py_environment.PyEnvironment):
 
       _, setpoint_name = self._id_map.inv[field_id]
       native_setpoint_value = default_actions[setpoint_name]
-      normalized_agent_value = self._action_normalizers[field_id].agent_value(
+      normalized_agent_value = self.action_normalizers[field_id].agent_value(
           native_setpoint_value
       )
       fixed_actions.append(normalized_agent_value)
@@ -848,7 +848,7 @@ class Environment(py_environment.PyEnvironment):
 
       agent_action = action[field_id]
 
-      action_normalizer = self._action_normalizers[field_id]
+      action_normalizer = self.action_normalizers[field_id]
 
       action_value = action_normalizer.setpoint_value(agent_action)
 
@@ -942,35 +942,35 @@ class Environment(py_environment.PyEnvironment):
         dtype=np.float32,
     )
     observation[NUM_OCCUPANTS] = np.array(
-        (self.building.num_occupants - self._occupancy_normalization_constant)
-        / (self._occupancy_normalization_constant + 1),
+        (self.building.num_occupants - self.occupancy_normalization_constant)
+        / (self.occupancy_normalization_constant + 1),
         dtype=np.float32,
     )
     # Return observation as a flat array.
-    if len(self._field_names) > len(observation):
-      dif_set = set(self._field_names) - observation.keys()
+    if len(self.field_names) > len(observation):
+      dif_set = set(self.field_names) - observation.keys()
       dif_set_str = ", ".join(dif_set)
       logging.error("Difference: %s", dif_set_str)
       raise ValueError(
           f"Observation of length ({len(observation)}) is missing"
           f" {len(dif_set)} fields from expected fields size"
-          f" ({len(self._field_names)})."
+          f" ({len(self.field_names)})."
       )
 
     obsarray = np.array(
-        [observation[field_id] for field_id in self._field_names],
+        [observation[field_id] for field_id in self.field_names],
         dtype=np.float32,
     )
     nan_ix = np.squeeze(np.argwhere(np.isnan(obsarray)), axis=1)
     if nan_ix.size > 0:
-      nan_fields = [self._field_names[i] for i in nan_ix]
+      nan_fields = [self.field_names[i] for i in nan_ix]
       logging.warning(
           "Observation vector contains Nans at %s.", ", ".join(nan_fields)
       )
     inf_ix = np.squeeze(np.argwhere(np.isinf(obsarray)), axis=1)
     # TODO(sipple) Add a unit test for the logging below.
     if inf_ix.size > 0:
-      inf_fields = [self._field_names[i] for i in inf_ix]
+      inf_fields = [self.field_names[i] for i in inf_ix]
       logging.warning(
           "Observation vector contains Infs at %s.", ", ".join(inf_fields)
       )
@@ -1166,9 +1166,9 @@ class Environment(py_environment.PyEnvironment):
 
     self._metrics_writer = None
 
-    if self._metrics_path and self._writer_factory:
+    if self.metrics_path and self._writer_factory:
       episode_metrics_id = f"{self._label}_{now:%y%m%d_%H%M%S}"
-      output_dir = os.path.join(self._metrics_path, episode_metrics_id)
+      output_dir = os.path.join(self.metrics_path, episode_metrics_id)
 
       logging.info("Writing metric files to %s", output_dir)
       self._metrics_writer = self._writer_factory.create(output_dir)

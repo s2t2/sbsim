@@ -514,14 +514,14 @@ class RenderingObserver(Observer):
 
   def _render_env(self, env: environment.Environment, step_count: int):
     """Renders the environment and saves to file."""
-    building_layout = env.building._simulator._building._floor_plan
+    building_layout = env.building.simulator.building.floor_plan
 
     # Create a renderer
     renderer = building_renderer.BuildingRenderer(building_layout, 1)
 
     # Get the current temps to render
-    temps = env.building._simulator._building.temp
-    input_q = env.building._simulator._building.input_q
+    temps = env.building.simulator.building.temp
+    input_q = env.building.simulator.building.input_q
 
     # Render
     vmin = 285
@@ -571,9 +571,9 @@ class RenderingObserver(Observer):
           mean_execution_time,
       )
 
-      if self._environment.pyenv.envs[0]._metrics_path is not None:
+      if self._environment.pyenv.envs[0].metrics_path is not None:
         logger.warning('Plotting timeseries charts...')
-        reader = get_latest_episode_reader(self._environment.pyenv.envs[0]._metrics_path)  # pylint: disable=line-too-long
+        reader = get_latest_episode_reader(self._environment.pyenv.envs[0].metrics_path)  # pylint: disable=line-too-long
         self._plot_timeseries_charts(reader, self._time_zone, self._counter)
 
       self._render_env(self._environment.pyenv.envs[0], self._counter)
