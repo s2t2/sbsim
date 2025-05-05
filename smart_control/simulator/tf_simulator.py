@@ -541,14 +541,14 @@ class TFSimulator(simulator.SimulatorFlexibleGeometries):
     n_exterior_elements = tf.math.count_nonzero(self._t_exerior_temps_mask)
     logging.info('Number of exterior CVs: %d', n_exterior_elements)
 
-    n_elements = self._building.temp.shape[0] * self._building.temp.shape[1]
+    n_elements = self.building.temp.shape[0] * self.building.temp.shape[1]
     n_interior_elements = n_elements - n_boundary_elements - n_exterior_elements
     logging.info('Number of interior CVs: %d', n_interior_elements)
 
     self._t_u, self._t_v = get_cv_dimension_tensors(
-        self._building.cv_size_cm / 100.0,
+        self.building.cv_size_cm / 100.0,
         self._boundary_cv_mapping,
-        self._building.temp.shape,
+        self.building.temp.shape,
     )
 
     (
@@ -557,7 +557,7 @@ class TFSimulator(simulator.SimulatorFlexibleGeometries):
         self._t_conductivity_top_edge,
         self._t_conductivity_bottom_edge,
     ) = get_oriented_conductivity_tensors(
-        self._building.conductivity, self._boundary_cv_mapping
+        self.building.conductivity, self._boundary_cv_mapping
     )
 
   def _get_tensor_exterior_mask(
@@ -765,7 +765,7 @@ class TFSimulator(simulator.SimulatorFlexibleGeometries):
         t_density,
         t_heat_capacity,
         t_z,
-    ) = _get_input_tensors(self._building)
+    ) = _get_input_tensors(self.building)
 
     (
         t_convection_left_edge,
@@ -774,7 +774,7 @@ class TFSimulator(simulator.SimulatorFlexibleGeometries):
         t_convection_bottom_edge,
     ) = get_oriented_convection_coefficient_tensors(
         convection_coefficient,
-        self._building.temp.shape,
+        self.building.temp.shape,
         self._boundary_cv_mapping,
     )
 

@@ -19,7 +19,7 @@ persistent=no
 
 # List of plugins (as comma separated values of python modules names) to load,
 # usually to register additional checkers.
-load-plugins=
+load-plugins=pylint_per_file_ignores
 
 # Use multiple processes to speed up Pylint.
 jobs=4
@@ -129,6 +129,12 @@ disable=R,
         wrong-import-order,
         xrange-builtin,
         zip-builtin-not-iterating,
+
+
+# Ignore certain errors in certain files
+# see: https://github.com/christopherpickering/pylint-per-file-ignores
+per-file-ignores =
+  .*_test\.py:protected-access # ignore "protected-access" errors in test files
 
 
 [REPORTS]
