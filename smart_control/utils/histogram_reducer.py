@@ -123,7 +123,7 @@ def approximate_values_from_histogram_assignment(
     bins: the values associated with each bin.
 
   Returns:
-    A mapping of (device_id, measurement_name): bin-assigned value
+    A mapping of {(device_id, measurement_name): bin-assigned value}
   """
   assigned_values = {}
 
@@ -348,6 +348,7 @@ class HistogramReducer(BaseReducer):
               next_histogram_assignment
           )
 
+          # pylint: disable-next=consider-using-dict-items # TODO: loop through the items (perhaps after this existing functionality has been tested)
           for measurement in next_assigned_measurements:
             updates[measurement].append(next_assigned_measurements[measurement])
 
