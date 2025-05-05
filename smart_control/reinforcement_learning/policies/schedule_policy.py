@@ -1,6 +1,6 @@
 """Reinforcement learning schedule policies."""
 
-from dataclasses import dataclass
+import dataclasses
 import enum
 import logging
 from typing import Dict, List, Optional, Tuple, Union
@@ -33,7 +33,7 @@ SetpointValue = Union[float, int, bool]
 ActionSequence = List[Tuple[DeviceType, SetpointName]]
 
 
-@dataclass
+@dataclass.dataclass
 class ScheduleEvent:
   """An event that sets a specific value at a specific time."""
 

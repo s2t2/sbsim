@@ -149,9 +149,12 @@ To check for a specific issue (e.g. "missing-module-docstring"), using the corre
 
 ```sh
 pylint smart_control --rcfile=.pylintrc --ignore=proto --disable=all --enable=C0114
+
+# using Google internal tools to check for Google-specific errors:
+#gpylint smart_control --ignore=proto --disable=all --enable=C6202
 ```
 
-> NOTE: some error messages beginning with "g-" are additional Google-specific errors that may need to be checked using internal tools (`gpylint`), and may not be able to be checked by open source contributors at this time.
+> NOTE: some error messages beginning with "g-" are additional Google-specific errors that may need to be checked using internal tools (`gpylint`), and may not be able to be checked by open source contributors at this time. Maintainer note: `gpylint` may not work with the ".pylintrc" config file.
 
 If you would like to prevent certain lines of code from being checked (for example to leave a long line as-is), it is possible to [ignore formatting](hhttps://pylint.readthedocs.io/en/stable/user_guide/messages/message_control.html#block-disables) by adding `pylint` pragma comments like `# pylint: disable=line-too-long`. NOTE: `pylint` and `pyink` (see section above) may each require their own set of separate pragma comments.
 

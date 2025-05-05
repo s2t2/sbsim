@@ -10,7 +10,7 @@ import os
 # https://github.com/tensorflow/tensorflow/issues/63548#issuecomment-2008941537
 os.environ['WRAPT_DISABLE_EXTENSIONS'] = 'true'
 
-from datetime import datetime
+import datetime
 import logging
 
 import tensorflow as tf
@@ -77,7 +77,7 @@ def train_agent(
   scenario_config_path = os.path.join(CONFIG_PATH, 'sim_config_1_day.gin')
 
   # Generate timestamp for summary directory
-  current_time = datetime.now().strftime('%Y_%m_%d-%H:%M:%S')
+  current_time = datetime.datetime.now().strftime('%Y_%m_%d-%H:%M:%S')
   summary_dir = os.path.join(
       EXPERIMENT_RESULTS_PATH, f'{experiment_name}_{current_time}'
   )
