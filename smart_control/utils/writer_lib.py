@@ -27,9 +27,9 @@ from smart_control.proto import smart_control_normalization_pb2
 from smart_control.proto import smart_control_reward_pb2
 
 if sys.version_info >= (3, 11):
-  from importlib.resources.abc import Traversable  # pylint: disable=g-import-not-at-top
+  from importlib.resources.abc import Traversable  # pylint: disable=g-import-not-at-top, g-importing-member
 else:
-  from importlib_resources.abc import Traversable  # pylint: disable=g-import-not-at-top
+  from importlib_resources.abc import Traversable  # pylint: disable=g-import-not-at-top, g-importing-member
 
 PathLocation: TypeAlias = Traversable | os.PathLike[str] | str
 
