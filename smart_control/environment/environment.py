@@ -1130,7 +1130,7 @@ class Environment(py_environment.PyEnvironment):
     assert self._summary_writer is not None
 
     if self._global_step_count % self._metrics_reporting_interval == 0:
-      with (
+      with (  # pylint: disable=not-context-manager # TODO: consider adding comments to provide more context
           self._summary_writer.as_default(),
           tf.compat.v2.summary.record_if(True),
           tf.name_scope("RewardInfo/"),
