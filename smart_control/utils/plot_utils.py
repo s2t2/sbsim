@@ -246,7 +246,7 @@ def render_building_subplot(
       ax.text(
           x + 0.005,
           y,
-          '%3.1f kW' % (q / 1000.0),
+          f'{(q / 1000.0):3.1f} kW',
           horizontalalignment='left',
           verticalalignment='top',
           transform=ax.transAxes,
@@ -435,9 +435,7 @@ def plot_combined_results(
 
   if writedir:
 
-    filename = 'thermal_step_%s.png' % (
-        current_time.strftime('%Y-%m-%d_%H-%M-%S')
-    )
+    filename = f"thermal_step_{current_time.strftime('%Y-%m-%d_%H-%M-%S')}.png"
     full_path = os.path.join(writedir, filename)
     full_path = pathlib.Path(full_path)
 
