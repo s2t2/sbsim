@@ -52,7 +52,7 @@ We welcome your contributions to this repository!
 
 All open source contributors will need to sign Google's [Contributor License Agreement (CLA)](https://cla.developers.google.com/).
 
-Contributors are encouraged to consult the sections below for more information about code documenation, testing, and formatting.
+Contributors are encouraged to consult the sections below for more information about code documentation, testing, and formatting.
 
 ### Documentation
 
