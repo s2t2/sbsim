@@ -402,6 +402,8 @@ class Environment(py_environment.PyEnvironment):
       step_interval: amount of time between env steps.
       writer_factory: Used with metrics_path, factory for metrics writers.
     """
+    super().__init__()
+
     self.building: base_building.BaseBuilding = building
     self._time_zone = time_zone
     self._device_action_tuples: Optional[Sequence[DeviceActionTuple]] = (
