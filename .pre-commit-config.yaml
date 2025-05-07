@@ -19,11 +19,13 @@ repos:
       exclude: '^smart_control/proto/'
 
     # NOTE: running this against all files is prohibitively slow
-    # ... so we are choosing to only run against files that have changed
+    # ... so we omit passing the smart_buildings directory,
+    # ... to avoid overriding pre-commit wanting to run against changed files only
     - id: pylint
       name: pylint
       #entry: pylint --rcfile=.pylintrc --ignore=proto smart_control
-      entry: pylint --rcfile=.pylintrc --ignore=proto $(git diff --name-only  --staged | grep -E '\.py$')
+      #entry: pylint --rcfile=.pylintrc --ignore=proto $(git diff --name-only --staged | grep -E '\.py$')
+      entry: pylint --rcfile=.pylintrc --ignore=proto
       language: system
       types: [file, python]
       files: '^smart_control/'
