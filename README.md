@@ -164,7 +164,7 @@ If you would like to prevent certain lines of code from being checked (for examp
 
 ### Pre-commit Hooks
 
-We are using pre-commit hooks to perform code formatting and import sorting. These actions will take place on each commit.
+We are using pre-commit hooks to perform code formatting, import sorting, and code linting. These actions will take place on each commit.
 
 To enable the pre-commit hooks, you must perform a one-time setup by running `pre-commit install`. This will update ".git/hooks/pre-commit".
 
@@ -172,14 +172,17 @@ To enable the pre-commit hooks, you must perform a one-time setup by running `pr
 If you would like to run the pre-commit hooks without making a commit:
 
 ```sh
-# run for all files:
+# run against staged files only:
+pre-commit run
+
+# run against all files:
 pre-commit run --all-files
 
-# run for a specific set of file(s):
+# run against a specific set of file(s):
 pre-commit run --files path/to/my_file.py path/to/other_file.py
 ```
 
-If you run into issues and need to clear the cache:
+If you encounter issues and need to clear the cache:
 
 ```sh
 pre-commit clean
