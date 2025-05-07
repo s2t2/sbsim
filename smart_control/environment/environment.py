@@ -554,13 +554,13 @@ class Environment(py_environment.PyEnvironment):
     """Returns the labels of the auxiliary features."""
     return (
         [
-            "%s_%s" % (tup[0], tup[1])
+            f"{tup[0]}_{tup[1]}"
             for tup in regression_building_utils.get_time_feature_names(
                 num_hod_features, HOD_LABEL
             )
         ]
         + [
-            "%s_%s" % (tup[0], tup[1])
+            f"{tup[0]}_{tup[1]}"
             for tup in regression_building_utils.get_time_feature_names(
                 num_dow_features, DOW_LABEL
             )
@@ -744,7 +744,7 @@ class Environment(py_environment.PyEnvironment):
           for v in self._observation_histogram_reducer.histogram_parameters[
               measurement_name
           ]:
-            bin_id = "h_%.2f" % v
+            bin_id = f"h_{v:.2f}"
             if (measurement_name, bin_id) not in self._id_map.keys():
               field_id = DeviceFieldId(f"{measurement_name}_{bin_id}")
 
@@ -914,8 +914,8 @@ class Environment(py_environment.PyEnvironment):
         self._num_hod_features, hod_rad, HOD_LABEL
     )
     for hod_feature_name in hod_features:
-      observation["%s_%s" % (hod_feature_name[0], hod_feature_name[1])] = (
-          np.array(hod_features[hod_feature_name], dtype=np.float32)
+      observation[f"{hod_feature_name[0]}_{hod_feature_name[1]}"] = np.array(
+          hod_features[hod_feature_name], dtype=np.float32
       )
 
     dow_rad = conversion_utils.get_radian_time(
@@ -927,8 +927,8 @@ class Environment(py_environment.PyEnvironment):
         self._num_dow_features, dow_rad, DOW_LABEL
     )
     for dow_feature_name in dow_features:
-      observation["%s_%s" % (dow_feature_name[0], dow_feature_name[1])] = (
-          np.array(dow_features[dow_feature_name], dtype=np.float32)
+      observation[f"{dow_feature_name[0]}_{dow_feature_name[1]}"] = np.array(
+          dow_features[dow_feature_name], dtype=np.float32
       )
 
     observation[COMFORT_MODE_NOW] = np.array(
@@ -1223,10 +1223,10 @@ class Environment(py_environment.PyEnvironment):
       """Create a list of actions from an ActionRequest for logging."""
       action_strings = []
       for single_action_request in action_request.single_action_requests:
-        action_string = "%s %s: %3.2f" % (
-            single_action_request.device_id,
-            single_action_request.setpoint_name,
-            single_action_request.continuous_value,
+        action_string = (
+            f"{single_action_request.device_id} "
+            f"{single_action_request.setpoint_name}: "
+            f"{single_action_request.continuous_value:3.2f}"
         )
         action_strings.append(action_string)
       return action_strings
