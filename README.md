@@ -143,6 +143,9 @@ pylint --rcfile=.pylintrc --ignore=proto smart_control
 
 # check a specific file:
 pylint --rcfile=.pylintrc --ignore=proto smart_control/path/to/file.py
+
+# check only files that have been changed since the previous commit:
+pylint --rcfile=.pylintrc --ignore=proto $(git diff --name-only  --staged | grep -E '\.py$')
 ```
 
 To check for a specific issue (e.g. "missing-module-docstring"), using the corresponding [message code](https://pylint.readthedocs.io/en/stable/user_guide/messages/messages_overview.html) (e.g. "C0114"):
