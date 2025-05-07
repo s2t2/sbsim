@@ -48,7 +48,7 @@ jobs:
         source .venv/bin/activate
         isort .
 
-    - name: Run the linter
+    - name: Run the style checker
       run: |
         source .venv/bin/activate
         pylint --rcfile=.pylintrc --ignore=proto smart_control

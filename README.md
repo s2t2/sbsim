@@ -133,7 +133,9 @@ isort -v .
 
 ### Style Checking
 
-We are using `pylint` to check for style formatting issues that `pyink` doesn't fix, to more closely follow [Google Python style guidelines](https://google.github.io/styleguide/pyguide.html) and pass pre-submit linting checks when merging code into Google's codebase.
+We are using `pylint` to check for style formatting issues that `pyink` doesn't fix, to more closely follow [Google Python style guidelines](https://google.github.io/styleguide/pyguide.html). The style checker will NOT automatically update files inplace, but rather will produce a report containing any errors that you will need to fix manually.
+
+The style checker will run automatically as a pre-commit hook (see "Pre-commit Hooks" section below for more information and setup instructions).
 
 If you would like to run the style checker manually:
 
