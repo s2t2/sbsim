@@ -110,7 +110,7 @@ class ProtoWriter(writer_lib.BaseWriter):
     return timestamp.strftime('%Y.%m.%d.%H')
 
   def _get_file_path(self, output_dir: str, file_prefix: str, serial: str):
-    return os.path.join(output_dir, '%s_%s' % (file_prefix, serial))
+    return os.path.join(output_dir, f'{file_prefix}_{serial}')
 
   def _write_msg_to_disk(self, proto: message.Message, filepath: str):
     """Creates or appends a binary file with the proto."""

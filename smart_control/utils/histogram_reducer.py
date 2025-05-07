@@ -421,7 +421,7 @@ class HistogramReducer(BaseReducer):
       reduced_feature_columns = feature_mapping[reduced_feature]
       # Now compute the histogram
       if reduced_feature_columns:
-        columns_indexes = [(reduced_feature, "h_%.2f" % v) for v in bins]
+        columns_indexes = [(reduced_feature, f"h_{v:.2f}") for v in bins]
         df = pd.DataFrame(columns=columns_indexes)
         for idx, row in observation_sequence.iterrows():
           # Convert all the measurements of the same feature into an array.
