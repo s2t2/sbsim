@@ -17,3 +17,11 @@ repos:
       types: [file, python]
       files: '^smart_control/'
       exclude: '^smart_control/proto/'
+
+    - id: pylint
+      name: pylint
+      entry: pylint --rcfile=.pylintrc --ignore=proto smart_control
+      language: system
+      types: [file, python]
+      files: '^smart_control/'
+      exclude: '^smart_control/proto/'
