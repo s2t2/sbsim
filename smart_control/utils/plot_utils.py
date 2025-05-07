@@ -199,11 +199,17 @@ def render_building_subplot(
 
     temp_min, temp_max, temp_avg = building.get_zone_temp_stats((zi, zj))
 
+    temp_label = (  # TODO: consider using KELVIN_TO_CELSIUS constant here if appropriate (see https://github.com/google/sbsim/issues/25)
+        f'({zi}, {zj}) '
+        f'min {(temp_min - 273.0):3.1f} C, '
+        f'max {(temp_max - 273.0):3.1f} C, '
+        f'avg {(temp_avg - 273.0):3.1f} C'
+    )
+
     ax.text(
         0.01 + left,
         bottom + height - 0.017,
-        '(%d, %d) min %3.1f C, max %3.1f C, avg %3.1f C'
-        % (zi, zj, temp_min - 273.0, temp_max - 273.0, temp_avg - 273.0),
+        temp_label,
         horizontalalignment='left',
         verticalalignment='top',
         transform=ax.transAxes,
