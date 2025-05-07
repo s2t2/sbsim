@@ -114,9 +114,11 @@ class SetpointEnergyCarbonRewardFunction(
       reward_normalizer_shift: float = 0.0,
       reward_normalizer_scale: float = 1.0,
   ):
-    self._max_productivity_personhour_usd = max_productivity_personhour_usd
-    self._productivity_midpoint_delta = productivity_midpoint_delta
-    self._productivity_decay_stiffness = productivity_decay_stiffness
+    super().__init__(
+        max_productivity_personhour_usd=max_productivity_personhour_usd,
+        productivity_midpoint_delta=productivity_midpoint_delta,
+        productivity_decay_stiffness=productivity_decay_stiffness,
+    )
     self._electricity_energy_cost = electricity_energy_cost
     self._natural_gas_energy_cost = natural_gas_energy_cost
     self._energy_cost_weight = energy_cost_weight

@@ -123,12 +123,14 @@ class SetpointEnergyCarbonRegretFunction(
       energy_cost_weight: float,
       carbon_emission_weight: float,
   ):
-    self._max_productivity_personhour_usd = max_productivity_personhour_usd
+    super().__init__(
+        max_productivity_personhour_usd=max_productivity_personhour_usd,
+        productivity_midpoint_delta=productivity_midpoint_delta,
+        productivity_decay_stiffness=productivity_decay_stiffness,
+    )
     self._min_productivity_personhour_usd = min_productivity_personhour_usd
     self._max_electricity_rate = max_electricity_rate
     self._max_natural_gas_rate = max_natural_gas_rate
-    self._productivity_midpoint_delta = productivity_midpoint_delta
-    self._productivity_decay_stiffness = productivity_decay_stiffness
     self._electricity_energy_cost = electricity_energy_cost
     self._natural_gas_energy_cost = natural_gas_energy_cost
     self._productivity_weight = productivity_weight
