@@ -207,7 +207,7 @@ def get_reward_timeseries(
     ]
 
   df = df.sort_index()
-  df['cumulative_reward'] = df['agent_reward_value'].cumsum()
+  df = df.assign(cumulative_reward=df['agent_reward_value'].cumsum())
   return df
 
 
