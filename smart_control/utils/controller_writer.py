@@ -67,7 +67,7 @@ class ProtoWriter(writer_lib.BaseWriter):
   ) -> None:
     """Writes the rendered building image obtained from the environment."""
     filepath = os.path.join(self._output_dir, constants.BUILDING_IMAGE_CSV_FILE)
-    with open(filepath, 'a') as csv_file:
+    with open(filepath, 'a', encoding='utf-8') as csv_file:
       csv.writer(csv_file).writerow([timestamp.timestamp(), base64_img])
 
   def write_action_response(
