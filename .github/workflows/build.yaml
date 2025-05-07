@@ -48,6 +48,11 @@ jobs:
         source .venv/bin/activate
         isort .
 
+    - name: Run the linter
+      run: |
+        source .venv/bin/activate
+        pylint --rcfile=.pylintrc --ignore=proto smart_control
+
     - name: Run tests
       run: |
         source .venv/bin/activate
