@@ -27,6 +27,8 @@ from matplotlib.ticker import MaxNLocator
 import numpy as np
 import pandas as pd
 
+K_TO_C = 273.0  # TODO: consider importing and using `int(KELVIN_TO_CELSIUS)` constant here (see https://github.com/google/sbsim/issues/25)
+
 
 def get_temp_colors(min_k, max_k):
   """Returns a color gradient for the temps between min and max_k.
@@ -199,11 +201,11 @@ def render_building_subplot(
 
     temp_min, temp_max, temp_avg = building.get_zone_temp_stats((zi, zj))
 
-    temp_label = (  # TODO: consider using KELVIN_TO_CELSIUS constant here if appropriate (see https://github.com/google/sbsim/issues/25)
+    temp_label = (
         f'({zi}, {zj}) '
-        f'min {(temp_min - 273.0):3.1f} C, '
-        f'max {(temp_max - 273.0):3.1f} C, '
-        f'avg {(temp_avg - 273.0):3.1f} C'
+        f'min {(temp_min - K_TO_C):3.1f} C, '
+        f'max {(temp_max - K_TO_C):3.1f} C, '
+        f'avg {(temp_avg - K_TO_C):3.1f} C'
     )
 
     ax.text(
@@ -283,11 +285,15 @@ def render_building_subplot(
     ):
       if building.diffusers[i][j] > 0:
         render_diffuser(i, j, building.diffusers[i][j] * building.input_q[i][j])
+
+  label = (
+      f"Local time {current_time.strftime('%Y-%m-%d %H:%M')}, "
+      f'Ambient temp {(ambient_temp - K_TO_C):3.1f} C'
+  )
   ax.text(
       0.01,
       1.0,
-      'Local time %s, Ambient temp %3.1f C'
-      % (current_time.strftime('%Y-%m-%d %H:%M'), ambient_temp - 273.0),
+      label,
       horizontalalignment='left',
       verticalalignment='top',
       transform=ax.transAxes,
@@ -303,7 +309,7 @@ def plot_zone_temp_timeline(ax1, schedule, temps_timeseries_df, end_timestamp):
   )
   for _, row in setpoint_windows.iterrows():
     left = mdates.date2num(row['start_time'])
-    bottom = row['heating_setpoint'] - 273.0
+    bottom = row['heating_setpoint'] - K_TO_C
     width = mdates.date2num(row['end_time']) - left
     height = row['cooling_setpoint'] - row['heating_setpoint']
     face_color = 'white'
@@ -323,7 +329,7 @@ def plot_zone_temp_timeline(ax1, schedule, temps_timeseries_df, end_timestamp):
   for zone in zone_temps_cols:
     ax1.plot(
         temps_timeseries_df.index,
-        temps_timeseries_df[zone] - 273.0,
+        temps_timeseries_df[zone] - K_TO_C,
         color='yellow',
         marker=None,
         alpha=1,
@@ -333,7 +339,7 @@ def plot_zone_temp_timeline(ax1, schedule, temps_timeseries_df, end_timestamp):
 
   ax1.plot(
       temps_timeseries_df.index,
-      temps_timeseries_df['ambient'] - 273.0,
+      temps_timeseries_df['ambient'] - K_TO_C,
       color='blue',
       marker=None,
       alpha=1,
