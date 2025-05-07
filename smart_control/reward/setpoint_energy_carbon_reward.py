@@ -126,22 +126,20 @@ class SetpointEnergyCarbonRewardFunction(
     self._reward_normalizer_scale = reward_normalizer_scale
 
   def compute_reward(
-      self, energy_reward_info: smart_control_reward_pb2.RewardInfo
+      self, reward_info: smart_control_reward_pb2.RewardInfo
   ) -> smart_control_reward_pb2.RewardResponse:
     """Returns the real-valued reward for the current state of the building."""
 
     start_time = conversion_utils.proto_to_pandas_timestamp(
-        energy_reward_info.start_timestamp
+        reward_info.start_timestamp
     )
     end_time = conversion_utils.proto_to_pandas_timestamp(
-        energy_reward_info.end_timestamp
+        reward_info.end_timestamp
     )
 
-    productivity_reward, _ = self._sum_zone_productivities(energy_reward_info)
+    productivity_reward, _ = self._sum_zone_productivities(reward_info)
 
-    electricity_energy_rate = self._sum_electricity_energy_rate(
-        energy_reward_info
-    )
+    electricity_energy_rate = self._sum_electricity_energy_rate(reward_info)
     electricity_energy_cost = self._electricity_energy_cost.cost(
         start_time=start_time,
         end_time=end_time,
@@ -153,9 +151,7 @@ class SetpointEnergyCarbonRewardFunction(
         energy_rate=electricity_energy_rate,
     )
 
-    natural_gas_energy_rate = self._sum_natural_gas_energy_rate(
-        energy_reward_info
-    )
+    natural_gas_energy_rate = self._sum_natural_gas_energy_rate(reward_info)
     natural_gas_energy_cost = self._natural_gas_energy_cost.cost(
         start_time=start_time,
         end_time=end_time,
