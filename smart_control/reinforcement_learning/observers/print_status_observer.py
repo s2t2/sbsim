@@ -53,7 +53,7 @@ class PrintStatusObserver(Observer):
       rb_string = ""
       if self._replay_buffer is not None:
         rb_size = self._replay_buffer.num_frames()
-        rb_string = "Replay Buffer Size: %d" % rb_size
+        rb_string = f"Replay Buffer Size: {rb_size}"
 
       logger.info(
           "[Step %d of %d %d%%] [Sim Time: %s] [Reward: %.2f] "
