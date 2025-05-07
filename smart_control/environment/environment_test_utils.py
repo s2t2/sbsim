@@ -104,7 +104,7 @@ class SimpleBuilding(base_building.BaseBuilding):
       response.single_action_responses.append(
           smart_control_building_pb2.SingleActionResponse(
               request=single_action_request,
-              response_type=smart_control_building_pb2.SingleActionResponse.ActionResponseType.ACCEPTED,  # pylint: disable=line-too-long
+              response_type=smart_control_building_pb2.SingleActionResponse.ActionResponseType.ACCEPTED,
               additional_info="test",
           )
       )
