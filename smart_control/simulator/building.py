@@ -872,7 +872,7 @@ class FloorPlanBasedBuilding(BaseSimulatorBuilding):
     return np.min(temps), np.max(temps), np.mean(temps)
 
   def get_zone_average_temps(self) -> Dict[str, Any]:
-    """Returns a dict of zone average temps,
+    """Returns a dict of zone average temps.
 
     The dict is formatted as: {`zone_coordinates`: `temp`}.
     """
