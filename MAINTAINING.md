@@ -24,14 +24,14 @@ This may produce verbose outputs, which may be helpful for specific errors but w
 gpylint smart_control --ignore=proto --msg-template="{path}:{line}: [{msg_id}({symbol})]"
 ```
 
-To ignore and/or check for certain messages, using the corresponding [message code](https://goto.google.com/gpylint-faq):
+To ignore and/or check for certain messages, using the corresponding [message name](https://goto.google.com/gpylint-faq):
 
 ```sh
 # disabling certain messages:
-gpylint smart_control --ignore=proto --disable=g-bad-import-order,g-bad-todo
+gpylint smart_control --ignore=proto --disable=g-bad-import-order,g-bad-todo --msg-template="{path}:{line}: [{msg_id}({symbol})]"
 
 # checking for a specific message:
-gpylint smart_control --ignore=proto --disable=all --enable=C6113
+gpylint smart_control --ignore=proto --disable=all --enable=g-doc-args
 ```
 
 ## Copybara Sync

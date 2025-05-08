@@ -19,8 +19,8 @@ import collections
 import os
 import pathlib
 
+from matplotlib import cm
 from matplotlib import patches
-import matplotlib.cm as cm
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
