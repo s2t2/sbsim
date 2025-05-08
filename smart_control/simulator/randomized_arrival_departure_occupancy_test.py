@@ -92,6 +92,7 @@ _EXPECTED_ZONE_OCCUPANCIES_UTC = [
 # pylint: disable=bad-continuation
 # fmt: off
 
+
 class RandomizedArrivalDepartureOccupancyTest(parameterized.TestCase):
 
   @parameterized.parameters(
