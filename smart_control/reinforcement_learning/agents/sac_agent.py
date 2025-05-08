@@ -87,7 +87,7 @@ def create_sac_agent(
     )
 
   # Create agent
-  tf_agent = sac_agent.SacAgent(
+  agent = sac_agent.SacAgent(
       time_step_spec=time_step_spec,
       action_spec=action_spec,
       actor_network=actor_network,
@@ -113,4 +113,4 @@ def create_sac_agent(
   )
 
   # Wrap TF-Agents agent with our interface
-  return tf_agent
+  return agent

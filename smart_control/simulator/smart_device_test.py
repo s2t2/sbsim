@@ -28,6 +28,7 @@ class SmartDeviceTest(absltest.TestCase):
     super().setUp()
 
     class Heater(smart_device.SmartDevice):
+      """Heater device. Used for testing purposes."""
 
       def __init__(self):
         observable_fields = {

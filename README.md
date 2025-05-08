@@ -52,7 +52,7 @@ We welcome your contributions to this repository!
 
 All open source contributors will need to sign Google's [Contributor License Agreement (CLA)](https://cla.developers.google.com/).
 
-Contributors are encouraged to consult the sections below for more information about code documenation, testing, and formatting.
+Contributors are encouraged to consult the sections below for more information about code documentation, testing, and formatting.
 
 ### Documentation
 
@@ -82,7 +82,7 @@ pytest --disable-pytest-warnings -k your_test_name_here
 
 #### Style Formatting
 
-We are using the [`pyink` formatter](https://github.com/google/pyink) to format code according to [Google Python Style Guidelines](https://google.github.io/styleguide/pyguide.html). The formatter will automatically update files inplace.
+We are using [`pyink`](https://github.com/google/pyink) to format code according to [Google Python Style Guidelines](https://google.github.io/styleguide/pyguide.html). The formatter will automatically update files inplace.
 
 The formatter will run automatically as a pre-commit hook (see "Pre-commit Hooks" section below for more information and setup instructions).
 
@@ -108,7 +108,7 @@ pyink . --check
 pyink . --diff
 ```
 
-If you would like to prevent certain lines of code from being formatted (for example to leave a long line as-is), it is possible to [ignore formatting](https://black.readthedocs.io/en/stable/usage_and_configuration/the_basics.html#ignoring-sections) by adding a trailing pragma comment of `# fmt: skip` to the right of the line / at the end of the expression, or by wrapping multiple lines of code between `# fmt: off` and `# fmt: on` pragma comments. NOTE: `pyink` and `pylint` (see section below) may each require their own set of separate pragma comments.
+If you would like to prevent certain lines of code from being formatted (for example to leave a long line as-is), it is possible to [ignore formatting](https://black.readthedocs.io/en/stable/usage_and_configuration/the_basics.html#ignoring-sections) by adding a trailing comment of `# fmt: skip` to the right of the line / at the end of the expression, or by wrapping multiple lines of code between `# fmt: off` and `# fmt: on` comments. NOTE: `pyink` and `pylint` (see section below) may each require their own separate set of comments, however `pyink` respects many `pylint` comments, so you are recommended to try using a `pylint` comment first, and then only also add a `pyink` comment as necessary.
 
 #### Import Sorting
 
@@ -133,7 +133,9 @@ isort -v .
 
 ### Style Checking
 
-We are using `pylint` to check for style formatting issues that `pyink` doesn't fix, to more closely follow [Google Python style guidelines](https://google.github.io/styleguide/pyguide.html) and pass pre-submit linting checks when merging code into Google's codebase.
+We are using [`pylint`](https://pylint.readthedocs.io/en/stable/index.html) to check for style formatting issues that `pyink` doesn't fix, to more closely follow [Google Python style guidelines](https://google.github.io/styleguide/pyguide.html). The style checker will NOT automatically update files inplace, but rather will produce a report containing any errors that you will need to fix manually.
+
+The style checker will run automatically as a pre-commit hook (see "Pre-commit Hooks" section below for more information and setup instructions).
 
 If you would like to run the style checker manually:
 
@@ -149,19 +151,14 @@ To check for a specific issue (e.g. "missing-module-docstring"), using the corre
 
 ```sh
 pylint smart_control --rcfile=.pylintrc --ignore=proto --disable=all --enable=C0114
-
-# using Google internal tools to check for Google-specific errors:
-#gpylint smart_control --ignore=proto --disable=all --enable=C6202
 ```
 
-> NOTE: some error messages beginning with "g-" are additional Google-specific errors that may need to be checked using internal tools (`gpylint`), and may not be able to be checked by open source contributors at this time. Maintainer note: `gpylint` may not work with the ".pylintrc" config file.
-
-If you would like to prevent certain lines of code from being checked (for example to leave a long line as-is), it is possible to [ignore formatting](hhttps://pylint.readthedocs.io/en/stable/user_guide/messages/message_control.html#block-disables) by adding `pylint` pragma comments like `# pylint: disable=line-too-long`. NOTE: `pylint` and `pyink` (see section above) may each require their own set of separate pragma comments.
+If you would like to prevent certain lines of code from being checked (for example to leave a long line as-is), it is possible to [ignore formatting](https://pylint.readthedocs.io/en/stable/user_guide/messages/message_control.html#block-disables) for a given message (e.g. "line-too-long") by adding a trailing comment of `# pylint: disable=line-too-long` to the right of the line / at the end of the expression, or by wrapping multiple lines of code between `# pylint: disable=line-too-long` and `# pylint: enable=line-too-long` comments.
 
 
 ### Pre-commit Hooks
 
-We are using pre-commit hooks to perform code formatting and import sorting. These actions will take place on each commit.
+We are using pre-commit hooks to perform code formatting, import sorting, and style checking. These actions will take place on each commit.
 
 To enable the pre-commit hooks, you must perform a one-time setup by running `pre-commit install`. This will update ".git/hooks/pre-commit".
 
@@ -169,14 +166,17 @@ To enable the pre-commit hooks, you must perform a one-time setup by running `pr
 If you would like to run the pre-commit hooks without making a commit:
 
 ```sh
-# run for all files:
+# run against staged files only:
+pre-commit run
+
+# run against all files:
 pre-commit run --all-files
 
-# run for a specific set of file(s):
+# run against a specific set of file(s):
 pre-commit run --files path/to/my_file.py path/to/other_file.py
 ```
 
-If you run into issues and need to clear the cache:
+If you encounter issues and need to clear the cache:
 
 ```sh
 pre-commit clean
