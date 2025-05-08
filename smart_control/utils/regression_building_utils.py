@@ -216,7 +216,12 @@ def get_action_tuples(
 ) -> Set[Tuple[str, str, str]]:
   """Returns the tuples from ActionResponse.
 
-  The tuples are formatted as (_ACTION_PREFIX, device_id, setpoint).
+  Args:
+    action_response: The ActionResponse from which to extract action tuples.
+
+  Returns:
+    A set of tuples, where each tuple is in the format
+      (`_ACTION_PREFIX`, `device_id`, `setpoint`).
   """
   action_tuples = set()
   for request in action_response.request.single_action_requests:
@@ -433,7 +438,13 @@ def get_device_action_tuples(
 ) -> Sequence[Tuple[str, str, str]]:
   """Converts DeviceInfos into action tuples.
 
-  The tuples are formatted as (_ACTION_PREFIX, device, setpoint).
+  Args:
+    devices: A sequence of DeviceInfo objects.
+
+  Returns:
+    A sequence of tuples, where each tuple is in the format
+      (`_ACTION_PREFIX`, `device_id`, `setpoint`).
+
   """
   device_action_tuples = []
   for device_info in devices:
@@ -745,9 +756,21 @@ def get_zone_reward_infos(
     zone_infos: Sequence[smart_control_building_pb2.ZoneInfo],
     device_infos: Sequence[smart_control_building_pb2.DeviceInfo],
 ) -> Mapping[str, smart_control_reward_pb2.RewardInfo.ZoneRewardInfo]:
-  """Returns a mapping of messages with zone data.
+  """Get zone reward information.
 
   This is used to compute the instantaneous reward.
+
+  Args:
+    current_timestamp: The current timestamp.
+    step_interval: The time duration of a single step.
+    current_observation_mapping: A mapping for the current observation.
+    occupancy_function: An occupancy function.
+    setpoint_schedule: A setpoint schedule.
+    zone_infos: A sequence of ZoneInfo objects.
+    device_infos: A sequence of DeviceInfo objects.
+
+  Returns:
+    A mapping of messages with zone data.
   """
   zone_reward_infos = {}
   zone_device_mapping = {

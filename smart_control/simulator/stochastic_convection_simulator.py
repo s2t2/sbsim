@@ -68,6 +68,10 @@ class StochasticConvectionSimulator(
     """Applies convection to the temperature array given.
 
     Splits up rooms via room_dict.
+
+    Args:
+      room_dict: A dictionary mapping of room coordinates.
+      temp: An array of temperatures.
     """
     p = self._p
     distance = self._distance

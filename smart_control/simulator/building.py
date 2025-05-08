@@ -599,7 +599,7 @@ class Building(BaseSimulatorBuilding):
 
     The thermal power [W] is applied to zones `zone_x` and `zone_y`.
 
-     Args:
+    Args:
        zone_coordinates: Tuple containing x and y coordinates for zone.
        power: Watts to apply to zone.
     """
@@ -625,9 +625,10 @@ class FloorPlanBasedBuilding(BaseSimulatorBuilding):
       width and length of each room.
     building_shape: 2-Tuple representing the number of rooms in the width and
       length of the building.
+    floor_plan: an np.ndarray representing the building's floor plan.
     temp: The current temp in K of each control volume.
     conductivity: Thermal conductivity in of each control volume W/m/K.
-    heat_capacity: Thermal heat cpacity of each control volume in J/kg/K.
+    heat_capacity: Thermal heat capacity of each control volume in J/kg/K.
     density: Material density in kg/m3 of each control volume.
     input_q: Heat energy applied (sign indicates heating/cooling) at the CV in W
       (J/s).
@@ -871,7 +872,7 @@ class FloorPlanBasedBuilding(BaseSimulatorBuilding):
     return np.min(temps), np.max(temps), np.mean(temps)
 
   def get_zone_average_temps(self) -> Dict[str, Any]:
-    """Returns a dict of zone average temps,
+    """Returns a dict of zone average temps.
 
     The dict is formatted as: {`zone_coordinates`: `temp`}.
     """
