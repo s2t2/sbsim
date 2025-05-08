@@ -160,11 +160,20 @@ class ZoneOccupant:
     return departed
 
   def peek(self, current_time: pd.Timestamp) -> OccupancyStateEnum:
+    """Checks the current occupancy state based on the provided timestamp.
+
+    This method determines the occupancy state (AWAY or WORK) based on
+    the current time, considering workdays, arrival/departure times,
+    and a lunch break.
+
+    Args:
+        current_time: The current timestamp to evaluate.
+
+    Returns:
+        The current `OccupancyStateEnum` (AWAY or WORK).
+    """
     local_timestamp = self._to_local_time(current_time)
-    # print(f"Inside peek: current_time={current_time}")
-    local_time = (
-        local_timestamp.time()
-    )  # Extracts time as a datetime.time object
+    local_time = local_timestamp.time()  # a datetime.time object
     if debug_print:
       print(
           f"Peek called: current_time={current_time},"

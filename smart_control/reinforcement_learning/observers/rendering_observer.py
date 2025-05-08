@@ -44,9 +44,9 @@ class RenderingObserver(Observer):
   def __init__(
       self,
       render_interval_steps: int = 10,
-      env=None,  # TODO: do we want to use `Optional[environment.Environment] = None` here?
-      render_fn: Optional[Callable] = None,  # pylint: disable=g-bare-generic # TODO: use more specific type hint if possible
-      plot_fn: Optional[Callable] = None,  # pylint: disable=g-bare-generic # TODO: use more specific type hint if possible
+      env=None,  # consider: `Optional[environment.Environment] = None`
+      render_fn: Optional[Callable] = None,  # pylint: disable=g-bare-generic
+      plot_fn: Optional[Callable] = None,  # pylint: disable=g-bare-generic
       clear_output_before_render: bool = True,
       time_zone: str = DEFAULT_TIME_ZONE,
       save_path: str = RENDERS_PATH,
