@@ -80,11 +80,11 @@ class RejectionSimulatorBuilding(BaseBuilding):
       self,
       observation_request: smart_control_building_pb2.ObservationRequest,
       start_timestamp: pd.Timestamp,
-      end_time: pd.Timestamp,
+      end_timestamp: pd.Timestamp,
   ) -> Sequence[smart_control_building_pb2.ObservationResponse]:
     """Queries the building for observations between start and end times."""
     return self._base_building.request_observations_within_time_interval(
-        observation_request, start_timestamp, end_time
+        observation_request, start_timestamp, end_timestamp
     )
 
   def wait_time(self) -> None:

@@ -142,7 +142,7 @@ class SimulatorBuilding(BaseBuilding):
       self,
       observation_request: smart_control_building_pb2.ObservationRequest,
       start_timestamp: pd.Timestamp,
-      end_time: pd.Timestamp,
+      end_timestamp: pd.Timestamp,
   ) -> Sequence[smart_control_building_pb2.ObservationResponse]:
     """Queries the building for observations between start and end times."""
     raise NotImplementedError()

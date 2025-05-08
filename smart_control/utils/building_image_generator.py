@@ -83,7 +83,7 @@ class BuildingImageGenerator:
     for device_info in self._device_infos:
       device_map[device_info.device_id] = device_info.code
 
-    with self._device_layout_path.open("rt") as f:  # pytype: disable=wrong-arg-types
+    with self._device_layout_path.open("rt", encoding="utf-8") as f:  # pytype: disable=wrong-arg-types
       room_dict_real = json.load(f)
 
     with self._floor_plan_path.open("rb") as fp:

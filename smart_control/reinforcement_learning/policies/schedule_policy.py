@@ -8,7 +8,7 @@ from typing import Dict, List, Optional, Tuple, Union
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-from tf_agents.environments import tf_py_environment as tf_env
+from tf_agents.environments import tf_py_environment
 from tf_agents.policies import tf_policy
 from tf_agents.train.utils import spec_utils
 from tf_agents.trajectories import policy_step
@@ -191,7 +191,7 @@ class SchedulePolicy(tf_policy.TFPolicy):
 
 
 def create_baseline_schedule_policy(
-    tf_env: tf_env.TFPyEnvironment,
+    tf_env: tf_py_environment.TFPyEnvironment,
 ) -> SchedulePolicy:
   """Create baseline schedule policy.
 

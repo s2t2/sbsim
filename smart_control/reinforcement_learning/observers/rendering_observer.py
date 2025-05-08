@@ -44,7 +44,7 @@ class RenderingObserver(Observer):
   def __init__(
       self,
       render_interval_steps: int = 10,
-      environment=None,
+      env=None,  # TODO: do we want to use `Optional[environment.Environment] = None` here?
       render_fn: Optional[Callable] = None,  # pylint: disable=g-bare-generic # TODO: use more specific type hint if possible
       plot_fn: Optional[Callable] = None,  # pylint: disable=g-bare-generic # TODO: use more specific type hint if possible
       clear_output_before_render: bool = True,
@@ -55,7 +55,7 @@ class RenderingObserver(Observer):
 
     Args:
         render_interval_steps: Number of steps between renders.
-        environment: The environment to render. This must support the
+        env: The environment to render. This must support the
           current_simulation_timestamp property if plot_fn is specified.
         render_fn: Optional function to use for rendering. If not provided,
           environment.render() will be used.
@@ -67,7 +67,7 @@ class RenderingObserver(Observer):
     """
     self._counter = 0
     self._render_interval_steps = render_interval_steps
-    self._environment = environment
+    self._environment = env
     self._render_fn = render_fn
     self._plot_fn = plot_fn
     self._clear_output_before_render = clear_output_before_render
@@ -146,8 +146,8 @@ class RenderingObserver(Observer):
       feature_timeseries_ac = _to_kwh(timeseries['air_handler_air_conditioner_energy_rate'])
       feature_timeseries_blower = _to_kwh(timeseries['air_handler_blower_electrical_energy_rate'])
     else:
-      feature_timeseries_ac = (timeseries['air_handler_air_conditioner_energy_rate'] / 1000.0)
-      feature_timeseries_blower = (timeseries['air_handler_blower_electrical_energy_rate'] / 1000.0)
+      feature_timeseries_ac = timeseries['air_handler_air_conditioner_energy_rate'] / 1000.0
+      feature_timeseries_blower = timeseries['air_handler_blower_electrical_energy_rate'] / 1000.0
     # pylint: enable=line-too-long
     # fmt: on
 
@@ -180,8 +180,8 @@ class RenderingObserver(Observer):
       feature_timeseries_gas = _to_kwh(timeseries['boiler_natural_gas_heating_energy_rate'])
       feature_timeseries_pump = _to_kwh(timeseries['boiler_pump_electrical_energy_rate'])
     else:
-      feature_timeseries_gas = (timeseries['boiler_natural_gas_heating_energy_rate'] / 1000.0)
-      feature_timeseries_pump = (timeseries['boiler_pump_electrical_energy_rate'] / 1000.0)
+      feature_timeseries_gas = timeseries['boiler_natural_gas_heating_energy_rate'] / 1000.0
+      feature_timeseries_pump = timeseries['boiler_pump_electrical_energy_rate'] / 1000.0
     # pylint: enable=line-too-long
     # fmt: on
 

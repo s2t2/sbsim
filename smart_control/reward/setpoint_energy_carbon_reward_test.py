@@ -231,6 +231,14 @@ class SetpointEnergyCarbonRewardTest(parameterized.TestCase):
 
 
 class TestEnergyCost(BaseEnergyCost):
+  """Calculates energy cost and carbon emissions based on fixed rates.
+
+  Used for testing purposes.
+
+  TODO: https://github.com/google/sbsim/issues/49 - consider refactoring with similar classes in:
+    smart_control/reward/base_setpoint_energy_carbon_reward_test.py
+    smart_control/reward/setpoint_energy_carbon_regret_test.py
+  """
 
   def __init__(self, usd_per_kwh: float, kg_per_kwh: float):
     # Energy price in USD/Watt second (fixed schedule)
