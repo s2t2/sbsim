@@ -36,4 +36,8 @@ class BaseConvectionSimulator(metaclass=abc.ABCMeta):
     """Applies convection to the temperature array in place.
 
     Splits up rooms via room_dict.
+
+    Args:
+      room_dict: A dictionary mapping of room coordinates.
+      temp: An array of temperatures.
     """

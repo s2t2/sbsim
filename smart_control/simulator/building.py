@@ -599,7 +599,7 @@ class Building(BaseSimulatorBuilding):
 
     The thermal power [W] is applied to zones `zone_x` and `zone_y`.
 
-     Args:
+    Args:
        zone_coordinates: Tuple containing x and y coordinates for zone.
        power: Watts to apply to zone.
     """
