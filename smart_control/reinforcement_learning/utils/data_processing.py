@@ -167,6 +167,10 @@ def get_reward_timeseries(
       DataFrame with reward timeseries data.
   """
 
+  # TODO: revise the DataFrame construction approach in this entire method
+  # ... to fix "unsubscriptable-object" pylint error below
+  # ... (after ensuring the logic is tested, to make sure we don't break it).
+  # ... consider constructing a list of dict and initializing the df from that.
   cols = [
       'agent_reward_value',
       'electricity_energy_cost',
@@ -207,7 +211,8 @@ def get_reward_timeseries(
     ]
 
   df = df.sort_index()
-  df['cumulative_reward'] = df['agent_reward_value'].cumsum()
+  # pylint: disable-next=unsubscriptable-object #TODO: see note above
+  df = df.assign(cumulative_reward=df['agent_reward_value'].cumsum())
   return df
 
 

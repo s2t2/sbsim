@@ -47,7 +47,7 @@ class BaseSetpointEnergyCarbonRewardFunction(BaseRewardFunction):
     self._productivity_decay_stiffness = productivity_decay_stiffness
 
   def compute_reward(
-      self, energy_reward_info: smart_control_reward_pb2.RewardInfo
+      self, reward_info: smart_control_reward_pb2.RewardInfo
   ) -> smart_control_reward_pb2.RewardResponse:
     """Returns the real-valued reward for the current state of the building."""
     raise NotImplementedError()

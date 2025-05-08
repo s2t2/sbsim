@@ -228,9 +228,7 @@ class ProtoReader(reader_lib.BaseReader):
             )
         )
         if reader_lib.VariableId(variable.id) in normalization_info:
-          raise ValueError(
-              'Duplicate entry for variable %s found.' % variable.id
-          )
+          raise ValueError(f'Duplicate entry for variable {variable.id} found.')
         normalization_info[reader_lib.VariableId(variable.id)] = variable
     return normalization_info
 

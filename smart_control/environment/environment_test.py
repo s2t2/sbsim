@@ -591,6 +591,7 @@ class EnvironmentTest(parameterized.TestCase, tf.test.TestCase):
 
   def test_get_observation_invalid(self):
     class BadObservationBuilding(environment_test_utils.SimpleBuilding):
+      """A building that has a bad observation. Used for testing purposes."""
 
       def request_observations(
           self,
@@ -721,6 +722,10 @@ class EnvironmentTest(parameterized.TestCase, tf.test.TestCase):
   )
   def test_validate_environment(self, step_interval):
     class TerminatingEnv(environment.Environment):
+      """Environment that terminates after a fixed number of steps.
+
+      Used for testing purposes.
+      """
 
       def __init__(
           self,
