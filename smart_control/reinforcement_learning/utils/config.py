@@ -32,7 +32,7 @@ from smart_control.utils.observation_normalizer import StandardScoreObservationN
 # Path to the root directory of the project:
 ROOT_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "..")
 # fmt: off
-#pylint: disable=line-too-long
+# pylint: disable=line-too-long
 DATA_PATH = os.path.join(ROOT_DIR, "smart_control", "configs", "resources", "sb1")
 CONFIG_PATH = os.path.join(ROOT_DIR, "smart_control", "configs", "resources", "sb1", "train_sim_configs")
 METRICS_PATH = os.path.join(ROOT_DIR, "smart_control", "reinforcement_learning", "experiment_results", "metrics")
