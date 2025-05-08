@@ -23,7 +23,7 @@ import pandas as pd
 from smart_control.simulator import randomized_arrival_departure_occupancy
 
 # fmt: off
-#pylint: disable=bad-continuation
+# pylint: disable=bad-continuation
 _EXPECTED_ZONE_OCCUPANCIES_PACIFIC = [
   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
@@ -89,8 +89,9 @@ _EXPECTED_ZONE_OCCUPANCIES_UTC = [
   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
   1, 1, 1, 1, 1, 1,
 ]
-#pylint: disable=bad-continuation
-#fmt: off
+# pylint: disable=bad-continuation
+# fmt: off
+
 
 class RandomizedArrivalDepartureOccupancyTest(parameterized.TestCase):
 

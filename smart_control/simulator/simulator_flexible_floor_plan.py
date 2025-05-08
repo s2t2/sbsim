@@ -228,6 +228,9 @@ class SimulatorFlexibleGeometries(simulator.Simulator):
     """Returns a map of messages with zone data.
 
     This data is used to compute the instantaneous reward.
+
+    Args:
+      occupancy_function: An occupancy function.
     """
     zone_reward_infos = {}
     for (

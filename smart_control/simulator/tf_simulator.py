@@ -219,7 +219,7 @@ def classify_cv(
           corner=CVCornerOrientationType.BOTTOM_RIGHT
       )
     raise ValueError(
-        f"wasn't able to determine which corner the CV {(i,j)} is."
+        f"Wasn't able to determine which corner the CV {(i, j)} is."
     )
 
   def _cv_type_edge_factory(
@@ -242,7 +242,7 @@ def classify_cv(
       return edge(CVEdgeOrientationType.LEFT)
     if set([(i - 1, j), (i, j - 1), (i + 1, j)]) == set(cv_neighbors):
       return edge(CVEdgeOrientationType.RIGHT)
-    raise ValueError(f"wasn't able to determine which edge the CV {(i,j)} is.")
+    raise ValueError(f"Wasn't able to determine which edge the CV {(i, j)} is.")
 
   i, j = coords
 
@@ -260,7 +260,7 @@ def classify_cv(
       return CVType(position=CVPositionType.INTERIOR)
     case _:
       raise ValueError(
-          f"wasn't able to determine which CV type the CV {(i,j)} is."
+          f"Wasn't able to determine which CV type the CV {(i, j)} is."
       )
 
 
