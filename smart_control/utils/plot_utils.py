@@ -27,7 +27,7 @@ from matplotlib.ticker import MaxNLocator
 import numpy as np
 import pandas as pd
 
-K_TO_C = 273.0  # TODO: https://github.com/google/sbsim/issues/25 - consider importing and using `int(KELVIN_TO_CELSIUS)` constant here # pylint:disable:line-too-long
+K_TO_C = 273.0  # TODO: https://github.com/google/sbsim/issues/25 - consider importing and using `int(KELVIN_TO_CELSIUS)` constant here # pylint:disable=line-too-long
 
 
 def get_temp_colors(min_k, max_k):
