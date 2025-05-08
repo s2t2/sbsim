@@ -153,7 +153,7 @@ class TestEnergyCost(BaseEnergyCost):
 
   Used for testing purposes.
 
-  TODO: consider refactoring with similar classes in:
+  TODO: https://github.com/google/sbsim/issues/49 - consider refactoring with similar classes in:
     smart_control/reward/setpoint_energy_carbon_regret_test.py
     smart_control/reward/setpoint_energy_carbon_reward_test.py
 
