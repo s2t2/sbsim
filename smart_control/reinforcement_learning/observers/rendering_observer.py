@@ -571,9 +571,9 @@ class RenderingObserver(Observer):
           mean_execution_time,
       )
 
-      if self._environment.pyenv.envs[0].metrics_path is not None:
+      if self._environment.pyenv.envs[0]._metrics_path is not None:
         logger.warning('Plotting timeseries charts...')
-        reader = get_latest_episode_reader(self._environment.pyenv.envs[0].metrics_path)  # pylint: disable=line-too-long
+        reader = get_latest_episode_reader(self._environment.pyenv.envs[0]._metrics_path)  # pylint: disable=line-too-long
         self._plot_timeseries_charts(reader, self._time_zone, self._counter)
 
       self._render_env(self._environment.pyenv.envs[0], self._counter)
