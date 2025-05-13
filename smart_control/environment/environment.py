@@ -290,7 +290,7 @@ class ActionConfig:
   """
 
   def __init__(self, action_normalizers: ActionNormalizerMap):
-    self.action_normalizers = action_normalizers
+    self._action_normalizers = action_normalizers
 
   def get_action_normalizer(
       self, setpoint_name: FieldName
@@ -300,7 +300,7 @@ class ActionConfig:
     Args:
       setpoint_name: Name of setpoint to get action normalizer for.
     """
-    return self.action_normalizers.get(DeviceFieldId(setpoint_name))
+    return self._action_normalizers.get(DeviceFieldId(setpoint_name))
 
 
 def generate_field_id(
@@ -460,14 +460,14 @@ class Environment(py_environment.PyEnvironment):
       raise ValueError("Discount factor must be in (0,1]")
 
     if device_action_tuples is not None:
-      self._action_spec, self.action_normalizers, self._action_names = (
+      self._action_spec, self._action_normalizers, self._action_names = (
           self._get_action_spec_and_normalizers_from_device_action_tuples(
               action_config=action_config,
               device_action_tuples=device_action_tuples,
           )
       )
     else:
-      self._action_spec, self.action_normalizers, self._action_names = (
+      self._action_spec, self._action_normalizers, self._action_names = (
           self._get_action_spec_and_normalizers(action_config, building.devices)
       )
 
@@ -577,7 +577,7 @@ class Environment(py_environment.PyEnvironment):
 
       _, setpoint_name = self._id_map.inv[field_id]
       native_setpoint_value = default_actions[setpoint_name]
-      normalized_agent_value = self.action_normalizers[field_id].agent_value(
+      normalized_agent_value = self._action_normalizers[field_id].agent_value(
           native_setpoint_value
       )
       fixed_actions.append(normalized_agent_value)
@@ -848,7 +848,7 @@ class Environment(py_environment.PyEnvironment):
 
       agent_action = action[field_id]
 
-      action_normalizer = self.action_normalizers[field_id]
+      action_normalizer = self._action_normalizers[field_id]
 
       action_value = action_normalizer.setpoint_value(agent_action)
 

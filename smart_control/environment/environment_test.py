@@ -349,7 +349,7 @@ class EnvironmentTest(parameterized.TestCase, tf.test.TestCase):
     for i in range(len(env._action_names)):
       field_id = env._action_names[i]
       device, setpoint = env._id_map.inv[field_id]
-      action_normalizer = action_config.action_normalizers[setpoint]
+      action_normalizer = action_config._action_normalizers[setpoint]
       normalized_value = action_normalizer.setpoint_value(action[i])
       expected_request.single_action_requests.append(
           smart_control_building_pb2.SingleActionRequest(
