@@ -13,7 +13,7 @@ third_party {
 
   identifier {
     type: "PyPI"
-    omission_reason: "Does not yet exist on PyPI."
+    omission_reason: "Package doesn't have an upstream repo."
   }
 }
 
