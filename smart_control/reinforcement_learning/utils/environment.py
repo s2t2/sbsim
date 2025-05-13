@@ -25,6 +25,6 @@ def create_and_setup_environment(
   """Creates and sets up the environment."""
   env = load_environment(gin_config_file)
   env._metrics_path = metrics_path  # pylint: disable=protected-access
-  env.occupancy_normalization_constant = occupancy_normalization_constant
+  env._occupancy_normalization_constant = occupancy_normalization_constant  # pylint: disable=protected-access
 
   return env

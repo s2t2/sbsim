@@ -501,7 +501,7 @@ class Environment(py_environment.PyEnvironment):
     # Since the request will not change (i.e., feature vector is fixed),
     # just define a single ObservationRequest as a template for all requests.
     self._observation_request = self._get_observation_request(building.devices)
-    self.occupancy_normalization_constant = occupancy_normalization_constant
+    self._occupancy_normalization_constant = occupancy_normalization_constant
     if run_command_predictors is None:
       self._run_command_predictors = None
     else:
@@ -942,8 +942,8 @@ class Environment(py_environment.PyEnvironment):
         dtype=np.float32,
     )
     observation[NUM_OCCUPANTS] = np.array(
-        (self.building.num_occupants - self.occupancy_normalization_constant)
-        / (self.occupancy_normalization_constant + 1),
+        (self.building.num_occupants - self._occupancy_normalization_constant)
+        / (self._occupancy_normalization_constant + 1),
         dtype=np.float32,
     )
     # Return observation as a flat array.
