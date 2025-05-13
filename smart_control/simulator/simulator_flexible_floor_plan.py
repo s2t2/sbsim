@@ -99,7 +99,7 @@ class SimulatorFlexibleGeometries(simulator.Simulator):
 
     logging.info("Constructing the floorplan based simulation.")
 
-    render_zones = np.copy(self.building.floor_plan)
+    render_zones = np.copy(self.building._floor_plan)
     render_zones[render_zones == 2] = 0
 
     renderer = building_renderer.BuildingRenderer(render_zones, 1)

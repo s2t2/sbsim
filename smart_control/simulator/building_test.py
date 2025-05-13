@@ -521,7 +521,7 @@ class BuildingTest(parameterized.TestCase):
     )
 
     with self.subTest("floor_plans"):
-      np.testing.assert_array_equal(b.floor_plan, floor_plan)
+      np.testing.assert_array_equal(b._floor_plan, floor_plan)
     with self.subTest("exterior_wall"):
       np.testing.assert_array_equal(b._exterior_walls, expected_exterior_walls)
     with self.subTest("interior_wall"):

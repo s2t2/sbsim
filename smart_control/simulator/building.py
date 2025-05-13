@@ -698,12 +698,12 @@ class FloorPlanBasedBuilding(BaseSimulatorBuilding):
       )
 
     elif floor_plan is None and floor_plan_filepath:
-      self.floor_plan = building_utils.read_floor_plan_from_filepath(
+      self._floor_plan = building_utils.read_floor_plan_from_filepath(
           floor_plan_filepath
       )
 
     elif floor_plan is not None and floor_plan_filepath is None:
-      self.floor_plan = floor_plan
+      self._floor_plan = floor_plan
 
     else:
       raise ValueError("floor_plan and floor_plan_filepath ")
@@ -725,7 +725,7 @@ class FloorPlanBasedBuilding(BaseSimulatorBuilding):
 
     (self._room_dict, exterior_walls, interior_walls, self._exterior_space) = (
         building_utils.construct_building_data_types(
-            floor_plan=self.floor_plan, zone_map=zone_map
+            floor_plan=self._floor_plan, zone_map=zone_map
         )
     )
 
