@@ -514,14 +514,14 @@ class RenderingObserver(Observer):
 
   def _render_env(self, env: environment.Environment, step_count: int):
     """Renders the environment and saves to file."""
-    building_layout = env.building.simulator._building._floor_plan  # pylint: disable=protected-access
+    building_layout = env.building._simulator._building._floor_plan  # pylint: disable=protected-access
 
     # Create a renderer
     renderer = building_renderer.BuildingRenderer(building_layout, 1)
 
     # Get the current temps to render
-    temps = env.building.simulator._building.temp  # pylint: disable=protected-access
-    input_q = env.building.simulator._building.input_q  # pylint: disable=protected-access
+    temps = env.building._simulator._building.temp  # pylint: disable=protected-access
+    input_q = env.building._simulator._building.input_q  # pylint: disable=protected-access
 
     # Render
     vmin = 285
