@@ -1207,6 +1207,12 @@ class Environment(py_environment.PyEnvironment):
   def observation_spec(self) -> types.NestedArraySpec:
     return self._observation_spec
 
+  def _format_action(
+      self, action: types.NestedArray, action_names: Sequence[str]  # pylint: disable=unused-argument
+  ) -> types.NestedArray:
+    """Enables extension classes to reformat actions into base format."""
+    return action
+
   def _step(self, action: types.NestedArray) -> ts.TimeStep:
     """Individual time step calculations.
 
