@@ -1207,6 +1207,28 @@ class Environment(py_environment.PyEnvironment):
   def observation_spec(self) -> types.NestedArraySpec:
     return self._observation_spec
 
+  def _format_action(
+      self, action: types.NestedArray, action_names: Sequence[str]  # pylint: disable=unused-argument
+  ) -> types.NestedArray:
+    """Enables extension classes to reformat actions into base format.
+
+    Args:
+      action: the action(s) to be formatted.
+      action_names: the action names to use for formatting.
+
+    Returns:
+      The formatted action names.
+
+    NOTE: this function is currently a no-op
+    that returns the action without formatting it.
+    However invocation of this function from within the `_step` function
+    allows child classes to format their actions.
+    So it turns out this function is required to stay here, and we are
+    allowing the unused argument.
+    See: https://github.com/google/sbsim/pull/57
+    """
+    return action
+
   def _step(self, action: types.NestedArray) -> ts.TimeStep:
     """Individual time step calculations.
 
@@ -1237,6 +1259,9 @@ class Environment(py_environment.PyEnvironment):
     t0 = time.time()
     reward_value = 0.0
     observation = None
+
+    # Reformat actions if necessary.
+    action = self._format_action(action, self._action_names)
 
     # Convert the action from normalized to native values.
     action_request = self._create_action_request(action)
