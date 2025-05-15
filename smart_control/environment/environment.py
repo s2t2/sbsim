@@ -1210,7 +1210,16 @@ class Environment(py_environment.PyEnvironment):
   def _format_action(
       self, action: types.NestedArray, action_names: Sequence[str]  # pylint: disable=unused-argument
   ) -> types.NestedArray:
-    """Enables extension classes to reformat actions into base format."""
+    """Enables extension classes to reformat actions into base format.
+
+    NOTE: this function is currently a no-op
+    that returns the action without formatting it.
+    However invocation of this function from within the `_step` function
+    allows child classes to format their actions.
+    So it turns out this function is required to stay here, and we are
+    allowing the unused argument.
+    See: https://github.com/google/sbsim/pull/57
+    """
     return action
 
   def _step(self, action: types.NestedArray) -> ts.TimeStep:
