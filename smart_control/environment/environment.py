@@ -1244,6 +1244,9 @@ class Environment(py_environment.PyEnvironment):
     reward_value = 0.0
     observation = None
 
+    # Reformat actions if necessary.
+    action = self._format_action(action, self._action_names)
+
     # Convert the action from normalized to native values.
     action_request = self._create_action_request(action)
 
