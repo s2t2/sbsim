@@ -78,5 +78,7 @@ exported {
   request_url: "https://launch.corp.google.com/launch/4284362"
   remote_location: "https://github.com/google/sbsim"
   reason: OPEN_SOURCE
-  description: "Open sourcing the Smart Buildings Control Simulation, Reward Function, and Custom Environment for training RL agents."
+  description:
+    "Open sourcing the Smart Buildings Control Simulation, Reward Function, "
+    "and Custom Environment for training RL agents."
 }
