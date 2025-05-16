@@ -1,4 +1,4 @@
-<!-- mdformat off -->
+<!-- disableFinding(LINE_OVER_80) -->
 
 # Google Smart Buildings Control
 
@@ -156,7 +156,6 @@ pylint smart_control --rcfile=.pylintrc --ignore=proto --disable=all --enable=C0
 ```
 
 If you would like to prevent certain lines of code from being checked (for example to leave a long line as-is), it is possible to [ignore formatting](https://pylint.readthedocs.io/en/stable/user_guide/messages/message_control.html#block-disables) for a given message (e.g. "line-too-long") by adding a trailing comment of `# pylint: disable=line-too-long` to the right of the line / at the end of the expression, or by wrapping multiple lines of code between `# pylint: disable=line-too-long` and `# pylint: enable=line-too-long` comments.
-
 
 ### Pre-commit Hooks
 

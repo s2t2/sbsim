@@ -1,4 +1,4 @@
-<!-- mdformat off -->
+<!-- disableFinding(LINE_OVER_80) -->
 
 Smart Control Project Documentation
 ===================================
