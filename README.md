@@ -1,3 +1,5 @@
+<!-- mdformat global-off -->
+
 # Google Smart Buildings Control
 
 This repository accompanies Goldfeder, J., Sipple, J., Real-World Data and Calibrated
