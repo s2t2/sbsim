@@ -1,4 +1,4 @@
-<!-- mdformat global-off -->
+<!-- mdformat off -->
 
 # Google Smart Buildings Control
 

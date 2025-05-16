@@ -1,4 +1,4 @@
-<!-- mdformat global-off -->
+<!-- mdformat off -->
 
 Smart Control Project Documentation
 ===================================
