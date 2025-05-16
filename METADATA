@@ -45,8 +45,7 @@ presubmit: {
 
 presubmit: {
   path_expression: "//depot/google3/third_party/py/smart_buildings/..."
-  # Exclude Markdown files from lint checks:
-  path_expression_exclusion: "//depot/google3/third_party/py/smart_buildings/*.md"
+  path_expression_exclusion: "....md"
 
   check_do_not_submit: {
     failure_status: ERROR
