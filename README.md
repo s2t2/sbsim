@@ -82,7 +82,7 @@ pytest --disable-pytest-warnings -k your_test_name_here
 
 #### Style Formatting
 
-We are using [`pyink`](https://github.com/google/pyink) to format code according to [Google Python Style Guidelines](https://google.github.io/styleguide/pyguide.html). The formatter will automatically update files inplace.
+We are using [`pyink`](https://github.com/google/pyink) to format Python code according to [Google Python Style Guidelines](https://google.github.io/styleguide/pyguide.html). The formatter will automatically update files inplace.
 
 The formatter will run automatically as a pre-commit hook (see "Pre-commit Hooks" section below for more information and setup instructions).
 
@@ -112,7 +112,7 @@ If you would like to prevent certain lines of code from being formatted (for exa
 
 #### Import Sorting
 
-We are using [`isort`](https://pycqa.github.io/isort/) to control the sort order of import statements, specifically grouping the "smart_control" local module imports separately in their own section below the package imports.
+We are using [`isort`](https://pycqa.github.io/isort/) to control the sort order of Python import statements, specifically grouping the "smart_control" local module imports separately in their own section below the package imports.
 
 The import sorter will run automatically as a pre-commit hook (see "Pre-commit Hooks" section below for more information and setup instructions).
 
@@ -133,7 +133,7 @@ isort -v .
 
 ### Style Checking
 
-We are using [`pylint`](https://pylint.readthedocs.io/en/stable/index.html) to check for style formatting issues that `pyink` doesn't fix, to more closely follow [Google Python style guidelines](https://google.github.io/styleguide/pyguide.html). The style checker will NOT automatically update files inplace, but rather will produce a report containing any errors that you will need to fix manually.
+We are using [`pylint`](https://pylint.readthedocs.io/en/stable/index.html) to check for Python style formatting issues that `pyink` doesn't fix, to more closely follow [Google Python style guidelines](https://google.github.io/styleguide/pyguide.html). The style checker will NOT automatically update files inplace, but rather will produce a report containing any errors that you will need to fix manually.
 
 The style checker will run automatically as a pre-commit hook (see "Pre-commit Hooks" section below for more information and setup instructions).
 
@@ -155,6 +155,27 @@ pylint smart_control --rcfile=.pylintrc --ignore=proto --disable=all --enable=C0
 
 If you would like to prevent certain lines of code from being checked (for example to leave a long line as-is), it is possible to [ignore formatting](https://pylint.readthedocs.io/en/stable/user_guide/messages/message_control.html#block-disables) for a given message (e.g. "line-too-long") by adding a trailing comment of `# pylint: disable=line-too-long` to the right of the line / at the end of the expression, or by wrapping multiple lines of code between `# pylint: disable=line-too-long` and `# pylint: enable=line-too-long` comments.
 
+
+### Markdown Formatting
+
+We are using [`mdformat`](https://github.com/hukkin/mdformat) to check for formatting errors in Markdown files.
+
+
+If you would like to run the markdown formatter manually:
+
+```sh
+# format specific files:
+mdformat README.md SBSIM_OVERVIEW.md
+```
+
+If you would like to perform a dry run:
+
+```sh
+# check if a file would be changed:
+mdformat README.md SBSIM_OVERVIEW.md --check
+```
+
+> NOTE: it would be nice to check all markdown files, however this includes all markdown files in the ".venv" folder (not desired), and the functionality for ignoring certain directories is only supported in Python 3.13+. When we upgrade we can consider updating the approach, but right now we are only targeting specific files.
 
 ### Pre-commit Hooks
 
