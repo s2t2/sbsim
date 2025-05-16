@@ -1,5 +1,6 @@
 <!-- disableFinding(LINE_OVER_80) -->
 <!-- disableFinding(WHITESPACE_LINES) -->
+<!-- disableFinding(LINK_ID) -->
 
 Smart Control Project Documentation
 ===================================
