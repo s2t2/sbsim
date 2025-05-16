@@ -45,7 +45,8 @@ presubmit: {
 
 presubmit: {
   path_expression: "//depot/google3/third_party/py/smart_buildings/..."
-  path_expression_exclusion: "....md"
+  #path_expression_exclusion: "....md"
+  path_regexp_exclusion: ".*\\.md"
 
   check_do_not_submit: {
     failure_status: ERROR
