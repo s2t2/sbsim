@@ -24,4 +24,14 @@
     // using pyink instead of black:
     ".venv/bin/pyink"
   ],
+  "[markdown]": {
+    // using markdownlint to perform linting on file save...
+    // requires installation of the "DavidAnson.vscode-markdownlint" extension:
+    // https://marketplace.visualstudio.com/items?itemName=DavidAnson.vscode-markdownlint
+    "editor.defaultFormatter": "DavidAnson.vscode-markdownlint",
+    //"editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.markdownlint": "explicit"
+    }
+  },
 }

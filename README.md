@@ -246,10 +246,11 @@ mdformat README.md SBSIM_OVERVIEW.md --check
 > upgrade we can consider updating the approach, but right now we are only
 > targeting specific files.
 
-The `mdformat` tool might not be able to format long lines of code, so some
-manual review may still be required.
+The `mdformat` tool might not be able to format long lines of code blocks, so some manual review may still be required.
 
 Long lines caused by links are OK to keep as-is.
+
+This is a very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very long line of text.
 
 ### Pre-commit Hooks
 

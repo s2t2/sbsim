@@ -3,6 +3,7 @@
   // ... they will be prompted to install these extensions
   "recommendations": [
     "ms-python.black-formatter",
-    "ms-python.isort"
+    "ms-python.isort",
+    "DavidAnson.vscode-markdownlint"
   ]
 }
