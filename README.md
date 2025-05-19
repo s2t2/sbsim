@@ -16,9 +16,9 @@ This will walk you through:
 
 1. Creating an RL (gym compatible) environment
 
-1. Visualizing the env
+2. Visualizing the env
 
-1. Training an agent using the
+3. Training an agent using the
    [Tensorflow Agents Library](https://www.tensorflow.org/agents)
 
 Before you run this notebook, make sure to go through the setup instructions
@@ -32,17 +32,17 @@ libraries are not supported by other operating systems.
 
 1. Clone the repository
 
-1. Ensure you have `protoc` and `ffmpeg` installed, as well as
+2. Ensure you have `protoc` and `ffmpeg` installed, as well as
    `python >=3.10.12 and <3.12`. You can install these running
    `sudo apt install -y protobuf-compiler` and `sudo apt install -y ffmpeg`
 
-1. Create a virtual environment by running `python -m venv .venv`. Activate the
+3. Create a virtual environment by running `python -m venv .venv`. Activate the
    environment `source .venv/bin/activate`. Then, install poetry with
    `pip install poetry`
 
-1. Install the dependencies by running `poetry install --with dev`
+4. Install the dependencies by running `poetry install --with dev`
 
-1. Build the `.proto` files at `smart_control/proto` into python files by
+5. Build the `.proto` files at `smart_control/proto` into python files by
    running:
 
    ```bash
@@ -53,16 +53,16 @@ libraries are not supported by other operating systems.
    cd ../..
    ```
 
-1. Modify the value of `VIDEO_PATH_ROOT` at
+6. Modify the value of `VIDEO_PATH_ROOT` at
    `smart_control/simulator/constants.py`. This is the path where simulation
    videos will be stored
 
-1. Now in the `notebooks/SAC_Demo.ipynb` notebook, modify the values of
+7. Now in the `notebooks/SAC_Demo.ipynb` notebook, modify the values of
    `data_path`, `metrics_path`, `output_data_path` and `root_dir`. In
    particular, `data_path` should point to the `sim_config.gin` file at
    `smart_control/configs/sim_config.gin`
 
-1. Now you are ready to run the `notebooks/SAC_Demo.ipynb` notebook
+8. Now you are ready to run the `notebooks/SAC_Demo.ipynb` notebook
 
 ## Real World Data
 

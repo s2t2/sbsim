@@ -4,7 +4,7 @@
 #
 
 wrap = 80             # options: {"keep", "no", INTEGER}
-number = false        # options: {false, true}
+number = true         # for ordered lists (true: consecutive numbering)
 end_of_line = "lf"    # options: {"lf", "crlf", "keep"}
 validate = true       # options: {false, true}
 
