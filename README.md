@@ -225,7 +225,7 @@ expression, or by wrapping multiple lines of code between
 ### Markdown Formatting
 
 We are using [`mdformat`](https://github.com/hukkin/mdformat) to check for
-formatting errors in Markdown files.
+formatting errors in markdown files.
 
 The markdown formatter will run automatically as a pre-commit hook (see
 "Pre-commit Hooks" section below for more information and setup instructions).
@@ -246,8 +246,8 @@ mdformat README.md SBSIM_OVERVIEW.md --check
 > upgrade we can consider updating the approach, but right now we are only
 > targeting specific files.
 
-The `mdformat` tool might not be able to format long lines of code, so some
-manual review may still be required.
+The `mdformat` tool might not be able to format long lines containing code
+fences, so some manual review may still be required.
 
 Long lines caused by links are OK to keep as-is.
 
