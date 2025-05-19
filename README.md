@@ -278,4 +278,7 @@ If you encounter issues and need to clear the cache:
 pre-commit clean
 ```
 
+If you would like to make a commit and skip the hooks (not recommended), use the
+`--no-verify` flag with your `git commit` command.
+
 ## [License](LICENSE)
