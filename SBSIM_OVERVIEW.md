@@ -528,11 +528,12 @@ bindings via configuration files or command-line arguments.
 
 **Example from the Provided Gin File**:
 
-python
-
-Copy code
-
-`# paths controller_reader.ProtoReader.input_dir = @get_histogram_path() floor_plan_filepath = @get_zone_path() zone_map_filepath = @get_zone_path() metrics_path = @get_metrics_path()`
+```python
+controller_reader.ProtoReader.input_dir = @get_histogram_path()
+floor_plan_filepath = @get_zone_path()
+zone_map_filepath = @get_zone_path()
+metrics_path = @get_metrics_path()
+```
 
 #### 4.2 Key Configuration Parameters
 
@@ -638,11 +639,17 @@ Copy code
 
 - Bind classes and functions to configured parameters, e.g.:
 
-  python
-
-  Copy code
-
-  `sim_building/TFSimulator:   building = @sim/FloorPlanBasedBuilding()   hvac  = @sim/FloorPlanBasedHvac()   weather_controller = %weather_controller   time_step_sec = %time_step_sec   convergence_threshold = %convergence_threshold   iteration_limit = %iteration_limit   iteration_warning = %iteration_warning   start_timestamp = @sim/to_timestamp()`
+  ```python
+  sim_building/TFSimulator:
+    building = @sim/FloorPlanBasedBuilding()
+    hvac  = @sim/FloorPlanBasedHvac()
+    weather_controller = %weather_controller
+    time_step_sec = %time_step_sec
+    convergence_threshold = %convergence_threshold
+    iteration_limit = %iteration_limit
+    iteration_warning = %iteration_warning
+    start_timestamp = @sim/to_timestamp()
+  ```
 
 - Reference parameters using `%` and functions or classes using `@`.
 
