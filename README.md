@@ -42,16 +42,17 @@ libraries are not supported by other operating systems.
 
 1. Install the dependencies by running `poetry install --with dev`
 
-1.  Build the `.proto` files at `smart_control/proto` into python files by
+1. Build the `.proto` files at `smart_control/proto` into python files by
    running:
 
-    ```bash
-    cd smart_control/proto
-    protoc --python_out=. smart_control_building.proto \
-      smart_control_normalization.proto \
-      smart_control_reward.proto
-    cd ../..
-    ```
+   ```bash
+   cd smart_control/proto
+   protoc --python_out=. smart_control_building.proto \
+     smart_control_normalization.proto \
+     smart_control_reward.proto
+   cd ../..
+   ```
+
 1. Modify the value of `VIDEO_PATH_ROOT` at
    `smart_control/simulator/constants.py`. This is the path where simulation
    videos will be stored
@@ -226,6 +227,9 @@ expression, or by wrapping multiple lines of code between
 We are using [`mdformat`](https://github.com/hukkin/mdformat) to check for
 formatting errors in Markdown files.
 
+The markdown formatter will run automatically as a pre-commit hook (see
+"Pre-commit Hooks" section below for more information and setup instructions).
+
 If you would like to run the markdown formatter manually:
 
 ```sh
@@ -242,8 +246,8 @@ mdformat README.md SBSIM_OVERVIEW.md --check
 > upgrade we can consider updating the approach, but right now we are only
 > targeting specific files.
 
-The `mdformat` tool might not be able to format long lines of code,
-so some manual review may still be required.
+The `mdformat` tool might not be able to format long lines of code, so some
+manual review may still be required.
 
 Long lines caused by links are OK to keep as-is.
 

@@ -30,3 +30,9 @@ repos:
       types: [file, python]
       files: '^smart_control/'
       exclude: '^smart_control/proto/'
+
+# See: https://mdformat.readthedocs.io/en/stable/users/installation_and_usage.html#usage-as-a-pre-commit-hook
+- repo: https://github.com/hukkin/mdformat
+  rev: 0.7.22
+  hooks:
+  - id: mdformat
