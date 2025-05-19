@@ -42,9 +42,16 @@ libraries are not supported by other operating systems.
 
 1. Install the dependencies by running `poetry install --with dev`
 
-1. Build the `.proto` files at `smart_control/proto`into python files by running
-   `cd smart_control/proto && protoc --python_out=. smart_control_building.proto smart_control_normalization.proto smart_control_reward.proto && cd ../..`
+1.  Build the `.proto` files at `smart_control/proto` into python files by
+   running:
 
+    ```bash
+    cd smart_control/proto
+    protoc --python_out=. smart_control_building.proto \
+      smart_control_normalization.proto \
+      smart_control_reward.proto
+    cd ../..
+    ```
 1. Modify the value of `VIDEO_PATH_ROOT` at
    `smart_control/simulator/constants.py`. This is the path where simulation
    videos will be stored
@@ -224,11 +231,7 @@ If you would like to run the markdown formatter manually:
 ```sh
 # format specific files:
 mdformat README.md SBSIM_OVERVIEW.md
-```
 
-If you would like to perform a dry run:
-
-```sh
 # check if a file would be changed:
 mdformat README.md SBSIM_OVERVIEW.md --check
 ```
@@ -238,6 +241,11 @@ mdformat README.md SBSIM_OVERVIEW.md --check
 > ignoring certain directories is only supported in Python 3.13+. When we
 > upgrade we can consider updating the approach, but right now we are only
 > targeting specific files.
+
+The `mdformat` tool might not be able to format long lines of code,
+so some manual review may still be required.
+
+Long lines caused by links are OK to keep as-is.
 
 ### Pre-commit Hooks
 
