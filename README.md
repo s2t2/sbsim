@@ -5,7 +5,7 @@ Calibrated Simulation Suite for Offline Training of Reinforcement Learning
 Agents to Optimize Energy and Emission in Office Buildings, currently under
 review at Neurips 2024, and builds off of Goldfeder, J., Sipple, J., (2023).
 [A Lightweight Calibrated Simulation Enabling Efficient Offline Learning for Optimal Control of Real Buildings](https://dl.acm.org/doi/10.1145/3600100.3625682),
-BuildSys ’23, November 15–16, 2023, Istanbul, Turkey
+BuildSys '23, November 15–16, 2023, Istanbul, Turkey
 
 ## Getting Started
 
@@ -70,6 +70,12 @@ In addition to our calibrated simulator, we released 6 years of data on 3
 buildings, for further calibration, and to use, in conjunction with the
 simulator, for training and evaluating RL models. The dataset is part of
 [Tensorflow Datasets](https://www.tensorflow.org/datasets/catalog/smart_buildings).
+
+## Documentation
+
+Here is an
+[Unofficial Community-run Documentation Site](https://gitwyd.github.io/sbsim_documentation/)
+containing more information about the project and the codebase.
 
 ## Contributing
 
