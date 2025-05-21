@@ -240,10 +240,10 @@ If you would like to run the markdown formatter manually:
 
 ```sh
 # format specific files:
-mdformat README.md SBSIM_OVERVIEW.md
+mdformat README.md
 
 # check if a file would be changed:
-mdformat README.md SBSIM_OVERVIEW.md --check
+mdformat README.md --check
 ```
 
 > NOTE: it would be nice to check all markdown files, however this includes all

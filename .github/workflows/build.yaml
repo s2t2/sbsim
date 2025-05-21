@@ -42,20 +42,25 @@ jobs:
         pip install poetry
         poetry install --with dev
 
-    - name: Run the formatter
+    - name: Run the Python formatter
       run: |
         source .venv/bin/activate
         pyink .
 
-    - name: Run the import sorter
+    - name: Run the Python import sorter
       run: |
         source .venv/bin/activate
         isort .
 
-    - name: Run the style checker
+    - name: Run the Python style checker
       run: |
         source .venv/bin/activate
         pylint --rcfile=.pylintrc --ignore=proto smart_control
+
+    - name: Run the Markdown formatter
+      run: |
+        source .venv/bin/activate
+        mdformat README.md --check
 
     - name: Run tests
       run: |
