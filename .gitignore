@@ -18,3 +18,6 @@ __pycache__/
 smart_control/refactor/data/
 smart_control/refactor/experiment_results/
 smart_control/learning/
+
+# Sphinx build output
+docs/_build/

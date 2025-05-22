@@ -326,10 +326,10 @@ class Simulator:
     To find the temperature after conduction/convection for each CV, we set
     up a system of linear equations. To approximate the solution:
 
-    1.   Create a starting estimate temperature for each CV.
-    2.   For each CV, solve for temperature T, based on the current estimate
-         for neighboring CVs and known thermal losses/gains.
-    3.   Calculate the difference between previous T and new T.
+    1. Create a starting estimate temperature for each CV.
+    2. For each CV, solve for temperature T, based on the current estimate
+       for neighboring CVs and known thermal losses/gains.
+    3. Calculate the difference between previous T and new T.
 
     If the maximum difference in the grid is less than some small constant,
     conversion_threshold, then quit. Otherwise, return to step 2.
@@ -592,16 +592,17 @@ class Simulator:
     """Steps the simulation by a small amount of time.
 
     The following steps are completed in order to proceed to the next time step:
-      1: Get external temperature.
-      2: Update temperatures for each CV using FDM.
-      3: Reset HVAC reheat and flow demands.
-      4: For each zone/VAV:
-        a: Update the VAV using the zone's temperature.
-        b: Apply thermal energy from VAV to the zone.
-        c: Accumulate HVAC reheat and flow demands from VAV
 
-      Note: There is a one step delay in application of current vav
-      settings/heating.
+    1. Get external temperature.
+    2. Update temperatures for each CV using FDM.
+    3. Reset HVAC reheat and flow demands.
+    4. For each zone/VAV:
+       a. Update the VAV using the zone's temperature.
+       b. Apply thermal energy from VAV to the zone.
+       c. Accumulate HVAC reheat and flow demands from VAV
+
+    Note: There is a one step delay in application of current vav
+    settings/heating.
     """
     self.setup_step_sim()
     self.execute_step_sim()

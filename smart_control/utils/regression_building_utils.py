@@ -90,8 +90,6 @@ def get_time_feature_names(
   return [(label, l1 % i) for i in range(n)] + [
       (label, l2 % i) for i in range(n)
   ]
-  # return [(label, '%s_%0.3d' % (_COS_RAD, i)) for i in range(n)
-  # ] + [(label, '%s_%0.3d' % (_SIN_RAD, i)) for i in range(n)]
 
 
 def expand_time_features(
@@ -365,7 +363,8 @@ def get_matching_indexes(
 
   Both input and output dataframes have timestamp indexes, that are
   separated by step_interval. If t1 - t0 = time_interval, then the
-  resultant indexes will be:
+  resultant indexes will be::
+
     input   output
     t0      t1
     t1      t2

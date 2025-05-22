@@ -292,8 +292,8 @@ class Boiler(smart_device.SmartDevice):
     to the outside at T_inf.
 
     Q_conduction = (T1 - T2) / (ln(R2/R1) / 2 x pi x L x k), and
-    Q_convection = (T2 - Tinf) / (1 / h x A), where
-      A = the area of the annulus = 2 x pi x R2 x L
+    Q_convection = (T2 - Tinf) / (1 / h / A), where
+    A = the area of the annulus = 2 x pi x R2 x L
 
     Solving for Q:
     Q = (T1 - Tinf) / [ln(R2/R1) / 2pi / L / k + 1 / h / A]

@@ -31,21 +31,18 @@ reward function:
   will learn to shift energy use to renewable sources. This factor requires an
   energy-to-carbon conversion formula/table.
 
-The three factors can be scaled and combined into a single regret function:
-        r_i = [u x (s(setpoint) - s_max)/s_max
-            - v x f(cost)/f_max - w x g(carbon)/g_max]
-            / [u + v + w]
+The three factors can be scaled and combined.
+The definition of terms are as follows:
 
-        r_i -> [-1, 0]
-where:
-  r_i is the incremental reward at step i
-  s(setpoint) is the reward for maintining temperature inside setpoint
-  s_max = occupancy x productivity, the maximum possible reward
-  f(cost) is the cost of consuming electrical and natural gas energy
+  r_i: is the incremental reward at step i
+  s(setpoint): is the reward for maintining temperature inside setpoint
+  s_max: equals occupancy x productivity, the maximum possible reward
+  f(cost): is the cost of consuming electrical and natural gas energy
   f_max: maximum momentary cost that occurs at max energy use
-  g(carbon) is the cost of emitting carbon,
-  g_max
-  and u, w, w are weighing factors for the policy.
+  g(carbon): is the cost of emitting carbon
+  g_max: maximum momentary carbon emission
+
+u, v, w are weighing factors for the policy.
 
 The fundamental metric unit of energy is the Joule (J), and the unit of energy
 applied over a fixed time interval (energy rate) is power measured in J/sec or
