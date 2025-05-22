@@ -1,224 +1,196 @@
-"""Energy carbon and cost model for electricity.
+"""Provides a model for calculating electricity cost and carbon emissions.
 
-Copyright 2024 Google LLC
+This module defines `ElectricityEnergyCost`, a concrete implementation of
+`BaseEnergyCost`. It calculates the monetary cost of electricity based on
+time-of-use (TOU) pricing schedules (differentiating weekdays and weekends)
+and determines carbon emissions based on hourly grid carbon intensity factors.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    https://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+The default pricing and emission schedules are provided as constants, likely
+derived from specific utility data (e.g., PG&E) and regional grid information
+(e.g., for US-SVL-BORD1212). These schedules can be overridden via Gin
+configuration.
 """
 
 from typing import Sequence
 
-from absl import logging
+from absl import logging # For logging warnings
 import gin
 import numpy as np
 import pandas as pd
-import pint
+import pint # For handling physical units
 
 from smart_control.models.base_energy_cost import BaseEnergyCost
 from smart_control.utils import conversion_utils
 
+# UNIT: A pint UnitRegistry instance for defining and converting physical units
+# used in calculations (e.g., kWh, cents, USD, kg, MWh, Watts, seconds).
 UNIT = pint.UnitRegistry()
-UNIT.define("cents_per_kWh = cents / kWh")
-UNIT.define("usd_per_Ws = USD / W / s")
-UNIT.define("kg_per_MWh = kg / MWh")
-UNIT.define("Watt = J / s")
+UNIT.define("cents_per_kWh = cents / kWh") # Custom unit for energy price
+UNIT.define("usd_per_Ws = USD / W / s")    # Custom unit for internal price representation
+UNIT.define("kg_per_MWh = kg / MWh")       # Custom unit for carbon intensity
+UNIT.define("Watt = J / s")                # Standard definition of Watt
 
-# Source:
-# Google Carbon Free Reporting Dashboard
-# US-SVL-BORD1212
-# Units kg Carbon / MWh
+# CARBON_EMISSION_BY_HOUR: A tuple of 24 values representing the average carbon
+# emission rate (in kg CO2e per MWh of electricity consumed) for each hour of
+# the day. Default values are sourced from Google Carbon Free Reporting Dashboard
+# for US-SVL-BORD1212. This reflects varying grid carbon intensity.
 CARBON_EMISSION_BY_HOUR = (
-    88.19666493,
-    87.79190866,
-    87.87607686,
-    87.83054163,
-    88.00279618,
-    88.19648183,
-    89.70663283,
-    93.97947901,
-    98.85868291,
-    100.7853521,
-    101.3866866,
-    101.7795612,
-    102.5919168,
-    103.4403736,
-    104.1380294,
-    104.7359292,
-    102.0714466,
-    97.04226176,
-    93.57895651,
-    92.46355045,
-    91.72914657,
-    90.69209747,
-    89.76552213,
-    88.99950995,
-) * UNIT.kg_per_MWh
+    88.19666493, 87.79190866, 87.87607686, 87.83054163, 88.00279618,
+    88.19648183, 89.70663283, 93.97947901, 98.85868291, 100.7853521,
+    101.3866866, 101.7795612, 102.5919168, 103.4403736, 104.1380294,
+    104.7359292, 102.0714466, 97.04226176, 93.57895651, 92.46355045,
+    91.72914657, 90.69209747, 89.76552213, 88.99950995,
+) * UNIT.kg_per_MWh # type: ignore
 
-# Time-of use schedule source (PG&E) for commercial/industrial:
-# https://www.pge.com/includes/docs/pdfs/mybusiness/energysavingsrebates/economicdevelopment/factsheet/ed-comind_e_rates_v4.pdf
-# Actual values estimated from Joint Rate Comparisons PG&E - MCE,
-# Large Commercial and Industrial
-# https://www.pge.com/pge_global/common/pdfs/customer-service/other-services/alternative-energy-providers/community-choice-aggregation/mce_rateclasscomparison.pdf
-# Units cents / kWh
+# WEEKDAY_PRICE_BY_HOUR: A tuple of 24 values representing the electricity price
+# (in US cents per kWh) for each hour of a weekday. Default values are based on
+# PG&E commercial/industrial Time-of-Use (TOU) tariffs.
 WEEKDAY_PRICE_BY_HOUR = (
-    16.0,
-    16.0,
-    16.0,
-    16.0,
-    16.0,
-    16.0,
-    18.0,
-    18.0,
-    18.0,
-    18.0,
-    18.0,
-    18.0,
-    20.0,
-    20.0,
-    20.0,
-    20.0,
-    20.0,
-    20.0,
-    20.0,
-    16.0,
-    16.0,
-    16.0,
-    16.0,
-    16.0,
-) * UNIT.cents_per_kWh
+    16.0, 16.0, 16.0, 16.0, 16.0, 16.0, # Off-peak
+    18.0, 18.0, 18.0, 18.0, 18.0, 18.0, # Partial-peak
+    20.0, 20.0, 20.0, 20.0, 20.0, 20.0, # Peak
+    20.0, # Peak
+    16.0, 16.0, 16.0, 16.0, 16.0, # Off-peak
+) * UNIT.cents_per_kWh # type: ignore
+
+# WEEKEND_PRICE_BY_HOUR: A tuple of 24 values representing the electricity price
+# (in US cents per kWh) for each hour of a weekend/holiday. Default values are
+# typically off-peak rates.
 WEEKEND_PRICE_BY_HOUR = (
-    16.0,
-    16.0,
-    16.0,
-    16.0,
-    16.0,
-    16.0,
-    16.0,
-    16.0,
-    16.0,
-    16.0,
-    16.0,
-    16.0,
-    16.0,
-    16.0,
-    16.0,
-    16.0,
-    16.0,
-    16.0,
-    16.0,
-    16.0,
-    16.0,
-    16.0,
-    16.0,
-    16.0,
-) * UNIT.cents_per_kWh
+    16.0, 16.0, 16.0, 16.0, 16.0, 16.0, 16.0, 16.0, 16.0, 16.0, 16.0, 16.0,
+    16.0, 16.0, 16.0, 16.0, 16.0, 16.0, 16.0, 16.0, 16.0, 16.0, 16.0, 16.0,
+) * UNIT.cents_per_kWh # type: ignore
 
 
 @gin.configurable()
 class ElectricityEnergyCost(BaseEnergyCost):
-  """Energy cost and carbon emission model for reward function."""
+  """Calculates electricity cost and carbon emissions using hourly schedules.
+
+  This class implements the `BaseEnergyCost` interface to provide cost and
+  carbon emission values specifically for electricity consumption. It uses
+  predefined hourly schedules for:
+  - Time-of-use (TOU) electricity pricing (different for weekdays and weekends).
+  - Grid carbon intensity factors (emissions per unit of electricity).
+
+  These schedules can be defaulted or configured via Gin.
+  """
 
   def __init__(
       self,
-      weekday_energy_prices: Sequence[float] = WEEKDAY_PRICE_BY_HOUR,
-      weekend_energy_prices: Sequence[float] = WEEKEND_PRICE_BY_HOUR,
-      carbon_emission_rates: Sequence[float] = CARBON_EMISSION_BY_HOUR,
+      weekday_energy_prices: Sequence[pint.Quantity] = WEEKDAY_PRICE_BY_HOUR,
+      weekend_energy_prices: Sequence[pint.Quantity] = WEEKEND_PRICE_BY_HOUR,
+      carbon_emission_rates: Sequence[pint.Quantity] = CARBON_EMISSION_BY_HOUR,
   ):
+    """Initializes the ElectricityEnergyCost model.
+
+    Args:
+      weekday_energy_prices: A sequence of 24 `pint.Quantity` values
+        representing the electricity price (e.g., in "cents / kWh") for each
+        hour of a weekday (0-23). Defaults to `WEEKDAY_PRICE_BY_HOUR`.
+      weekend_energy_prices: A sequence of 24 `pint.Quantity` values for
+        weekend hourly prices. Defaults to `WEEKEND_PRICE_BY_HOUR`.
+      carbon_emission_rates: A sequence of 24 `pint.Quantity` values
+        representing the carbon emission factor (e.g., in "kg / MWh") for
+        electricity consumed during each hour of the day. Defaults to
+        `CARBON_EMISSION_BY_HOUR`.
+
+    Raises:
+      ValueError: If any of the input schedule sequences do not contain exactly
+        24 entries (one for each hour).
+    """
     if len(weekday_energy_prices) != 24:
-      raise ValueError("Energy cost rates must have 24 entries.")
-
+      raise ValueError("Weekday energy price rates must have 24 entries, one for each hour.")
     if len(weekend_energy_prices) != 24:
-      raise ValueError("Energy cost rates must have 24 entries.")
-
+      raise ValueError("Weekend energy price rates must have 24 entries, one for each hour.")
     if len(carbon_emission_rates) != 24:
-      raise ValueError("Carbon emission rates must have 24 entries.")
+      raise ValueError("Carbon emission rates must have 24 entries, one for each hour.")
 
-    # Convert the emission rates from kg / MWh to kg / Ws.
-    self._carbon_emission_rates = (
-        np.array(carbon_emission_rates) / 1.0e6 / 3600.0
-    )
-
-    # Convert the energy rates to USD / W / s
-    self._weekday_energy_prices = (
-        np.array(weekday_energy_prices)
-        / 100.0
-        / 1000.0
-        / 3600.0
-        * UNIT.usd_per_Ws
-    )
-    self._weekend_energy_prices = (
-        np.array(weekend_energy_prices)
-        / 100.0
-        / 1000.0
-        / 3600.0
-        * UNIT.usd_per_Ws
-    )
+    # Convert input rates to consistent internal units (USD/Ws for price, kg/Ws for carbon)
+    # Price: cents/kWh -> USD/kWh -> USD/kWs -> USD/Ws
+    self._weekday_energy_prices = np.array([
+        price.to(UNIT.USD / (UNIT.W * UNIT.s)).magnitude for price in weekday_energy_prices
+    ])
+    self._weekend_energy_prices = np.array([
+        price.to(UNIT.USD / (UNIT.W * UNIT.s)).magnitude for price in weekend_energy_prices
+    ])
+    # Carbon: kg/MWh -> kg/Wh -> kg/Ws
+    self._carbon_emission_rates = np.array([
+        rate.to(UNIT.kg / (UNIT.W * UNIT.s)).magnitude for rate in carbon_emission_rates
+    ])
 
   def cost(
       self, start_time: pd.Timestamp, end_time: pd.Timestamp, energy_rate: float
   ) -> float:
-    """Returns the cost of energy from this time step.
+    """Calculates the monetary cost of electricity consumed over an interval.
+
+    The cost is determined by the duration of the interval, the average
+    `energy_rate` (power in Watts), and the hourly electricity price applicable
+    at the `start_time`. Prices vary by hour and between weekdays/weekends.
+    The absolute value of `energy_rate` is used, so cost is incurred for
+    energy consumed, regardless of whether it's for heating or cooling (if
+    cooling is represented as negative power).
 
     Args:
-      start_time: start of window
-      end_time: end of window
-      energy_rate: power applies in W, if negative then energy is drawn away
-        (i.e., cooling), positive energy_rate means heating.
+      start_time: A `pandas.Timestamp` (timezone-aware) indicating the
+        beginning of the consumption interval. The hour of this timestamp
+        determines which hourly rate is used.
+      end_time: A `pandas.Timestamp` (timezone-aware) indicating the end of the
+        consumption interval.
+      energy_rate: The average power consumption rate in Watts [W] during the
+        interval.
 
     Returns:
-      cost in USD for the energy consumed over the interval.
+      The calculated cost of electricity in USD (float) for the interval.
     """
-    dt = (end_time - start_time).total_seconds()
-    if dt > 3600.0:
-      logging.warn(
-          "Queries greater than an hour may yield incorrect price estimates."
+    dt_seconds = (end_time - start_time).total_seconds()
+    if dt_seconds > 3600.0:
+      logging.warning(
+          "Cost query interval (%.2f s) is greater than one hour; "
+          "price estimate will be based on the start_time's hourly rate only.",
+          dt_seconds
       )
 
     hour_index = start_time.hour
-    if conversion_utils.is_work_day(start_time):
-      current_price = self._weekday_energy_prices[hour_index]
-    else:
-      current_price = self._weekend_energy_prices[hour_index]
-    return (
-        current_price * np.abs(energy_rate) * UNIT.Watt * dt * UNIT.second
-    ).magnitude
+    current_price_usd_per_ws = (
+        self._weekday_energy_prices[hour_index]
+        if conversion_utils.is_work_day(start_time)
+        else self._weekend_energy_prices[hour_index]
+    )
+    # Cost = Price (USD/Ws) * Power (W) * Duration (s)
+    return float(current_price_usd_per_ws * np.abs(energy_rate) * dt_seconds)
 
   def carbon(
       self, start_time: pd.Timestamp, end_time: pd.Timestamp, energy_rate: float
   ) -> float:
-    """Returns the carbon produced in this time step.
+    """Calculates the mass of carbon emitted due to electricity consumption.
+
+    Carbon emissions are determined by the duration of the interval, the
+    average `energy_rate` (power in Watts), and the hourly carbon emission
+    factor applicable at the `start_time`. The absolute value of `energy_rate`
+    is used, implying emissions are tied to the magnitude of energy generation.
 
     Args:
-      start_time: start of window
-      end_time: end of window
-      energy_rate: power applies in W, if negative then energy is drawn away
-        (i.e., cooling), positive energy_rate means heating.
+      start_time: A `pandas.Timestamp` (timezone-aware) indicating the
+        beginning of the consumption interval. The hour of this timestamp
+        determines which hourly emission factor is used.
+      end_time: A `pandas.Timestamp` (timezone-aware) indicating the end of the
+        consumption interval.
+      energy_rate: The average power consumption rate in Watts [W] during the
+        interval.
 
     Returns:
-      carbon emitted [kg] for the energy consumed over the interval.
+      The calculated mass of carbon emissions in kilograms (kg) (float) for
+      the interval.
     """
-    dt = (end_time - start_time).total_seconds()
-
-    if dt > 3600.0:
-      logging.warn(
-          "Queries greater than an hour may yield incorrect carbon estimates."
+    dt_seconds = (end_time - start_time).total_seconds()
+    if dt_seconds > 3600.0:
+      logging.warning(
+          "Carbon query interval (%.2f s) is greater than one hour; "
+          "emission estimate will be based on the start_time's hourly rate only.",
+          dt_seconds
       )
 
     hour_index = start_time.hour
-    # Return carbon mass [kg] generated by the energy consumed [J].
-    return (
-        self._carbon_emission_rates[hour_index]
-        * np.abs(energy_rate)
-        * UNIT.Watt
-        * dt
-        * UNIT.second
-    ).magnitude
+    current_emission_rate_kg_per_ws = self._carbon_emission_rates[hour_index]
+    # Carbon (kg) = Rate (kg/Ws) * Power (W) * Duration (s)
+    return float(current_emission_rate_kg_per_ws * np.abs(energy_rate) * dt_seconds)

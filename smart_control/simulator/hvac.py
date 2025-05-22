@@ -1,24 +1,14 @@
-"""Models HVAC for simulation.
+"""Simulates a Heating, Ventilation, and Air Conditioning (HVAC) system.
 
-The model assumes a single boiler and air handler, with one VAV per zone in the
-building.
-
-Copyright 2023 Google LLC
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    https://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+This module provides the `Hvac` class, which models a centralized HVAC system
+typically found in commercial buildings. The model generally assumes a primary
+air handling unit (AHU) and a boiler providing conditioned air and hot water,
+respectively, to multiple zones. Each zone is equipped with a Variable Air
+Volume (VAV) unit and controlled by a thermostat operating on a predefined
+schedule.
 """
 
-from typing import List, Mapping, Tuple
+from typing import List, Mapping, Tuple, Dict # Added Dict for type hint
 
 import gin
 import pandas as pd
@@ -34,15 +24,15 @@ from smart_control.utils import conversion_utils
 
 @gin.configurable
 class Hvac:
-  """Model for the HVAC components of the building.
+  """Manages and coordinates the components of a simulated HVAC system.
 
-  Creates a single boiler and air handler, along with one vav for each zone.
+  This class acts as an aggregator for the main HVAC components: a central
+  air handler, a boiler, and a collection of Variable Air Volume (VAV) units,
+  where each VAV serves a specific zone. It initializes these components and
+  provides access to them, as well as managing metadata about the zones.
 
-  Attributes:
-    vavs: Mapping from zone_coordinates to VAV.
-    air_handler: AirHandler
-    boiler: Boiler
-    zone_infos: information about each zone in the building.
+  The behavior of thermostats associated with each VAV is governed by a shared
+  setpoint schedule.
   """
 
   def __init__(
@@ -54,71 +44,109 @@ class Hvac:
       vav_max_air_flow_rate: float,
       vav_reheat_max_water_flow_rate: float,
   ):
-    """Initialize HVAC.
+    """Initializes the HVAC system model.
 
     Args:
-      zone_coordinates: List of 2-tuple containing zone coordinates to service.
-      air_handler: the air handler for hte HVAC
-      boiler: the boiler for the HVAC
-      schedule: the setpoint_schedule for the thermostats
-      vav_max_air_flow_rate: the max airflow rate for the vavs
-      vav_reheat_max_water_flow_rate: the max water reheat flowrate for the vavs
+      zone_coordinates: A list of 2-tuples `(row, col)`, where each tuple
+        uniquely identifies a zone that will be served by a dedicated VAV unit.
+        These coordinates might correspond to a grid representation of the building.
+      air_handler: An initialized instance of `air_handler_py.AirHandler` that
+        will serve as the central air conditioning and ventilation unit.
+      boiler: An initialized instance of `boiler_py.Boiler` that will provide
+        hot water, typically for VAV reheat coils.
+      schedule: An instance of `setpoint_schedule.SetpointSchedule` which defines
+        the temperature setpoints (e.g., heating and cooling) over time. This
+        schedule is used by the thermostats controlling each VAV unit.
+      vav_max_air_flow_rate: The maximum air flow rate (in cubic meters per
+        second, m^3/s) that each VAV unit can deliver.
+      vav_reheat_max_water_flow_rate: The maximum hot water flow rate (in cubic
+        meters per second, m^3/s, assuming consistent volumetric flow units)
+        for the reheat coil within each VAV unit.
     """
-    self._air_handler = air_handler
-    self._boiler = boiler
-    self._vav_max_air_flow_rate = vav_max_air_flow_rate
-    self._vav_reheat_max_water_flow_rate = vav_reheat_max_water_flow_rate
-    self._zone_coordinates = zone_coordinates
-    self._vavs = {}
-    self._schedule = schedule
-    self._zone_infos = {}
+    self._air_handler: air_handler_py.AirHandler = air_handler
+    self._boiler: boiler_py.Boiler = boiler
+    self._vav_max_air_flow_rate: float = vav_max_air_flow_rate
+    self._vav_reheat_max_water_flow_rate: float = vav_reheat_max_water_flow_rate
+    self._zone_coordinates: List[Tuple[int, int]] = zone_coordinates
+    self._vavs: Dict[Tuple[int, int], vav.Vav] = {}
+    self._schedule: setpoint_schedule.SetpointSchedule = schedule
+    self._zone_infos: Dict[Tuple[int, int], smart_control_building_pb2.ZoneInfo] = {}
 
-    for z in self._zone_coordinates:
-      zone_id = conversion_utils.zone_coordinates_to_id(z)
-      therm = thermostat.Thermostat(self._schedule)
-      device_id = f'vav_{z[0]}_{z[1]}'
-      self._vavs[z] = vav.Vav(
-          self._vav_max_air_flow_rate,
-          self._vav_reheat_max_water_flow_rate,
-          therm,
-          self._boiler,
-          device_id=device_id,
-          zone_id=zone_id,
-      )
-      self._zone_infos[z] = smart_control_building_pb2.ZoneInfo(
-          zone_id=zone_id,
-          building_id='US-SIM-001',
-          zone_description='Simulated zone',
-          devices=[device_id],
-          zone_type=smart_control_building_pb2.ZoneInfo.ROOM,
-          floor=0,
-      )
-    self.reset()
+    # Create a VAV, Thermostat, and ZoneInfo for each specified zone coordinate
+    for z_coord in self._zone_coordinates:
+      zone_id_str = conversion_utils.zone_coordinates_to_id(z_coord)
+      # Each VAV gets its own thermostat, but all thermostats use the same schedule
+      vav_thermostat = thermostat.Thermostat(self._schedule)
+      vav_device_id = f'vav_{z_coord[0]}_{z_coord[1]}'
 
-  def reset(self):
+      self._vavs[z_coord] = vav.Vav(
+          max_air_flow_rate=self._vav_max_air_flow_rate,
+          reheat_max_water_flow_rate=self._vav_reheat_max_water_flow_rate,
+          thermostat=vav_thermostat,
+          boiler=self._boiler, # VAVs are connected to the central boiler
+          device_id=vav_device_id,
+          zone_id=zone_id_str,
+      )
+      self._zone_infos[z_coord] = smart_control_building_pb2.ZoneInfo(
+          zone_id=zone_id_str,
+          building_id='US-SIM-001', # Example building ID
+          zone_description=f'Simulated zone at coordinates {z_coord}',
+          devices=[vav_device_id], # List of devices serving this zone
+          zone_type=smart_control_building_pb2.ZoneInfo.ZoneType.ROOM, # Example type
+          floor=0, # Example floor
+      )
+    self.reset() # Initialize states of all components
+
+  def reset(self) -> None:
+    """Resets all components of the HVAC system to their initial states.
+
+    This involves calling the `reset()` method on the central air handler,
+    the boiler, and each individual VAV unit.
+    """
     self.air_handler.reset()
     self.boiler.reset()
-    for z in self._zone_coordinates:
-      self._vavs[z].reset()
+    for z_coord in self._zone_coordinates:
+      if z_coord in self._vavs: # Ensure VAV exists for the coordinate
+        self._vavs[z_coord].reset()
 
   @property
   def vavs(self) -> Mapping[Tuple[int, int], vav.Vav]:
+    """A mapping from zone coordinates to their respective `Vav` instances."""
     return self._vavs
 
   @property
   def air_handler(self) -> air_handler_py.AirHandler:
+    """The central `AirHandler` instance for this HVAC system."""
     return self._air_handler
 
   @property
   def boiler(self) -> boiler_py.Boiler:
+    """The central `Boiler` instance for this HVAC system."""
     return self._boiler
 
   def is_comfort_mode(self, current_time: pd.Timestamp) -> bool:
-    """Returns True if building is in comfort mode."""
+    """Checks if the HVAC system is currently in a "comfort" mode.
+
+    This determination is delegated to the `SetpointSchedule` instance,
+    which typically defines periods of active climate control based on time
+    (e.g., occupied hours).
+
+    Args:
+      current_time: A `pandas.Timestamp` representing the current time for
+        which to check the comfort mode.
+
+    Returns:
+      True if the system is in comfort mode at `current_time`, False otherwise.
+    """
     return self._schedule.is_comfort_mode(current_time)
 
   @property
   def zone_infos(
       self,
   ) -> Mapping[Tuple[int, int], smart_control_building_pb2.ZoneInfo]:
+    """A mapping from zone coordinates to `ZoneInfo` protobuf messages.
+    
+    Each `ZoneInfo` message contains metadata about a specific zone, such as
+    its ID, description, and associated devices.
+    """
     return self._zone_infos

@@ -21,10 +21,38 @@ from smart_control.proto import smart_control_reward_pb2
 
 
 class BaseRewardFunction(metaclass=abc.ABCMeta):
-  """Base class that converts the building energy information into a reward."""
+  """Abstract base class for defining the reward function in an RL environment.
+
+  This class provides an interface for calculating a scalar reward signal that
+  guides the reinforcement learning agent's behavior. The reward is computed
+  based on various aspects of the building's performance and state, which are
+  provided via the `RewardInfo` protobuf message.
+
+  Implementations of this class will define the specific logic for how these
+  diverse factors (e.g., energy consumption, occupant comfort, operational
+  costs, carbon emissions) are weighted and combined into a single reward value.
+  The output is a `RewardResponse` protobuf, which includes the final agent
+  reward and can also carry disaggregated components of the reward for analysis.
+  """
 
   @abc.abstractmethod
   def compute_reward(
       self, reward_info: smart_control_reward_pb2.RewardInfo
   ) -> smart_control_reward_pb2.RewardResponse:
-    """Returns the real-valued reward for the current state of the building."""
+    """Computes the reward based on the provided building performance data.
+
+    Args:
+      reward_info: A `smart_control_reward_pb2.RewardInfo` protobuf message
+        populated by the `BaseBuilding` implementation. This message contains
+        various metrics reflecting the building's state and performance over
+        the last control interval (e.g., energy usage by different systems,
+        comfort metrics like temperature deviations, occupancy levels).
+
+    Returns:
+      A `smart_control_reward_pb2.RewardResponse` protobuf message. This
+      includes:
+      - `agent_reward_value`: The final scalar reward for the RL agent.
+      - Other fields that can store disaggregated components of the reward,
+        such as calculated energy costs, comfort penalties, carbon costs, etc.,
+        which are useful for logging and detailed performance analysis.
+    """

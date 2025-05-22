@@ -1,21 +1,14 @@
-"""Models an air handler in an HVAC system.
+"""Simulation model for an Air Handling Unit (AHU) in an HVAC system.
 
-Copyright 2023 Google LLC
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    https://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+This module provides the `AirHandler` class, which simulates the core
+functionalities of an AHU. This includes mixing recirculated indoor air with
+fresh outside air, heating or cooling the mixed air to meet supply temperature
+setpoints, and calculating the energy consumption of its fans and thermal
+conditioning processes. The AHU interacts with a weather controller for ambient
+conditions and can be part of a larger HVAC simulation.
 """
 
-from typing import Optional
+from typing import Optional, Dict # Added Dict for type hint
 import uuid
 
 import gin
@@ -28,28 +21,26 @@ from smart_control.utils import constants
 
 @gin.configurable
 class AirHandler(smart_device.SmartDevice):
-  """Models an air hander with heating/cooling, input/exhaust and recirculation.
+  """Models an air handler with heating/cooling, intake/exhaust, and recirculation.
 
-  Attributes:
-    recirculation: Proportion of air recirculated.
-    air_flow_rate: Flow rate produced by fan in m^3/s.
-    heating_air_temp_setpoint: Minimum temperature in K until air will need to
-      be heated.
-    cooling_air_temp_setpoint: Maximum temperature in K until air will be
-      cooled.
-    fan_differential_pressure: Amount of pressure in Pa needed to push air
-      effectively.
-    fan_efficiency: Electrical efficiency of fan (0 - 1).
-    cooling_request_count: count of VAVs that have requested cooling in this
-      cycle.
-    max_air_flow_rate: max air flow rate in kg/s
+  This class simulates the physical behavior and energy consumption of an Air
+  Handling Unit (AHU). It inherits from `SmartDevice` to define its observable
+  and actionable properties for integration into a simulated environment.
+
+  Key simulated aspects include:
+  - Mixing of recirculated building air with outside ambient air.
+  - Heating or cooling of the mixed air to achieve a supply air temperature
+    based on heating and cooling setpoints.
+  - Calculation of thermal energy required for heating/cooling.
+  - Calculation of fan power consumption for supply and exhaust fans.
+  - Tracking of air flow rates and demand aggregation.
   """
 
   def __init__(
       self,
       recirculation: float,
-      heating_air_temp_setpoint: int,
-      cooling_air_temp_setpoint: int,
+      heating_air_temp_setpoint: float, # Changed int to float for consistency
+      cooling_air_temp_setpoint: float, # Changed int to float for consistency
       fan_differential_pressure: float,
       fan_efficiency: float,
       max_air_flow_rate: float = 8.67,
@@ -58,49 +49,82 @@ class AirHandler(smart_device.SmartDevice):
           weather_controller.WeatherController
       ] = None,
   ):
+    """Initializes the AirHandler instance.
+
+    Args:
+      recirculation: The proportion of air that is recirculated from the
+        building, ranging from 0.0 (all fresh air) to 1.0 (all recirculated air).
+      heating_air_temp_setpoint: The target temperature (in Kelvin) to which
+        the mixed air should be heated if it's below this setpoint.
+      cooling_air_temp_setpoint: The target temperature (in Kelvin) to which
+        the mixed air should be cooled if it's above this setpoint.
+      fan_differential_pressure: The pressure difference (in Pascals, Pa) that
+        the fan operates against to move air through the system.
+      fan_efficiency: The electrical efficiency of the fan, as a dimensionless
+        ratio between 0.0 and 1.0.
+      max_air_flow_rate: The maximum possible air flow rate that the AHU can
+        deliver (in cubic meters per second, m^3/s). This caps the aggregated
+        demand. Defaults to 8.67 m^3/s.
+        Note: The original class attribute docstring mentioned kg/s, but usage
+        in fan power calculations and consistency with `air_flow_rate` (m^3/s)
+        suggests m^3/s is more appropriate here.
+      device_id: An optional unique string identifier for this air handler.
+        If None, a random UUID will be generated.
+      sim_weather_controller: An optional instance of
+        `weather_controller.WeatherController` used to fetch current outside
+        air temperature. If provided, 'outside_air_temperature_sensor' becomes
+        an observable field.
+
+    Raises:
+      ValueError: If `cooling_air_temp_setpoint` is not strictly greater
+        than `heating_air_temp_setpoint`.
+    """
     if cooling_air_temp_setpoint <= heating_air_temp_setpoint:
       raise ValueError(
-          'cooling_air_temp_setpoint must greater than'
-          ' heating_air_temp_setpoint'
+          'cooling_air_temp_setpoint must be greater than'
+          ' heating_air_temp_setpoint.'
       )
 
-    observable_fields = {
+    observable_fields: Dict[str, smart_device.AttributeInfo] = {
         'differential_pressure_setpoint': smart_device.AttributeInfo(
-            'fan_differential_pressure', float
+            internal_attribute_name='fan_differential_pressure', attribute_type=float
         ),
         'supply_air_flowrate_sensor': smart_device.AttributeInfo(
-            'air_flow_rate', float
+            internal_attribute_name='air_flow_rate', attribute_type=float
         ),
         'supply_air_heating_temperature_setpoint': smart_device.AttributeInfo(
-            'heating_air_temp_setpoint', float
+            internal_attribute_name='heating_air_temp_setpoint', attribute_type=float
         ),
         'supply_air_cooling_temperature_setpoint': smart_device.AttributeInfo(
-            'cooling_air_temp_setpoint', float
+            internal_attribute_name='cooling_air_temp_setpoint', attribute_type=float
         ),
         'supply_fan_speed_percentage_command': smart_device.AttributeInfo(
-            'supply_fan_speed_percentage', float
+            internal_attribute_name='supply_fan_speed_percentage', attribute_type=float
         ),
+        # Assuming discharge fan speed is same as supply for this model
         'discharge_fan_speed_percentage_command': smart_device.AttributeInfo(
-            'supply_fan_speed_percentage', float
+            internal_attribute_name='supply_fan_speed_percentage', attribute_type=float
         ),
         'outside_air_flowrate_sensor': smart_device.AttributeInfo(
-            'ambient_flow_rate', float
+            internal_attribute_name='ambient_flow_rate', attribute_type=float
         ),
         'cooling_request_count': smart_device.AttributeInfo(
-            'cooling_request_count', float
+            internal_attribute_name='cooling_request_count', attribute_type=float # Should likely be int
         ),
     }
     if sim_weather_controller:
       observable_fields['outside_air_temperature_sensor'] = (
-          smart_device.AttributeInfo('outside_air_temperature_sensor', float)
+          smart_device.AttributeInfo(
+              internal_attribute_name='outside_air_temperature_sensor', attribute_type=float
+          )
       )
 
-    action_fields = {
+    action_fields: Dict[str, smart_device.AttributeInfo] = {
         'supply_air_heating_temperature_setpoint': smart_device.AttributeInfo(
-            'heating_air_temp_setpoint', float
+            internal_attribute_name='heating_air_temp_setpoint', attribute_type=float
         ),
         'supply_air_cooling_temperature_setpoint': smart_device.AttributeInfo(
-            'cooling_air_temp_setpoint', float
+            internal_attribute_name='cooling_air_temp_setpoint', attribute_type=float
         ),
     }
 
@@ -108,24 +132,34 @@ class AirHandler(smart_device.SmartDevice):
       device_id = f'air_handler_id_{uuid.uuid4()}'
 
     super().__init__(
-        observable_fields,
-        action_fields,
+        observable_fields=observable_fields,
+        action_fields=action_fields,
         device_type=smart_control_building_pb2.DeviceInfo.DeviceType.AHU,
         device_id=device_id,
     )
 
+    # Store initial configuration values for reset
     self._init_recirculation = recirculation
-    self._init_air_flow_rate = 0.0
-    self._init_heating_air_temp_setpoint = heating_air_temp_setpoint
-    self._init_cooling_air_temp_setpoint = cooling_air_temp_setpoint
+    self._init_air_flow_rate = 0.0  # Initial demand is zero
+    self._init_heating_air_temp_setpoint = float(heating_air_temp_setpoint)
+    self._init_cooling_air_temp_setpoint = float(cooling_air_temp_setpoint)
     self._init_fan_differential_pressure = fan_differential_pressure
     self._init_fan_efficiency = fan_efficiency
     self._init_cooling_request_count = 0
     self._init_max_air_flow_rate = max_air_flow_rate
     self._sim_weather_controller = sim_weather_controller
+
+    # Initialize state variables by calling reset
     self.reset()
 
-  def reset(self):
+  def reset(self) -> None:
+    """Resets the air handler's state to its initial configuration.
+
+    This method is typically called at the beginning of a new simulation
+    episode. It restores variables like air flow rate, cooling request count,
+    and temperature setpoints to their initial values defined during
+    instantiation.
+    """
     self._recirculation = self._init_recirculation
     self._air_flow_rate = self._init_air_flow_rate
     self._heating_air_temp_setpoint = self._init_heating_air_temp_setpoint

@@ -1,13 +1,42 @@
-"""Trains a reinforcement learning agent using a pre-populated replay buffer.
+"""Trains a reinforcement learning agent for smart building control.
 
-This script sets up the training process with separate collection and evaluation
-components.
+This script orchestrates the training of a reinforcement learning agent (e.g., SAC)
+using TF-Agents. It leverages a pre-populated "starter" replay buffer to begin
+training and includes components for:
+- Setting up training and evaluation environments based on Gin configurations.
+- Creating and configuring the specified RL agent.
+- Managing a Reverb replay buffer, loading initial data, and collecting new
+  experiences.
+- Defining actors for data collection and agent evaluation.
+- Setting up a learner for updating the agent's policy.
+- Running a main training loop that interleaves data collection, agent learning,
+  periodic evaluation, and checkpointing.
+
+The script is configurable via command-line arguments to specify the starter
+buffer, experiment name, agent type, training duration, and other hyperparameters.
+Experiment results, including TensorBoard summaries and saved model policies,
+are stored in a timestamped directory.
+
+Example usage from the command line:
+  ```bash
+  python -m smart_control.reinforcement_learning.scripts.train \
+    --starter-buffer-path="/path/to/your/starter_buffer_dir" \
+    --experiment-name="my_sac_experiment" \
+    --agent-type="sac" \
+    --train-iterations=50000 \
+    --collect-steps-per-training-iteration=10 \
+    --batch-size=256 \
+    --eval-interval=500 \
+    --checkpoint-interval=1000 \
+    --learner-iterations=100
+  ```
 """
 
 import os
 
-# setting this environment variable before importing tensorflow
-# https://github.com/tensorflow/tensorflow/issues/63548#issuecomment-2008941537
+# Setting this environment variable before importing TensorFlow can mitigate certain
+# extension loading issues on some systems.
+# See: https://github.com/tensorflow/tensorflow/issues/63548#issuecomment-2008941537
 os.environ['WRAPT_DISABLE_EXTENSIONS'] = 'true'
 
 # pylint: disable=g-import-not-at-top, wrong-import-position
@@ -16,6 +45,7 @@ import datetime
 import logging
 
 import tensorflow as tf
+from tf_agents.agents import tf_agent # For type hinting agent
 from tf_agents.environments import tf_py_environment
 from tf_agents.metrics import tf_metrics
 from tf_agents.policies import greedy_policy
@@ -32,7 +62,6 @@ from smart_control.reinforcement_learning.replay_buffer.replay_buffer import Rep
 from smart_control.reinforcement_learning.utils.config import CONFIG_PATH
 from smart_control.reinforcement_learning.utils.config import EXPERIMENT_RESULTS_PATH
 from smart_control.reinforcement_learning.utils.environment import create_and_setup_environment
-
 # pylint: enable=g-import-not-at-top, wrong-import-position
 
 # Configure logging
@@ -43,44 +72,74 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def train_agent(
-    starter_buffer_path,
-    experiment_name,
-    agent_type='sac',
-    train_iterations=100000,
-    collect_steps_per_iteration=1,
-    batch_size=256,
-    log_interval=100,
-    eval_interval=1000,
-    num_eval_episodes=5,
-    checkpoint_interval=1000,  # New parameter for checkpointing frequency
-    learner_iterations=200,  # New parameter for learner iterations per loop
-):
-  """Trains a reinforcement learning agent using a pre-populated replay buffer.
+def train_agent( # pylint: disable=too-many-locals, too-many-statements
+    starter_buffer_path: str,
+    experiment_name: str,
+    agent_type: str = 'sac',
+    train_iterations: int = 100000,
+    collect_steps_per_iteration: int = 1,
+    batch_size: int = 256,
+    log_interval: int = 100,
+    eval_interval: int = 1000,
+    num_eval_episodes: int = 5,
+    checkpoint_interval: int = 1000,
+    learner_iterations: int = 200,
+) -> tf_agent.TFAgent:
+  """Trains a reinforcement learning agent for smart building control.
+
+  This function sets up the complete training pipeline, including:
+  - Creating training and evaluation environments.
+  - Initializing the specified RL agent (e.g., SAC).
+  - Loading a pre-populated "starter" replay buffer.
+  - Configuring data collection actors, evaluation actors, and a learner.
+  - Running the main training loop, which involves collecting new experience,
+    training the agent, and periodically evaluating its performance.
+  - Saving TensorBoard summaries and agent policies.
 
   Args:
-    starter_buffer_path: Path to the pre-populated replay buffer
-    experiment_name: Name of the experiment - used to name the
-      experiment results directory
-    agent_type: Type of agent to train ('sac' or 'td3')
-    train_iterations: Number of training iterations
-    collect_steps_per_iteration: Number of collection steps
-      per training iteration
-    batch_size: Batch size for training
-    log_interval: Interval for logging training metrics
-    eval_interval: Interval for evaluating the agent
-    num_eval_episodes: Number of episodes for evaluation
-    checkpoint_interval: Interval for checkpointing the replay buffer
-    learner_iterations: Number of iterations to run the agent learner
-      per training loop
+    starter_buffer_path: Path to the directory containing the checkpoint files
+      of a pre-populated Reverb replay buffer.
+    experiment_name: A unique name for this training experiment. A directory
+      with this name (plus a timestamp) will be created under
+      `EXPERIMENT_RESULTS_PATH` to store all outputs (TensorBoard summaries,
+      saved policies, etc.).
+    agent_type: The type of reinforcement learning agent to train. Currently
+      supported: 'sac'. Defaults to 'sac'.
+    train_iterations: The total number of outer training iterations to run.
+      Each iteration typically involves some data collection and some agent
+      learning steps. Defaults to 100000.
+    collect_steps_per_iteration: The number of new environment steps to collect
+      and add to the replay buffer in each training iteration. Defaults to 1.
+    batch_size: The batch size for sampling from the replay buffer during each
+      agent learning (gradient update) step. Defaults to 256.
+    log_interval: The frequency (in training iterations) at which to log
+      training metrics (e.g., step rate). Defaults to 100.
+    eval_interval: The frequency (in training iterations) at which to perform
+      agent evaluation using the evaluation environment. Defaults to 1000.
+    num_eval_episodes: The number of episodes to run in the evaluation
+      environment during each evaluation phase. Defaults to 5.
+    checkpoint_interval: The frequency (in training iterations) at which to
+      checkpoint the Reverb replay buffer, saving its current state.
+      Defaults to 1000.
+    learner_iterations: The number of gradient update steps (learning
+      iterations) to perform on the agent in each main training iteration.
+      Defaults to 200.
 
   Returns:
-    The trained agent.
+    The trained `tf_agents.agents.tf_agent.TFAgent` instance. The primary
+    outputs of the script (trained policies, logs) are saved to disk in the
+    experiment directory.
+
+  Raises:
+    FileExistsError: If the directory for saving experiment results (derived
+      from `experiment_name` and current timestamp) already exists.
+    ValueError: If an unsupported `agent_type` is specified.
   """
-  # Set up scenario config path
+  # Define the path to the Gin configuration file for the environment.
+  # This example uses a 1-day simulation configuration.
   scenario_config_path = os.path.join(CONFIG_PATH, 'sim_config_1_day.gin')
 
-  # Generate timestamp for summary directory
+  # Create a unique directory for this experiment's results, including a timestamp.
   current_time = datetime.datetime.now().strftime('%Y_%m_%d-%H:%M:%S')
   summary_dir = os.path.join(
       EXPERIMENT_RESULTS_PATH, f'{experiment_name}_{current_time}'
