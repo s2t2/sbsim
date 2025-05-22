@@ -238,10 +238,11 @@ def get_episode_data(working_dir: str) -> pd.DataFrame:
 
   In retrieving the summaries of the of the experiment there are various
   time-stamped files/directories:
-    (1) The episode directory format is [episode_label]_[yymmdd_hhmmss UTC].
-    (2) The updates (RewardInfo, RewardResponse, ActionResponse, and
-    ObservationResponse) are time-stamped .pbtxt files in the following
-    [update_label]_[yyyy.mm.dd.hh local].
+
+  (1) The episode directory format is [episode_label]_[yymmdd_hhmmss UTC].
+  (2) The updates (RewardInfo, RewardResponse, ActionResponse, and
+      ObservationResponse) are time-stamped .pbtxt files in the following
+      [update_label]_[yyyy.mm.dd.hh local].
 
   Episode labels include bc_collect, bc_eval, sac_collect, sac_eval, with
   the name of the algorithm followed by the type or episode.

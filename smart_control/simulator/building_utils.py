@@ -31,35 +31,36 @@ from smart_control.simulator import constants
 Coordinates2D = Tuple[int, int]
 RoomIndicesDict = collections.defaultdict[str, Any]
 """Note: The following four types all describe various aspects of the same
+floorplan; i.e. all four types have the same dimensionality and encode similar
+variations of the same information.
 
-  floorplan; i.e. all four types have the same dimensionality and encode similar
-  variations of the same information.
-  Here I will describe the differences between the types:
-  (1) FileInputFloorPlan: the floorplan format as entered into the
+Here I will describe the differences between the types:
+
+(1) FileInputFloorPlan: the floorplan format as entered into the
     program. This specifically notes exterior space as 2's, walls as 1's, and
     inside space as 0's. This file type may have various "glitches" that the
     program will correct, such as walls that abut directly the frame of the
     image.
-  (2) ConnectionReadyFloorPlan: the floorplan format as processed and ready for
+(2) ConnectionReadyFloorPlan: the floorplan format as processed and ready for
     the opencv function connectedComponents . This format requires a very
     specific input type, namely 1's where there is open space and 0's everywhere
     else. Therefore, prior to this step, various pieces of information must be
     removed from the floor plan, such as the location of exterior space, and
     stored in other datatypes.
-  (3) Connections: the floorplan format after opencv's connectedComponents is
+(3) Connections: the floorplan format after opencv's connectedComponents is
     run on it. The Connections floorplan has each connected component, defined
     as the contiguous space within each component of interest (room, zone, etc.)
     labelled with an increasing integer indexing the component. It is an
     np.ndarray where 0's are walls and connected contiguous space are increasing
     integers.
-  (4) ExteriorSpace: the floorplan format serves an auxiliary store of
+(4) ExteriorSpace: the floorplan format serves an auxiliary store of
     information so that the original floorplan can be stripped of a specific
     designation for exterior space in order to be prepared for ingestion into
     connectedComponents. It is an np.ndarray where 0's are walls or interior
     space and exterior space is marked with -1.
-  (5) ExteriorWalls: a floorplan format that notes where exterior walls are with
+(5) ExteriorWalls: a floorplan format that notes where exterior walls are with
     1's and everywhere else with 0's.
-  (6) InteriorWalls: a floorplan format that notes where interior walls are
+(6) InteriorWalls: a floorplan format that notes where interior walls are
     with -3 and everywhere else with 0's.
 """
 

@@ -31,14 +31,15 @@ reward function:
   will learn to shift energy use to renewable sources. This factor requires an
   energy-to-carbon conversion formula/table.
 
-The three factors can be scaled and combined into a single reward function:
-        r = s(setpoint) - u x f(cost) - w x g(carbon)
-where:
-  r is the incremental reward at this step
-  s(setpoint) is the reward for maintining setpoint
-  f(cost) is the cost of consuming electrical and natural gas energy
-  g(carbon) is the cost of emitting carbon,
-  and u, w are weighing factors for cost and carbon dependingon the policy.
+The three factors can be scaled and combined.
+The definition of terms are as follows:
+
+  r: is the incremental reward at this step
+  s(setpoint): is the reward for maintining setpoint
+  f(cost): is the cost of consuming electrical and natural gas energy
+  g(carbon): is the cost of emitting carbon
+
+u, w are weighing factors for cost and carbon dependingon the policy.
 
 The fundamental metric unit of energy is the Joule (J), and the unit of energy
 applied over a fixed time interval (energy rate) is power measured in J/sec or
