@@ -1,4 +1,11 @@
-"""Reinforcement learning - Soft Actor Critic (SAC) agent."""
+"""Factory function for creating Soft Actor-Critic (SAC) agents.
+
+This module provides a utility function, `create_sac_agent`, for instantiating
+and configuring a `tf_agents.agents.sac.sac_agent.SacAgent`. This agent is
+well-suited for continuous control tasks, often encountered in smart building
+applications, due to its off-policy nature and exploration capabilities driven
+by maximum entropy reinforcement learning.
+"""
 
 from typing import Optional, Sequence
 
@@ -6,15 +13,16 @@ import tensorflow as tf
 from tf_agents.agents import tf_agent
 from tf_agents.agents.sac import sac_agent
 from tf_agents.networks import network
-from tf_agents.typing import types
+from tf_agents.specs import tensor_spec
+from tf_agents.trajectories import time_step as ts
 
 from smart_control.reinforcement_learning.agents.networks.sac_networks import create_sequential_actor_network
 from smart_control.reinforcement_learning.agents.networks.sac_networks import create_sequential_critic_network
 
 
 def create_sac_agent(
-    time_step_spec: types.TimeStep,
-    action_spec: types.NestedTensorSpec,
+    time_step_spec: ts.TimeStepSpec,
+    action_spec: tensor_spec.BoundedTensorSpec,
     # Actor network parameters
     actor_fc_layers: Sequence[int] = (256, 256),
     actor_network: Optional[network.Network] = None,
@@ -37,37 +45,61 @@ def create_sac_agent(
     debug_summaries: bool = False,
     summarize_grads_and_vars: bool = False,
     train_step_counter: Optional[tf.Variable] = None,
-) -> tf_agent.TFAgent:
-  """Creates a SAC Agent.
+) -> sac_agent.SacAgent:
+  """Creates and configures a Soft Actor-Critic (SAC) agent.
+
+  This function simplifies the instantiation of a `tf_agents.agents.sac.sac_agent.SacAgent`.
+  It allows for customization of actor and critic networks, learning rates,
+  and other SAC-specific hyperparameters. If custom networks are not provided,
+  it creates default sequential networks using the specified layer configurations.
 
   Args:
-      time_step_spec: A `TimeStep` spec of the expected time_steps.
-      action_spec: A nest of BoundedTensorSpec representing the actions.
-      actor_fc_layers: Iterable of fully connected layer units for the actor
-        network.
-      actor_network: Optional custom actor network to use.
-      critic_obs_fc_layers: Iterable of fully connected layer units for the
-        critic observation network.
-      critic_action_fc_layers: Iterable of fully connected layer units for the
-        critic action network.
-      critic_joint_fc_layers: Iterable of fully connected layer units for the
-        joint part of the critic network.
-      critic_network: Optional custom critic network to use.
-      actor_learning_rate: Actor network learning rate.
-      critic_learning_rate: Critic network learning rate.
-      alpha_learning_rate: Alpha (entropy regularization) learning rate.
-      gamma: Discount factor for future rewards.
-      target_update_tau: Factor for soft update of target networks.
-      target_update_period: Period for soft update of target networks.
-      reward_scale_factor: Multiplicative scale for the reward.
-      gradient_clipping: Norm length to clip gradients.
-      debug_summaries: Whether to emit debug summaries.
-      summarize_grads_and_vars: Whether to summarize gradients and variables.
-      train_step_counter: An optional counter to increment every time the train
-        op is run. Defaults to the global_step.
+    time_step_spec: A `tf_agents.trajectories.time_step.TimeStepSpec` defining the
+      expected shape and type of observations from the environment.
+    action_spec: A `tf_agents.specs.tensor_spec.BoundedTensorSpec` defining the
+      shape, type, and bounds of actions expected by the environment.
+    actor_fc_layers: A sequence of integers representing the number of units in
+      each fully connected layer of the default actor network. Used if
+      `actor_network` is not provided.
+    actor_network: An optional `tf_agents.networks.network.Network` instance to
+      use as the actor network. If `None`, a default network is created using
+      `actor_fc_layers`.
+    critic_obs_fc_layers: A sequence of integers for the observation pathway
+      fully connected layers in the default critic network. Used if
+      `critic_network` is not provided.
+    critic_action_fc_layers: A sequence of integers for the action pathway
+      fully connected layers in the default critic network. Used if
+      `critic_network` is not provided.
+    critic_joint_fc_layers: A sequence of integers for the joint pathway
+      fully connected layers (after concatenating observation and action
+      embeddings) in the default critic network. Used if `critic_network` is
+      not provided.
+    critic_network: An optional `tf_agents.networks.network.Network` instance to
+      use as the critic network. If `None`, a default network is created using
+      the `critic_*_fc_layers` arguments.
+    actor_learning_rate: The learning rate for the actor network's optimizer.
+    critic_learning_rate: The learning rate for the critic network's optimizer.
+    alpha_learning_rate: The learning rate for the entropy regularization
+      parameter (alpha) optimizer.
+    gamma: The discount factor for future rewards, typically between 0 and 1.
+    target_update_tau: The factor for soft updates of the target networks'
+      weights (polyak averaging). A value of 1.0 means hard updates.
+    target_update_period: The frequency (in training steps) at which to update
+      the target networks.
+    reward_scale_factor: A factor by which to scale rewards before they are used
+      for training. This can help stabilize training.
+    gradient_clipping: An optional float value. If provided, gradients will be
+      clipped by this norm during training to prevent excessively large updates.
+    debug_summaries: If True, diagnostic summaries (e.g., for network
+      activations) will be generated for use with TensorBoard.
+    summarize_grads_and_vars: If True, summaries of gradients and trainable
+      variables will be generated for TensorBoard.
+    train_step_counter: An optional `tf.Variable` to increment with each training
+      step. If `None`, a new counter is created.
 
   Returns:
-      A BaseAgent instance with the SAC agent.
+    An instance of `tf_agents.agents.sac.sac_agent.SacAgent` configured with
+    the specified parameters.
   """
   # Create train step counter if not provided
   if train_step_counter is None:
@@ -87,7 +119,8 @@ def create_sac_agent(
     )
 
   # Create agent
-  agent = sac_agent.SacAgent(
+  # Instantiate the SAC agent from TF-Agents library
+  tf_agent_instance = sac_agent.SacAgent(
       time_step_spec=time_step_spec,
       action_spec=action_spec,
       actor_network=actor_network,
@@ -103,7 +136,7 @@ def create_sac_agent(
       ),
       target_update_tau=target_update_tau,
       target_update_period=target_update_period,
-      td_errors_loss_fn=tf.math.squared_difference,
+      td_errors_loss_fn=tf.math.squared_difference, # Standard loss for SAC
       gamma=gamma,
       reward_scale_factor=reward_scale_factor,
       gradient_clipping=gradient_clipping,
@@ -112,5 +145,4 @@ def create_sac_agent(
       train_step_counter=train_step_counter,
   )
 
-  # Wrap TF-Agents agent with our interface
-  return agent
+  return tf_agent_instance

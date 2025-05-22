@@ -1,10 +1,17 @@
-"""Reinforcement learning metrics."""
+"""Utilities for reinforcement learning metrics and trajectory handling.
+
+This module provides functions for constructing TF-Agents trajectories from
+environment steps and policy actions, and for evaluating a policy's performance
+by computing its average return over multiple episodes in a given environment.
+"""
 
 import logging
 import time
 from typing import Any, Callable, List, Optional, Tuple
 
 import numpy as np
+import pandas as pd # For pd.Timestamp in example
+from tf_agents.environments import py_environment # For type hinting environment
 from tf_agents.policies import py_policy
 from tf_agents.trajectories import policy_step
 from tf_agents.trajectories import time_step as ts
@@ -16,56 +23,120 @@ logger = logging.getLogger(__name__)
 
 
 def get_trajectory(
-    time_step: ts.TimeStep, current_action: policy_step.PolicyStep
+    time_step: ts.TimeStep,
+    current_action_step: policy_step.PolicyStep # Renamed for clarity
 ) -> trajectory.Trajectory:
-  """Get the trajectory for the current action and time step.
+  """Constructs a TF-Agents `Trajectory` object from a time step and action.
+
+  This function takes the current `time_step` from the environment (which includes
+  the observation, reward, discount, and step type) and the `current_action_step`
+  (which includes the action taken by the policy and policy-specific info)
+  to form a complete `Trajectory` object. It correctly identifies whether the
+  trajectory represents the first step, a middle step, or the last step of an
+  episode.
 
   Args:
-      time_step: Current time step.
-      current_action: Current action.
+    time_step: A `tf_agents.trajectories.time_step.TimeStep` namedtuple
+      containing the observation, reward, discount, and step type from the
+      environment at the current point in time.
+    current_action_step: A `tf_agents.trajectories.policy_step.PolicyStep`
+      namedtuple containing the action taken by the policy and any associated
+      policy information.
 
   Returns:
-      Trajectory for the current action and time step.
+    A `tf_agents.trajectories.trajectory.Trajectory` object representing the
+    transition.
   """
   observation = time_step.observation
-  action = current_action.action
-  policy_info = ()
+  action = current_action_step.action
+  # Assuming policy_info is empty for this context or taken from action_step if available
+  policy_info = current_action_step.info if hasattr(current_action_step, 'info') else ()
   reward = time_step.reward
   discount = time_step.discount
 
   if time_step.is_first():
-    return trajectory.first(observation, action, policy_info, reward, discount)
-
-  if time_step.is_last():
-    return trajectory.last(observation, action, policy_info, reward, discount)
-
-  return trajectory.mid(observation, action, policy_info, reward, discount)
+    # For the first step of an episode.
+    return trajectory.first(
+        observation=observation,
+        action=action,
+        policy_info=policy_info,
+        reward=reward,
+        discount=discount
+    )
+  elif time_step.is_last():
+    # For the last step of an episode.
+    return trajectory.last(
+        observation=observation,
+        action=action,
+        policy_info=policy_info,
+        reward=reward,
+        discount=discount
+    )
+  else:
+    # For intermediate steps in an episode.
+    return trajectory.mid(
+        observation=observation,
+        action=action,
+        policy_info=policy_info,
+        reward=reward,
+        discount=discount
+    )
 
 
 def compute_avg_return(
-    environment: Any,
+    environment: py_environment.PyEnvironment, # More specific type
     policy: py_policy.PyPolicy,
     num_episodes: int = 1,
     time_zone: str = DEFAULT_TIME_ZONE,
-    trajectory_observers: Optional[List[Callable]] = None,  # pylint: disable=g-bare-generic # TODO: use a more specific type hint if possible
+    trajectory_observers: Optional[List[Callable[[trajectory.Trajectory], None]]] = None,
     num_steps: int = 6,
-) -> Tuple[float, List[List[Any]]]:
-  """Computes the average return of the policy on the environment.
+) -> Tuple[float, List[Tuple[pd.Timestamp, float]]]: # Return type hint improved
+  """Evaluates a policy by computing its average return over multiple episodes.
+
+  This function runs the given `policy` in the specified `environment` for
+  `num_episodes`, each for a maximum of `num_steps`. It calculates the total
+  reward (return) for each episode and then averages these returns.
+  During evaluation, it can also invoke optional `trajectory_observers` for
+  each step. Detailed logging of rewards and timing per step is performed.
 
   Args:
-      environment: Environment to evaluate on.
-      policy: Policy to evaluate.
-      num_episodes: Total number of episodes to run.
-      time_zone: Time zone for timestamps.
-      trajectory_observers: List of trajectory observers.
-      num_steps: Number of steps to take per episode.
+    environment: The `tf_agents.environments.PyEnvironment` instance in which
+      to evaluate the policy.
+    policy: The `tf_agents.policies.PyPolicy` instance to be evaluated.
+    num_episodes: The total number of episodes to run for the evaluation.
+      Defaults to 1.
+    time_zone: The timezone string (e.g., 'US/Pacific') used for logging
+      simulation timestamps. Defaults to `DEFAULT_TIME_ZONE`.
+    trajectory_observers: An optional list of callable observers. Each observer
+      will be called with the trajectory of each step taken during evaluation.
+      This can be used for detailed logging or custom metric calculation.
+      Defaults to `None`.
+    num_steps: The maximum number of steps to run within each evaluation
+      episode. Defaults to 6.
 
   Returns:
-      Tuple of (average return, list of [simulation time, episode return]
-      pairs).
+    A tuple containing:
+      - avg_return (float): The average total reward (return) achieved by the
+        policy across all evaluation episodes.
+      - return_by_simtime (List[Tuple[pd.Timestamp, float]]): A list where each
+        element is a tuple `(simulation_timestamp, cumulative_episode_return)`.
+        This tracks the cumulative return at each step's simulation time across
+        all episodes.
+
+  Example:
+    ```python
+    # Assuming `my_eval_env` is a PyEnvironment and `my_eval_policy` is a PyPolicy
+    # avg_return, return_details = compute_avg_return(
+    #     environment=my_eval_env,
+    #     policy=my_eval_policy,
+    #     num_episodes=10,
+    #     num_steps=288 # e.g., steps in a day for a 5-min step interval
+    # )
+    # print(f"Average return over 10 episodes: {avg_return}")
+    ```
   """
   total_return = 0.0
-  return_by_simtime = []
+  return_by_simtime: List[Tuple[pd.Timestamp, float]] = []
 
   for _ in range(num_episodes):
     time_step = environment.reset()

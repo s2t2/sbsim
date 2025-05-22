@@ -1,43 +1,50 @@
-"""Base class for a convection simulator.
+"""Defines the abstract base class for air convection simulators.
 
-Copyright 2024 Google LLC
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    https://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
-A convection simulator provides a method for simulating airflow convection in
-a building.
+This module provides `BaseConvectionSimulator`, an interface that all specific
+convection simulation algorithms must implement. Convection is a critical
+mechanism for heat transfer within a building, driven by air movement, and
+simulating it accurately is important for realistic building thermal dynamics.
+Implementations of this base class will model how temperatures change due to
+such airflows.
 """
 
 import abc
-from typing import MutableSequence
+from typing import MutableSequence, Dict # Used Dict for more specific type hint
 
 import numpy as np
 
 
 class BaseConvectionSimulator(metaclass=abc.ABCMeta):
-  """Represents a method of simulating air convection."""
+  """Abstract interface for simulating air convection within a space.
+
+  Concrete implementations of this class will provide specific algorithms
+  (e.g., simple averaging within rooms, more complex computational fluid
+  dynamics (CFD) approximations, or models based on pressure differences)
+  to simulate how air movement distributes heat and affects the temperature
+  profile of a building or a set of rooms.
+  """
 
   @abc.abstractmethod
   def apply_convection(
       self,
-      room_dict: dict[str, MutableSequence[tuple[int, int]]],
+      room_dict: Dict[str, MutableSequence[Tuple[int, int]]],
       temp: np.ndarray,
   ) -> None:
-    """Applies convection to the temperature array in place.
+    """Applies the effect of air convection to a temperature field in place.
 
-    Splits up rooms via room_dict.
+    This method simulates how air movement within and between rooms (as defined
+    by `room_dict`) affects the temperature distribution (`temp`) over a single
+    simulation time step. The `temp` array is modified directly by this method
+    to reflect these changes.
 
     Args:
-      room_dict: A dictionary mapping of room coordinates.
-      temp: An array of temperatures.
+      room_dict: A dictionary where keys are room identifiers (e.g., strings
+        like "living_room", "office_1") and values are mutable sequences of
+        `(row, column)` integer tuples. Each tuple represents the coordinates
+        of a grid cell belonging to that room within the temperature array.
+        This structure allows the convection model to identify room boundaries
+        and apply appropriate logic.
+      temp: A NumPy array (typically 2D or 3D) representing the current
+        temperature distribution across the simulated space. This array will be
+        modified in place by the convection simulation.
     """

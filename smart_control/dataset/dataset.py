@@ -8,9 +8,19 @@ import requests
 
 
 class SmartBuildingsDataset:
-  """Smart Buildings Dataset implementation, including loading and downloading."""
+  """Manages the Smart Buildings Dataset, including downloading and accessing data.
+
+  This dataset contains sensor readings, building layout information, and other
+  data relevant to smart building applications. It can be used for tasks such
+  as building energy optimization, occupant comfort analysis, and fault detection.
+  """
 
   def __init__(self, download=True):
+    """Initializes the SmartBuildingsDataset object.
+
+    Args:
+      download: If True (default), downloads the dataset upon initialization.
+    """
     self.partitions = {
         "sb1": [
             "2022_a",
@@ -24,7 +34,12 @@ class SmartBuildingsDataset:
       self.download()
 
   def download(self):
-    """Downloads the Smart Buildings Dataset from Google Cloud Storage."""
+    """Downloads the Smart Buildings Dataset from Google Cloud Storage.
+
+    The dataset is downloaded as a ZIP file from
+    https://storage.googleapis.com/gresearch/smart_buildings_dataset/tabular_data/sb1.zip
+    and extracted into the `./sb1/` directory.
+    """
     print("Downloading data...")
 
     def download_file(url):
@@ -44,10 +59,19 @@ class SmartBuildingsDataset:
     """Gets the floorplan and device layout map for a specific building.
 
     Args:
-      building: The name of the building.
+      building: The name of the building (e.g., "sb1").
 
     Returns:
-      A tuple containing the floorplan and device layout map.
+      A tuple containing:
+        - floorplan: A NumPy array representing the floorplan layout.
+        - device_layout_map: A dictionary mapping device IDs to their
+          locations and types.
+
+    Example:
+      >>> dataset = SmartBuildingsDataset(download=False)
+      >>> floorplan, device_map = dataset.get_floorplan("sb1")
+      >>> print(floorplan.shape)
+      >>> print(type(device_map))
     """
     if building not in self.partitions.keys():
       raise ValueError("invalid building")
@@ -60,11 +84,21 @@ class SmartBuildingsDataset:
     """Gets the data for a specific building and partition.
 
     Args:
-      building: The name of the building.
-      partition: The name of the partition.
+      building: The name of the building (e.g., "sb1").
+      partition: The name of the partition (e.g., "2022_a").
 
     Returns:
-      A tuple containing the data and metadata.
+      A tuple containing:
+        - data: A NumPy array or structured array containing the time-series
+          sensor data.
+        - metadata: A dictionary containing metadata associated with the
+          partition, such as device information and zone information.
+
+    Example:
+      >>> dataset = SmartBuildingsDataset(download=False)
+      >>> data, metadata = dataset.get_building_data("sb1", "2022_a")
+      >>> print(data.keys())  # If data is a NpzFile
+      >>> print(metadata.keys())
     """
     if building not in self.partitions.keys():
       raise ValueError("invalid building")

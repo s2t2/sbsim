@@ -27,22 +27,42 @@ import pandas as pd
 
 
 class BaseOccupancy(metaclass=abc.ABCMeta):
-  """Provides the RL agent information about how many people are in a zone."""
+  """Abstract base class for providing zone occupancy information.
+
+  This class defines an interface for models that estimate or report the
+  average number of occupants within a specific zone of a building over a
+  defined time period. Concrete implementations might derive this information
+  from various sources, such as:
+  - Building simulation models.
+  - Occupancy schedules (e.g., from calendar systems).
+  - Real-time sensor data (e.g., motion sensors, CO2 sensors, Wi-Fi connections).
+
+  The occupancy data provided by this class is often a critical input for
+  calculating occupant comfort, determining ventilation needs, or influencing
+  the reward signal in reinforcement learning-based building control systems.
+  """
 
   @abc.abstractmethod
   def average_zone_occupancy(
       self, zone_id: str, start_time: pd.Timestamp, end_time: pd.Timestamp
   ) -> float:
-    """Returns the occupancy within start_time, end_time for the zone.
-
-    If the zone is not found, implementations should raise a ValueError.
+    """Calculates the average number of occupants in a zone over an interval.
 
     Args:
-      zone_id: specific zone identifier for the building.
-      start_time: **local time** w/ TZ for the beginning of the interval.
-      end_time: **local time** w/ TZ for the end of the interval.
+      zone_id: The unique identifier for the building zone (e.g., "Office_101",
+        "ConferenceRoom_A").
+      start_time: A `pandas.Timestamp` representing the beginning of the time
+        interval (local time, timezone-aware).
+      end_time: A `pandas.Timestamp` representing the end of the time interval
+        (local time, timezone-aware).
 
     Returns:
-      average number of people in the zone for the interval.
+      The average number of people estimated or known to be in the specified
+      zone during the given time interval. This is a float value to account
+      for averaging over time.
+
+    Raises:
+      ValueError: If the provided `zone_id` is not recognized or if occupancy
+        data is unavailable for the given zone or time period.
     """
     pass
