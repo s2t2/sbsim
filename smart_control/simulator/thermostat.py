@@ -1,36 +1,13 @@
-"""Models a thermostat in the simulation.
+"""Simulates a thermostat controlling HVAC operations based on schedules.
 
-The theromstat is given a SetpointSchedule, which defines for any given time
-the deadband. The SetpointSchedule also determines when the thermostat should
-operate in Comfort mode or Eco mode.
-
-In Comfort mode, the thermostat can be in one of 3 states.  If the temperature
-goes beneath the heating setpoint, Heat mode is activated until the temperature
-reaches midway between the 2 setpoints. Similarly, if the temperature is higher
-than the cooling setpoint, the thermostat enters Cool mode until the mid-point.
-Otherways, it enters Off mode.
-
-In Eco mode, there is an additional state, Passive Cool mode. Upon entering
-Eco mode, the thermostate is initially placed in this state, and remains that
-way until the temperature cools beyond the eco heating setpoint, upon which the
-thermostat operates as it did in Comfort mode
-
-Copyright 2023 Google LLC
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    https://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+This module defines the `Thermostat` class, which models the behavior of a
+thermostat for a single zone. It determines the operational mode (e.g., HEAT,
+COOL, OFF) based on the current zone temperature, a predefined setpoint
+schedule, and whether the system is in "comfort" or "eco" mode.
 """
 
 import enum
+from typing import Optional # Added for type hinting
 
 import pandas as pd
 
@@ -38,112 +15,154 @@ from smart_control.simulator import setpoint_schedule
 
 
 class Thermostat:
-  """Local thermostat control for each VAV/zone.
+  """Models a thermostat that controls heating and cooling for a zone.
 
-  Is constructed by passing in a SetpointSchedule, which, for any timestamp,
-  provides heating and cooling setpoints, as well as whether the thermostat
-  should operate in Eco mode/.
+  The thermostat operates based on a `SetpointSchedule`, which provides
+  heating and cooling setpoints and determines if the current time falls
+  within a "comfort" or "eco" period.
+
+  In "comfort" mode, the thermostat aims to keep the zone temperature within
+  the deadband defined by heating and cooling setpoints. It activates heating
+  if the temperature drops below the heating setpoint and cooling if it rises
+  above the cooling setpoint. It continues heating/cooling until the temperature
+  reaches the midpoint of the deadband to prevent rapid cycling.
+
+  In "eco" mode (when not in comfort mode), an additional "PASSIVE_COOL" state
+  is introduced. If the system transitions from comfort to eco mode, it enters
+  PASSIVE_COOL, allowing the temperature to float downwards naturally. It will
+  only switch to active heating/cooling if the temperature violates the eco
+  mode's (potentially wider) setpoints.
 
   Attributes:
-    _setpoint_schedule: SetpointSchedule to determine temperature windows.
-    _previous_timestamp: Last timestamp the thermostat was called with.
-    _current_mode: Current mode thermostat is in.
+    _setpoint_schedule (setpoint_schedule.SetpointSchedule): The schedule
+      defining temperature setpoints and comfort/eco periods.
+    _previous_timestamp (Optional[pd.Timestamp]): The timestamp of the last
+      update call. Used to detect transitions between comfort/eco modes.
+    _current_mode (Thermostat.Mode): The current operational mode of the
+      thermostat.
   """
 
   class Mode(enum.Enum):
-    """Modes of the thermostat.
+    """Defines the operational modes of the thermostat.
 
-    Values:
-      OFF: Temperature is within windows and does not need active adjustments.
-      HEAT: VAV is actively heating zone.
-      COOL: VAV is actively cooling zone.
-      PASSIVE_COOL: Building is allowed to cool naturally until within eco mode
-      window.
+    Attributes:
+      OFF: Temperature is within the deadband; no active heating or cooling.
+      HEAT: VAV (or other HVAC unit) is actively heating the zone.
+      COOL: VAV (or other HVAC unit) is actively cooling the zone.
+      PASSIVE_COOL: In eco mode, the building is allowed to cool naturally
+        without active cooling, typically until a lower temperature threshold
+        is met or comfort mode resumes.
     """
-
     OFF = 0
     HEAT = 1
     COOL = 2
     PASSIVE_COOL = 3
 
   def __init__(self, schedule: setpoint_schedule.SetpointSchedule):
-    self._setpoint_schedule = schedule
-    self._previous_timestamp = None
-    self._current_mode = self.Mode.OFF
+    """Initializes the Thermostat.
+
+    Args:
+      schedule (setpoint_schedule.SetpointSchedule): The setpoint schedule
+        that dictates heating/cooling setpoints and comfort/eco modes based
+        on time.
+    """
+    self._setpoint_schedule: setpoint_schedule.SetpointSchedule = schedule
+    self._previous_timestamp: Optional[pd.Timestamp] = None
+    self._current_mode: Thermostat.Mode = self.Mode.OFF
 
   def get_setpoint_schedule(self) -> setpoint_schedule.SetpointSchedule:
+    """Returns the setpoint schedule used by this thermostat.
+
+    Returns:
+      setpoint_schedule.SetpointSchedule: The active setpoint schedule.
+    """
     return self._setpoint_schedule
 
   def _default_control(
       self,
-      zone_temp: float,
+      zone_temp_k: float,
       temperature_window: setpoint_schedule.TemperatureWindow,
   ) -> 'Thermostat.Mode':
-    """Returns mode based on current mode and current zone temperature.
+    """Determines thermostat mode based on temperature and current mode.
 
-    Does not consider Passive Cool mode.
-
-    Default control works as follows: if the temperature sinks below the heating
-    setpoint, Cool mode is entered until the midpoint temperature is reached.
-    Similarly, if the temperature rises above the cooling setpoint, Heat mode is
-    entered until the midpoint is reached. In all other cases, the thermostat is
-    in Off mode.
+    This logic applies during "comfort" mode or when "eco" mode behaves
+    similarly after passive cooling is no longer active. It implements
+    hysteresis by continuing heating/cooling until the midpoint of the
+    deadband is reached.
 
     Args:
-      zone_temp: Temperature in k of zone.
-      temperature_window: 2-Tuple containing temperature bounds.
+      zone_temp_k (float): Current temperature (K) of the zone.
+      temperature_window (setpoint_schedule.TemperatureWindow): A tuple
+        (heating_setpoint_k, cooling_setpoint_k) defining the current
+        comfort deadband.
+
+    Returns:
+      Thermostat.Mode: The determined operational mode (HEAT, COOL, or OFF).
     """
-    heating_setpoint, cooling_setpoint = temperature_window
-    mid = 0.5 * (cooling_setpoint - heating_setpoint) + heating_setpoint
-    # Case 1: temperature is below the heating set point, then always heat.
-    if zone_temp < heating_setpoint:
+    heating_setpoint_k, cooling_setpoint_k = temperature_window
+    midpoint_temp_k = (heating_setpoint_k + cooling_setpoint_k) / 2.0
+
+    if zone_temp_k < heating_setpoint_k:
       self._current_mode = self.Mode.HEAT
-    # Case 2: temperature is above the cooling set point, then always cool.
-    elif zone_temp > cooling_setpoint:
+    elif zone_temp_k > cooling_setpoint_k:
       self._current_mode = self.Mode.COOL
-    # Case 3: in dead band, below midpoint, and heating, then continue heating.
-    elif zone_temp < mid and self._current_mode == self.Mode.HEAT:
+    # Hysteresis: If already heating and below midpoint, continue heating.
+    elif zone_temp_k < midpoint_temp_k and self._current_mode == self.Mode.HEAT:
       self._current_mode = self.Mode.HEAT
-    # Case 4: in dead band, above midpoint, and cooling, then continue cooling.
-    elif zone_temp > mid and self._current_mode == self.Mode.COOL:
+    # Hysteresis: If already cooling and above midpoint, continue cooling.
+    elif zone_temp_k > midpoint_temp_k and self._current_mode == self.Mode.COOL:
       self._current_mode = self.Mode.COOL
-    # Case 5: in dead band, and no heating/cooling is needed.
-    else:
+    else: # Within deadband and no active heating/cooling needed to reach midpoint
       self._current_mode = self.Mode.OFF
     return self._current_mode
 
   def update(
-      self, zone_temp: float, current_timestamp: pd.Timestamp
+      self, zone_temp_k: float, current_timestamp: pd.Timestamp
   ) -> 'Thermostat.Mode':
-    """Returns updated mode, allowing passive cool if shifting into eco.
+    """Updates the thermostat's mode based on current conditions.
 
-    Should be invoked once per iteration of the simulation, after all
-    control volume temperatures have been updated.
+    This method should be called at each simulation step after zone
+    temperatures have been updated. It determines the appropriate mode (HEAT,
+    COOL, OFF, PASSIVE_COOL) by considering the zone temperature, the
+    setpoint schedule, and transitions between comfort and eco modes.
 
     Args:
-        zone_temp: Temperature in k of zone.
-        current_timestamp: Pandas timestamp.
+      zone_temp_k (float): The current temperature (K) of the zone.
+      current_timestamp (pd.Timestamp): The current simulation timestamp.
+
+    Returns:
+      Thermostat.Mode: The new operational mode of the thermostat.
     """
-    temperature_window = self._setpoint_schedule.get_temperature_window(
+    current_temp_window = self._setpoint_schedule.get_temperature_window(
         current_timestamp
     )
-    # In comfort mode, default control.
-    if self._setpoint_schedule.is_comfort_mode(current_timestamp):
-      self._default_control(zone_temp, temperature_window)
-    # Just entered eco mode, allow passive cool.
-    elif (
-        self._previous_timestamp is not None
-        and self._setpoint_schedule.is_comfort_mode(self._previous_timestamp)
-    ):
-      self._current_mode = self.Mode.PASSIVE_COOL
-    # Been in eco mod
-    else:
-      if (
-          self._current_mode == self.Mode.PASSIVE_COOL
-          and zone_temp > temperature_window[0]
-      ):
+    is_currently_comfort_mode = self._setpoint_schedule.is_comfort_mode(
+        current_timestamp
+    )
+    was_previously_comfort_mode = False
+    if self._previous_timestamp is not None:
+      was_previously_comfort_mode = self._setpoint_schedule.is_comfort_mode(
+          self._previous_timestamp
+      )
+
+    if is_currently_comfort_mode:
+      # Standard heating/cooling logic applies in comfort mode.
+      self._default_control(zone_temp_k, current_temp_window)
+    else: # Eco mode logic
+      # If just transitioned from comfort to eco mode, enter passive cool.
+      if self._previous_timestamp is not None and was_previously_comfort_mode:
         self._current_mode = self.Mode.PASSIVE_COOL
-      else:
-        self._default_control(zone_temp, temperature_window)
+      else: # Already in eco mode
+        # If in passive cool and temp is still above eco heating setpoint,
+        # continue passive cooling.
+        # (Assumes eco heating setpoint is temperature_window[0] for eco mode)
+        if (self._current_mode == self.Mode.PASSIVE_COOL and
+            zone_temp_k > current_temp_window[0]):
+          self._current_mode = self.Mode.PASSIVE_COOL
+        else:
+          # Otherwise (e.g., temp dropped below eco heating setpoint, or was
+          # never in passive cool), apply default control logic with eco setpoints.
+          self._default_control(zone_temp_k, current_temp_window)
+
     self._previous_timestamp = current_timestamp
     return self._current_mode

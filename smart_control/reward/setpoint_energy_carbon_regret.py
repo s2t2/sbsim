@@ -1,294 +1,280 @@
-"""Reward (Regret) Function for Smart Buildings.
+"""Defines a reward function based on productivity, energy, and carbon regret.
 
-Copyright 2024 Google LLC
+This module implements `SetpointEnergyCarbonRegretFunction`, a concrete reward
+function that calculates a scalar reward for an RL agent controlling a smart
+building. The reward is formulated as a weighted combination of three
+normalized "regret" components:
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+1.  **Productivity Regret**: Measures the loss in occupant productivity due to
+    thermal discomfort (zone temperatures deviating from setpoints). This is
+    normalized against a maximum possible productivity loss. A value of 0
+    indicates no productivity loss (maximum comfort), while negative values
+    indicate increasing loss.
+2.  **Energy Cost Regret**: The actual energy cost (electricity and natural gas)
+    incurred, normalized by a maximum possible energy cost. This component is
+    typically negative in the reward calculation.
+3.  **Carbon Emission Regret**: The amount of carbon emitted due to energy
+    consumption, normalized by a maximum possible emission. This is also
+    typically negative.
 
-    https://www.apache.org/licenses/LICENSE-2.0
+The final reward is a weighted sum of these normalized components, typically
+scaled to be between -1 and 0, where 0 represents the ideal state (maximum
+productivity, zero energy cost, zero emissions, though this is often
+unachievable).
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
-The reward function provides a feedback signal to the reinforcement learning
-agent that indicates the benefit of the action taken. During training, the
-agent learns an action policy to maximize the cumulative, or long-term reward.
-
-For this pilot there are three principal factors that contribute to the
-reward function:
-  * Setpoint: Maintaining the zone temperatures within heating and cooling
-  setpoints  results in a positive reward, and any temperature outside of
-  setpoints may also result in a negative reward (i.e., penalty).
-  * Cost: The cost of electricity and natural gas is a negative reward (cost).
-  Then by minimizing negative rewards/maximizing positive reward, the agent
-  will reduce overall energy cost. To compute the cost, both energy consumption
-  and the energy cost schedules are required.
-  * Carbon: By receiving negative reward for consuming natural gas, the agent
-  will learn to shift energy use to renewable sources. This factor requires an
-  energy-to-carbon conversion formula/table.
-
-The three factors can be scaled and combined into a single regret function:
-        r_i = [u x (s(setpoint) - s_max)/s_max
-            - v x f(cost)/f_max - w x g(carbon)/g_max]
-            / [u + v + w]
-
-        r_i -> [-1, 0]
-where:
-  r_i is the incremental reward at step i
-  s(setpoint) is the reward for maintining temperature inside setpoint
-  s_max = occupancy x productivity, the maximum possible reward
-  f(cost) is the cost of consuming electrical and natural gas energy
-  f_max: maximum momentary cost that occurs at max energy use
-  g(carbon) is the cost of emitting carbon,
-  g_max
-  and u, w, w are weighing factors for the policy.
-
-The fundamental metric unit of energy is the Joule (J), and the unit of energy
-applied over a fixed time interval (energy rate) is power measured in J/sec or
-Watts. However, energy is expressed based on diverse traditional units.
-For example, electrical energy unit is one hour of 1,000 W, or kWh.
-However, natural gas energy is measured in British thermal units (Btu) or
-cubic feet. So coordinate conversions are necessary.
-
-Notes on Setpoint Reward:
-Setpoint reward is the incremental reward (beneficial feedback) for maintaining
-comfort conditions inside the zone.
-
-We postulate that productivity is adversely affected when the zone air
-temperature is outside the deadband. Near the deadband, individual productivity
-decreases a little, but decreases smoothly and monotonically the farther the
-zone air temperature is away from the deadband.
-
-Cumulative productivity is the maximum potential reward, and is parameterized by
-how many persons occupy the zones, and the average hourly per-person
-productivity.
-
-Two other parameters are added to describe how productivity decays outside the
-deadband.
-
-productivity_midpoint_delta_temp: The difference in temperature
-beyond the setpoint, at which productivity decays to 50%.
-decay_stiffness: Parameter that controls the slope of the decay, the higher
-the value, the steeper the slope.
-
-The function for setpoint reward is based on a piecewise logistic regression.
-Maximum/full productivity occurs when the zone is occupied and inside its
-deadband. Productivity decays smoothly on a logistic curve outside the deadband.
+The function relies on external models for electricity and natural gas costs/
+carbon emissions (`BaseEnergyCost` implementations) and inherits productivity
+calculation logic from `BaseSetpointEnergyCarbonRewardFunction`.
 """
 
 import gin
 
-from smart_control.models.base_energy_cost import BaseEnergyCost
+from smart_control.models import base_energy_cost
 from smart_control.proto import smart_control_reward_pb2
-from smart_control.reward.base_setpoint_energy_carbon_reward import BaseSetpointEnergyCarbonRewardFunction
+from smart_control.reward import base_setpoint_energy_carbon_reward
 from smart_control.utils import conversion_utils
 
-_HOUR_SEC = 3600.0
+_SECONDS_PER_HOUR: float = 3600.0
 
 
 @gin.configurable()
 class SetpointEnergyCarbonRegretFunction(
-    BaseSetpointEnergyCarbonRewardFunction
+    base_setpoint_energy_carbon_reward.BaseSetpointEnergyCarbonRewardFunction
 ):
-  """Reward function based on productivity, energy cost and carbon emission.
+  """Calculates reward based on normalized productivity, energy, and carbon regret.
+
+  The reward `r` is computed as:
+  `r = (w_p * norm_prod_regret - w_e * norm_energy_cost - w_c * norm_carbon)
+       / (w_p + w_e + w_c)`
+  where:
+    `norm_prod_regret` is the normalized productivity regret (typically <= 0).
+    `norm_energy_cost` is the normalized energy cost (typically >= 0).
+    `norm_carbon` is the normalized carbon emission (typically >= 0).
+    `w_p, w_e, w_c` are weights for productivity, energy, and carbon.
+
+  All normalized values are scaled to be approximately within [0, 1] before
+  being used in the regret calculation (where productivity regret is adjusted
+  to be negative).
 
   Attributes:
-    max_productivity_personhour_usd: max occupant hourly productivity in $
-    min_productivity_personhour_usd: min occupant hourly productivity in $
-    productivity_midpoint_delta: temp difference from setpoint of half prod.
-    productivity_decay_stiffness: midpoint slope of the decay curve
-    electricity_energy_cost: cost and carbon model for electricity
-    natural_gas_energy_cost: cost and carbon model for natural gas
-    energy_cost_weight: u-coefficient described above
-    carbon_emission_weight: w-coefficient described above
-    carbon_cost_factor: cost value in $ per kg carbon emitted
+    _min_productivity_personhour_usd (float): Minimum assumed productivity
+      value per person per hour, used for normalization.
+    _max_electricity_rate (float): Maximum expected electricity consumption
+      rate (Watts), used for normalizing electricity cost and carbon.
+    _max_natural_gas_rate (float): Maximum expected natural gas consumption
+      rate (Watts), used for normalizing gas cost and carbon.
+    _electricity_energy_cost (base_energy_cost.BaseEnergyCost): Model for
+      calculating electricity cost and carbon.
+    _natural_gas_energy_cost (base_energy_cost.BaseEnergyCost): Model for
+      calculating natural gas cost and carbon.
+    _productivity_weight (float): Weight for the productivity regret component.
+    _energy_cost_weight (float): Weight for the energy cost component.
+    _carbon_emission_weight (float): Weight for the carbon emission component.
   """
 
-  @gin.configurable()
   def __init__(
       self,
       max_productivity_personhour_usd: float,
       min_productivity_personhour_usd: float,
-      max_electricity_rate: float,
-      max_natural_gas_rate: float,
-      productivity_midpoint_delta: float,
+      max_electricity_rate_watts: float,
+      max_natural_gas_rate_watts: float,
+      productivity_midpoint_delta_kelvin: float,
       productivity_decay_stiffness: float,
-      electricity_energy_cost: BaseEnergyCost,
-      natural_gas_energy_cost: BaseEnergyCost,
+      electricity_energy_cost_model: base_energy_cost.BaseEnergyCost,
+      natural_gas_energy_cost_model: base_energy_cost.BaseEnergyCost,
       productivity_weight: float,
       energy_cost_weight: float,
       carbon_emission_weight: float,
   ):
+    """Initializes the SetpointEnergyCarbonRegretFunction.
+
+    Args:
+      max_productivity_personhour_usd (float): Max productivity value
+        (e.g., USD/person-hour) at optimal comfort.
+      min_productivity_personhour_usd (float): Min productivity value
+        (e.g., USD/person-hour) at extreme discomfort, for normalization.
+      max_electricity_rate_watts (float): Max expected electricity consumption
+        rate (Watts) for normalization.
+      max_natural_gas_rate_watts (float): Max expected natural gas rate (Watts)
+        for normalization.
+      productivity_midpoint_delta_kelvin (float): Temperature deviation (K)
+        from setpoint where productivity drops to 50%.
+      productivity_decay_stiffness (float): Steepness of the productivity
+        decay curve.
+      electricity_energy_cost_model (base_energy_cost.BaseEnergyCost): Instance
+        for electricity cost/carbon.
+      natural_gas_energy_cost_model (base_energy_cost.BaseEnergyCost): Instance
+        for natural gas cost/carbon.
+      productivity_weight (float): Weight for productivity regret.
+      energy_cost_weight (float): Weight for energy cost regret.
+      carbon_emission_weight (float): Weight for carbon emission regret.
+    """
     super().__init__(
         max_productivity_personhour_usd=max_productivity_personhour_usd,
-        productivity_midpoint_delta=productivity_midpoint_delta,
+        productivity_midpoint_delta=productivity_midpoint_delta_kelvin,
         productivity_decay_stiffness=productivity_decay_stiffness,
     )
     self._min_productivity_personhour_usd = min_productivity_personhour_usd
-    self._max_electricity_rate = max_electricity_rate
-    self._max_natural_gas_rate = max_natural_gas_rate
-    self._electricity_energy_cost = electricity_energy_cost
-    self._natural_gas_energy_cost = natural_gas_energy_cost
+    self._max_electricity_rate = max_electricity_rate_watts
+    self._max_natural_gas_rate = max_natural_gas_rate_watts
+    self._electricity_energy_cost = electricity_energy_cost_model
+    self._natural_gas_energy_cost = natural_gas_energy_cost_model
     self._productivity_weight = productivity_weight
     self._energy_cost_weight = energy_cost_weight
     self._carbon_emission_weight = carbon_emission_weight
 
-    assert (
-        self._max_productivity_personhour_usd
-        > self._min_productivity_personhour_usd
-    )
+    if self._max_productivity_personhour_usd <= self._min_productivity_personhour_usd:
+      raise ValueError(
+          "max_productivity_personhour_usd must be greater than "
+          "min_productivity_personhour_usd for normalization."
+      )
+    if self._max_electricity_rate <= 0 or self._max_natural_gas_rate <= 0:
+        raise ValueError("Max energy rates must be positive for normalization.")
+    if self._productivity_weight < 0 or self._energy_cost_weight < 0 or \
+       self._carbon_emission_weight < 0:
+        raise ValueError("Reward component weights must be non-negative.")
+
 
   def compute_reward(
       self, reward_info: smart_control_reward_pb2.RewardInfo
   ) -> smart_control_reward_pb2.RewardResponse:
-    """Returns the real-valued reward for the current state of the building."""
+    """Calculates the regret-based reward for the current building state.
 
+    Args:
+      reward_info (smart_control_reward_pb2.RewardInfo): Proto message
+        containing raw data for reward calculation.
+
+    Returns:
+      smart_control_reward_pb2.RewardResponse: Proto message with the
+      calculated agent reward and its disaggregated components.
+    """
     start_time = conversion_utils.proto_to_pandas_timestamp(
         reward_info.start_timestamp
     )
     end_time = conversion_utils.proto_to_pandas_timestamp(
         reward_info.end_timestamp
     )
-
     delta_time_sec = (end_time - start_time).total_seconds()
+    if delta_time_sec <= 0:
+        # Handle cases with no time duration, though typically unexpected.
+        return smart_control_reward_pb2.RewardResponse(agent_reward_value=0.0)
 
-    actual_productivity, total_occupancy = self._sum_zone_productivities(
+    # 1. Calculate Productivity Regret
+    actual_productivity_usd, total_occupancy = self._sum_zone_productivities(
         reward_info
     )
-
-    max_productivity = (
-        self._max_productivity_personhour_usd
-        * total_occupancy
-        * delta_time_sec
-        / _HOUR_SEC
+    max_possible_productivity_usd = (
+        self._max_productivity_personhour_usd * total_occupancy *
+        (delta_time_sec / _SECONDS_PER_HOUR)
     )
-    min_productivity = (
-        self._min_productivity_personhour_usd
-        * total_occupancy
-        * delta_time_sec
-        / _HOUR_SEC
+    min_possible_productivity_usd = (
+        self._min_productivity_personhour_usd * total_occupancy *
+        (delta_time_sec / _SECONDS_PER_HOUR)
+    )
+    # Ensure actual productivity is within defined min/max for stable normalization
+    actual_productivity_usd = np.clip(
+        actual_productivity_usd,
+        min_possible_productivity_usd,
+        max_possible_productivity_usd
     )
 
-    actual_productivity = max(actual_productivity, min_productivity)
-
-    if total_occupancy > 0.0:
+    normalized_productivity_regret: float
+    if total_occupancy > 0.0 and (max_possible_productivity_usd > min_possible_productivity_usd):
+      # Regret is (actual - max_achieved_under_perfect_comfort) / range
+      # This should be <= 0. (actual_prod - max_prod) / (max_prod - min_prod)
+      # The original formula: (actual - min) / (max - min) - 1.0 also yields a value in [-1, 0]
       normalized_productivity_regret = (
-          actual_productivity - min_productivity
-      ) / (max_productivity - min_productivity) - 1.0
-    else:
+          (actual_productivity_usd - min_possible_productivity_usd) /
+          (max_possible_productivity_usd - min_possible_productivity_usd)
+      ) - 1.0
+    else: # No occupancy or no productivity range, so no productivity regret.
       normalized_productivity_regret = 0.0
 
-    capped_electricity_energy_rate = min(
-        self._sum_electricity_energy_rate(reward_info),
-        self._max_electricity_rate,
+    # 2. Calculate Energy Cost Regret (Normalized Energy Cost)
+    # Cap actual energy rates at maximums to prevent extreme values from dominating.
+    actual_elec_rate = min(
+        self._sum_electricity_energy_rate(reward_info), self._max_electricity_rate
+    )
+    actual_gas_rate = min(
+        self._sum_natural_gas_energy_rate(reward_info), self._max_natural_gas_rate
     )
 
-    actual_electricity_energy_cost = self._electricity_energy_cost.cost(
-        start_time=start_time,
-        end_time=end_time,
-        energy_rate=capped_electricity_energy_rate,
+    actual_elec_cost = self._electricity_energy_cost.cost(
+        start_time, end_time, actual_elec_rate
+    )
+    max_elec_cost = self._electricity_energy_cost.cost(
+        start_time, end_time, self._max_electricity_rate
+    )
+    actual_gas_cost = self._natural_gas_energy_cost.cost(
+        start_time, end_time, actual_gas_rate
+    )
+    max_gas_cost = self._natural_gas_energy_cost.cost(
+        start_time, end_time, self._max_natural_gas_rate
     )
 
-    max_electricity_energy_cost = self._electricity_energy_cost.cost(
-        start_time=start_time,
-        end_time=end_time,
-        energy_rate=self._max_electricity_rate,
+    total_actual_energy_cost = actual_elec_cost + actual_gas_cost
+    total_max_energy_cost = max_elec_cost + max_gas_cost
+    normalized_energy_cost: float = 0.0
+    if total_max_energy_cost > 0: # Avoid division by zero
+        normalized_energy_cost = total_actual_energy_cost / total_max_energy_cost
+    normalized_energy_cost = np.clip(normalized_energy_cost, 0.0, 1.0) # Ensure [0,1]
+
+    # 3. Calculate Carbon Emission Regret (Normalized Carbon Emission)
+    actual_elec_carbon = self._electricity_energy_cost.carbon(
+        start_time, end_time, actual_elec_rate
+    )
+    max_elec_carbon = self._electricity_energy_cost.carbon(
+        start_time, end_time, self._max_electricity_rate
+    )
+    actual_gas_carbon = self._natural_gas_energy_cost.carbon(
+        start_time, end_time, actual_gas_rate
+    )
+    max_gas_carbon = self._natural_gas_energy_cost.carbon(
+        start_time, end_time, self._max_natural_gas_rate
     )
 
-    actual_electricity_carbon_emission = self._electricity_energy_cost.carbon(
-        start_time=start_time,
-        end_time=end_time,
-        energy_rate=capped_electricity_energy_rate,
+    total_actual_carbon = actual_elec_carbon + actual_gas_carbon
+    total_max_carbon = max_elec_carbon + max_gas_carbon
+    normalized_carbon_emission: float = 0.0
+    if total_max_carbon > 0: # Avoid division by zero
+        normalized_carbon_emission = total_actual_carbon / total_max_carbon
+    normalized_carbon_emission = np.clip(normalized_carbon_emission, 0.0, 1.0)
+
+    # Combine into final reward
+    total_weight = (
+        self._productivity_weight + self._energy_cost_weight +
+        self._carbon_emission_weight
     )
+    if total_weight == 0: # Avoid division by zero if all weights are zero
+        agent_reward_value = 0.0
+    else:
+        raw_reward = (
+            normalized_productivity_regret * self._productivity_weight -
+            normalized_energy_cost * self._energy_cost_weight -
+            normalized_carbon_emission * self._carbon_emission_weight
+        )
+        agent_reward_value = raw_reward / total_weight
 
-    max_electricity_carbon_emission = self._electricity_energy_cost.carbon(
-        start_time=start_time,
-        end_time=end_time,
-        energy_rate=self._max_electricity_rate,
+    # Populate and return the RewardResponse proto
+    response = smart_control_reward_pb2.RewardResponse(
+        productivity_reward=actual_productivity_usd,
+        natural_gas_energy_cost=actual_gas_cost,
+        electricity_energy_cost=actual_elec_cost,
+        carbon_emitted=total_actual_carbon,
+        productivity_weight=self._productivity_weight,
+        energy_cost_weight=self._energy_cost_weight,
+        carbon_emission_weight=self._carbon_emission_weight,
+        person_productivity=self._max_productivity_personhour_usd, # Max potential
+        total_occupancy=total_occupancy,
+        reward_scale=1.0, # Default, not actively used for scaling here
+        reward_shift=0.0, # Default
+        productivity_regret=(actual_productivity_usd - max_possible_productivity_usd),
+        normalized_productivity_regret=normalized_productivity_regret,
+        normalized_energy_cost=normalized_energy_cost,
+        normalized_carbon_emission=normalized_carbon_emission,
+        agent_reward_value=agent_reward_value,
     )
-
-    capped_natural_gas_energy_rate = min(
-        self._sum_natural_gas_energy_rate(reward_info),
-        self._max_natural_gas_rate,
-    )
-
-    actual_natural_gas_energy_cost = self._natural_gas_energy_cost.cost(
-        start_time=start_time,
-        end_time=end_time,
-        energy_rate=capped_natural_gas_energy_rate,
-    )
-
-    max_natural_gas_energy_cost = self._natural_gas_energy_cost.cost(
-        start_time=start_time,
-        end_time=end_time,
-        energy_rate=self._max_natural_gas_rate,
-    )
-
-    actual_natural_gas_carbon_emission = self._natural_gas_energy_cost.carbon(
-        start_time=start_time,
-        end_time=end_time,
-        energy_rate=capped_natural_gas_energy_rate,
-    )
-
-    max_natural_gas_carbon_emission = self._natural_gas_energy_cost.carbon(
-        start_time=start_time,
-        end_time=end_time,
-        energy_rate=self._max_natural_gas_rate,
-    )
-
-    response = smart_control_reward_pb2.RewardResponse()
-    response.productivity_reward = actual_productivity
-    response.natural_gas_energy_cost = actual_natural_gas_energy_cost
-    response.electricity_energy_cost = actual_electricity_energy_cost
-
-    combined_energy_cost = (
-        actual_electricity_energy_cost + actual_natural_gas_energy_cost
-    )
-    normalized_energy_cost = combined_energy_cost / (
-        max_electricity_energy_cost + max_natural_gas_energy_cost
-    )
-
-    combined_carbon_emission = (
-        actual_electricity_carbon_emission + actual_natural_gas_carbon_emission
-    )
-
-    normalized_carbon_emission = combined_carbon_emission / (
-        max_electricity_carbon_emission + max_natural_gas_carbon_emission
-    )
-
-    response.carbon_emitted = combined_carbon_emission
-
-    response.productivity_weight = self._productivity_weight
-    response.energy_cost_weight = self._energy_cost_weight
-    response.carbon_emission_weight = self._carbon_emission_weight
-
-    response.person_productivity = self._max_productivity_personhour_usd
-    response.total_occupancy = total_occupancy
-
-    response.reward_scale = 1.0
-    response.reward_shift = 0.0
-    response.productivity_regret = actual_productivity - max_productivity
-    response.normalized_productivity_regret = normalized_productivity_regret
-    response.normalized_energy_cost = normalized_energy_cost
-    response.normalized_carbon_emission = normalized_carbon_emission
     response.start_timestamp.CopyFrom(reward_info.start_timestamp)
     response.end_timestamp.CopyFrom(reward_info.end_timestamp)
-
-    raw_reward_value = (
-        normalized_productivity_regret * self._productivity_weight
-        - normalized_energy_cost * self._energy_cost_weight
-        - normalized_carbon_emission * self._carbon_emission_weight
-    )
-
-    # Return a weighted average.
-    response.agent_reward_value = raw_reward_value / (
-        self._productivity_weight
-        + self._energy_cost_weight
-        + self._carbon_emission_weight
-    )
 
     return response

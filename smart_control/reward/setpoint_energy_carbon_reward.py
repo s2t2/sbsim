@@ -1,137 +1,126 @@
-"""Reward Function for Smart Buildings.
+"""Defines a reward function based on productivity, energy cost, and carbon cost.
 
-Copyright 2024 Google LLC
+This module implements `SetpointEnergyCarbonRewardFunction`, a concrete reward
+function that calculates a scalar reward for an RL agent. The reward is a
+weighted combination of:
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+1.  **Productivity Reward**: Estimated economic value of occupant productivity,
+    which is maximized when zone temperatures are within comfort setpoints and
+    decays based on deviation from these setpoints.
+2.  **Energy Cost Penalty**: The monetary cost of electricity and natural gas
+    consumed by the building's HVAC systems. This is a negative component.
+3.  **Carbon Cost Penalty**: An imputed cost associated with the carbon
+    emissions from energy consumption. This is also a negative component.
 
-    https://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
-The reward function provides a feedback signal to the reinforcement learning
-agent that indicates the benefit of the action taken. During training, the
-agent learns an action policy to maximize the cumulative, or long-term reward.
-
-For this pilot there are three principal factors that contribute to the
-reward function:
-  * Setpoint: Maintaining the zone temperatures within heating and cooling
-  setpoints  results in a positive reward, and any temperature outside of
-  setpoints may also result in a negative reward (i.e., penalty).
-  * Cost: The cost of electricity and natural gas is a negative reward (cost).
-  Then by minimizing negative rewards/maximizing positive reward, the agent
-  will reduce overall energy cost. To compute the cost, both energy consumption
-  and the energy cost schedules are required.
-  * Carbon: By receiving negative reward for consuming natural gas, the agent
-  will learn to shift energy use to renewable sources. This factor requires an
-  energy-to-carbon conversion formula/table.
-
-The three factors can be scaled and combined into a single reward function:
-        r = s(setpoint) - u x f(cost) - w x g(carbon)
-where:
-  r is the incremental reward at this step
-  s(setpoint) is the reward for maintining setpoint
-  f(cost) is the cost of consuming electrical and natural gas energy
-  g(carbon) is the cost of emitting carbon,
-  and u, w are weighing factors for cost and carbon dependingon the policy.
-
-The fundamental metric unit of energy is the Joule (J), and the unit of energy
-applied over a fixed time interval (energy rate) is power measured in J/sec or
-Watts. However, energy is expressed based on diverse traditional units.
-For example, electrical energy unit is one hour of 1,000 W, or kWh.
-However, natural gas energy is measured in British thermal units (Btu) or
-cubic feet. So coordinate conversions are necessary.
-
-Notes on Setpoint Reward:
-Setpoint reward is the incremental reward (beneficial feedback) for maintaining
-comfort conditions inside the zone.
-
-We postulate that productivity is adversely affected when the zone air
-temperature is outside the deadband. Near the deadband, individual productivity
-decreases a little, but decreases smoothly and monotonically the farther the
-zone air temperature is away from the deadband.
-
-Cumulative productivity is the maximum potential reward, and is parameterized by
-how many persons occupy the zones, and the average hourly per-person
-productivity.
-
-Two other parameters are added to describe how productivity decays outside the
-deadband.
-
-productivity_midpoint_delta_temp: The difference in temperature
-beyond the setpoint, at which productivity decays to 50%.
-decay_stiffness: Parameter that controls the slope of the decay, the higher
-the value, the steeper the slope.
-
-The function for setpoint reward is based on a piecewise logistic regression.
-Maximum/full productivity occurs when the zone is occupied and inside its
-deadband. Productivity decays smoothly on a logistic curve outside the deadband.
+The final reward can be shifted and scaled for normalization purposes, which
+can be beneficial for RL agent training.
 """
 
 import gin
 
-from smart_control.models.base_energy_cost import BaseEnergyCost
+from smart_control.models import base_energy_cost
 from smart_control.proto import smart_control_reward_pb2
-from smart_control.reward.base_setpoint_energy_carbon_reward import BaseSetpointEnergyCarbonRewardFunction
+from smart_control.reward import base_setpoint_energy_carbon_reward
 from smart_control.utils import conversion_utils
 
 
 @gin.configurable()
 class SetpointEnergyCarbonRewardFunction(
-    BaseSetpointEnergyCarbonRewardFunction
+    base_setpoint_energy_carbon_reward.BaseSetpointEnergyCarbonRewardFunction
 ):
-  """Reward function based on productivity, energy cost and carbon emission.
+  """Calculates reward from productivity, energy cost, and carbon cost.
+
+  The reward `r` is computed as:
+  `r_raw = productivity_reward - w_e * total_energy_cost - w_c * carbon_cost`
+  `r_final = (r_raw - shift) / scale`
+  where:
+    `productivity_reward` is estimated based on thermal comfort.
+    `total_energy_cost` is the sum of electricity and natural gas costs.
+    `carbon_cost` is `total_carbon_emissions * carbon_cost_factor`.
+    `w_e, w_c` are weights for energy and carbon costs.
+    `shift`, `scale` are normalization parameters.
 
   Attributes:
-    max_productivity_personhour_usd: average occupant hourly productivity in $
-    productivity_midpoint_delta: temp difference from setpoint of half prod.
-    productivity_decay_stiffness: midpoint slope of the decay curve
-    electricity_energy_cost: cost and carbon model for electricity
-    natural_gas_energy_cost: cost and carbon model for natural gas
-    energy_cost_weight: u-coefficient described above
-    carbon_cost_weight: w-coefficient described above
-    carbon_cost_factor: cost value in $ per kg carbon emitted
-    reward_normalizer_shift: shift reward by subtracting the from the reward
-    reward_normalizer_scale: divide the shifted reward by this value
+    _electricity_energy_cost (base_energy_cost.BaseEnergyCost): Model for
+      calculating electricity cost and carbon.
+    _natural_gas_energy_cost (base_energy_cost.BaseEnergyCost): Model for
+      calculating natural gas cost and carbon.
+    _energy_cost_weight (float): Weight for the total energy cost component.
+    _carbon_cost_weight (float): Weight for the carbon cost component.
+    _carbon_cost_factor (float): Factor to convert kg of carbon emissions to
+      a monetary cost (e.g., USD per kg CO2eq).
+    _reward_normalizer_shift (float): Value to subtract from the raw reward
+      for normalization.
+    _reward_normalizer_scale (float): Value to divide the shifted raw reward by
+      for normalization.
   """
 
-  @gin.configurable()
   def __init__(
       self,
       max_productivity_personhour_usd: float,
-      productivity_midpoint_delta: float,
+      productivity_midpoint_delta_kelvin: float,
       productivity_decay_stiffness: float,
-      electricity_energy_cost: BaseEnergyCost,
-      natural_gas_energy_cost: BaseEnergyCost,
+      electricity_energy_cost_model: base_energy_cost.BaseEnergyCost,
+      natural_gas_energy_cost_model: base_energy_cost.BaseEnergyCost,
       energy_cost_weight: float,
       carbon_cost_weight: float,
       carbon_cost_factor: float,
       reward_normalizer_shift: float = 0.0,
       reward_normalizer_scale: float = 1.0,
   ):
+    """Initializes the SetpointEnergyCarbonRewardFunction.
+
+    Args:
+      max_productivity_personhour_usd (float): Max productivity value
+        (e.g., USD/person-hour) at optimal comfort.
+      productivity_midpoint_delta_kelvin (float): Temperature deviation (K)
+        from setpoint where productivity drops to 50%.
+      productivity_decay_stiffness (float): Steepness of the productivity
+        decay curve.
+      electricity_energy_cost_model (base_energy_cost.BaseEnergyCost): Instance
+        for electricity cost/carbon calculations.
+      natural_gas_energy_cost_model (base_energy_cost.BaseEnergyCost): Instance
+        for natural gas cost/carbon calculations.
+      energy_cost_weight (float): Weight applied to the total energy cost
+        penalty in the reward formula.
+      carbon_cost_weight (float): Weight applied to the carbon cost penalty
+        in the reward formula.
+      carbon_cost_factor (float): Monetary value (e.g., USD) assigned per unit
+        of carbon emission (e.g., per kg CO2eq).
+      reward_normalizer_shift (float): A constant subtracted from the raw
+        calculated reward. Useful for shifting the reward distribution.
+      reward_normalizer_scale (float): A constant by which the shifted reward
+        is divided. Useful for scaling the reward to a specific range.
+        Must be non-zero.
+    """
     super().__init__(
         max_productivity_personhour_usd=max_productivity_personhour_usd,
-        productivity_midpoint_delta=productivity_midpoint_delta,
+        productivity_midpoint_delta=productivity_midpoint_delta_kelvin,
         productivity_decay_stiffness=productivity_decay_stiffness,
     )
-    self._electricity_energy_cost = electricity_energy_cost
-    self._natural_gas_energy_cost = natural_gas_energy_cost
+    self._electricity_energy_cost = electricity_energy_cost_model
+    self._natural_gas_energy_cost = natural_gas_energy_cost_model
     self._energy_cost_weight = energy_cost_weight
     self._carbon_cost_weight = carbon_cost_weight
     self._carbon_cost_factor = carbon_cost_factor
     self._reward_normalizer_shift = reward_normalizer_shift
+    if reward_normalizer_scale == 0:
+        raise ValueError("reward_normalizer_scale cannot be zero.")
     self._reward_normalizer_scale = reward_normalizer_scale
 
   def compute_reward(
       self, reward_info: smart_control_reward_pb2.RewardInfo
   ) -> smart_control_reward_pb2.RewardResponse:
-    """Returns the real-valued reward for the current state of the building."""
+    """Calculates the reward based on productivity, energy, and carbon costs.
 
+    Args:
+      reward_info (smart_control_reward_pb2.RewardInfo): Proto message
+        containing raw data for reward calculation.
+
+    Returns:
+      smart_control_reward_pb2.RewardResponse: Proto message with the
+      calculated agent reward and its disaggregated components.
+    """
     start_time = conversion_utils.proto_to_pandas_timestamp(
         reward_info.start_timestamp
     )
@@ -139,51 +128,65 @@ class SetpointEnergyCarbonRewardFunction(
         reward_info.end_timestamp
     )
 
-    productivity_reward, _ = self._sum_zone_productivities(reward_info)
-
-    electricity_energy_rate = self._sum_electricity_energy_rate(reward_info)
-    electricity_energy_cost = self._electricity_energy_cost.cost(
-        start_time=start_time,
-        end_time=end_time,
-        energy_rate=electricity_energy_rate,
-    )
-    electricity_carbon_emission = self._electricity_energy_cost.carbon(
-        start_time=start_time,
-        end_time=end_time,
-        energy_rate=electricity_energy_rate,
+    # 1. Calculate Productivity Reward
+    # `_sum_zone_productivities` returns (total_productivity_usd, total_occupancy)
+    productivity_reward_usd, total_occupancy = self._sum_zone_productivities(
+        reward_info
     )
 
-    natural_gas_energy_rate = self._sum_natural_gas_energy_rate(reward_info)
-    natural_gas_energy_cost = self._natural_gas_energy_cost.cost(
-        start_time=start_time,
-        end_time=end_time,
-        energy_rate=natural_gas_energy_rate,
+    # 2. Calculate Energy Costs and Carbon Emissions
+    # Electricity
+    elec_energy_rate_watts = self._sum_electricity_energy_rate(reward_info)
+    elec_cost_usd = self._electricity_energy_cost.cost(
+        start_time, end_time, elec_energy_rate_watts
     )
-    natural_gas_carbon_emission = self._natural_gas_energy_cost.carbon(
-        start_time=start_time,
-        end_time=end_time,
-        energy_rate=natural_gas_energy_rate,
+    elec_carbon_kg = self._electricity_energy_cost.carbon(
+        start_time, end_time, elec_energy_rate_watts
     )
-    response = smart_control_reward_pb2.RewardResponse()
-    response.productivity_reward = productivity_reward
-    response.natural_gas_energy_cost = natural_gas_energy_cost
-    response.electricity_energy_cost = electricity_energy_cost
 
-    combined_carbon_emission = (
-        electricity_carbon_emission + natural_gas_carbon_emission
+    # Natural Gas
+    gas_energy_rate_watts = self._sum_natural_gas_energy_rate(reward_info)
+    gas_cost_usd = self._natural_gas_energy_cost.cost(
+        start_time, end_time, gas_energy_rate_watts
     )
-    response.carbon_emitted = combined_carbon_emission
-    response.carbon_cost = combined_carbon_emission * self._carbon_cost_factor
+    gas_carbon_kg = self._natural_gas_energy_cost.carbon(
+        start_time, end_time, gas_energy_rate_watts
+    )
+
+    # 3. Combine into Raw Reward
+    total_energy_cost_usd = elec_cost_usd + gas_cost_usd
+    total_carbon_emissions_kg = elec_carbon_kg + gas_carbon_kg
+    carbon_cost_usd = total_carbon_emissions_kg * self._carbon_cost_factor
 
     raw_reward_value = (
-        productivity_reward
-        - self._energy_cost_weight
-        * (electricity_energy_cost + natural_gas_energy_cost)
-        - self._carbon_cost_weight * response.carbon_cost
+        productivity_reward_usd -
+        self._energy_cost_weight * total_energy_cost_usd -
+        self._carbon_cost_weight * carbon_cost_usd
     )
 
-    response.agent_reward_value = (
+    # 4. Normalize Reward
+    normalized_agent_reward_value = (
         raw_reward_value - self._reward_normalizer_shift
     ) / self._reward_normalizer_scale
+
+    # Populate and return the RewardResponse proto
+    response = smart_control_reward_pb2.RewardResponse(
+        productivity_reward=productivity_reward_usd,
+        natural_gas_energy_cost=gas_cost_usd,
+        electricity_energy_cost=elec_cost_usd,
+        carbon_emitted=total_carbon_emissions_kg,
+        carbon_cost=carbon_cost_usd,
+        productivity_weight=self._productivity_weight, # Assuming this is for info
+        energy_cost_weight=self._energy_cost_weight,   # Assuming this is for info
+        carbon_emission_weight=self._carbon_cost_weight,# Assuming this is for info
+        person_productivity=self._max_productivity_personhour_usd,
+        total_occupancy=total_occupancy,
+        reward_scale=self._reward_normalizer_scale,
+        reward_shift=self._reward_normalizer_shift,
+        # Normalized components are not explicitly calculated here but could be added
+        agent_reward_value=normalized_agent_reward_value,
+    )
+    response.start_timestamp.CopyFrom(reward_info.start_timestamp)
+    response.end_timestamp.CopyFrom(reward_info.end_timestamp)
 
     return response

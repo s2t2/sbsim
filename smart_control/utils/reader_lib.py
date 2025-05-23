@@ -1,18 +1,10 @@
-"""Utilities to read smart control protos from endpoint.
+"""Abstract base classes for reading Smart Control data.
 
-Copyright 2022 Google LLC
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    https://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+This module defines the `BaseReader` abstract class, which outlines the
+interface for reading various types of data used in the Smart Control project,
+such as observations, actions, rewards, and static building information
+(device and zone infos). It also defines `Readers`, a utility class for managing
+a collection of `BaseReader` instances.
 """
 
 import abc
@@ -26,37 +18,81 @@ from smart_control.proto import smart_control_building_pb2
 from smart_control.proto import smart_control_normalization_pb2
 from smart_control.proto import smart_control_reward_pb2
 
-VariableId = NewType('VariableId', str)
+VariableId = NewType("VariableId", str)
+"""Type alias for a string representing a unique variable identifier."""
 
-T = TypeVar('T')
+ProtoMessageType = TypeVar("ProtoMessageType")
+"""Generic type variable for protobuf message types."""
 
 
 class BaseReader(metaclass=abc.ABCMeta):
-  """Abstract base class for writing the building and reward protos."""
+  """Abstract interface for reading Smart Control project data.
+
+  Implementations of this class are responsible for fetching various types of
+  protobuf messages, typically from files or other data sources. This includes
+  time-series data like observations and actions, as well as static
+  configuration data like device and zone information.
+  """
 
   @abc.abstractmethod
   def read_observation_responses(
       self, start_time: pd.Timestamp, end_time: pd.Timestamp
   ) -> Sequence[smart_control_building_pb2.ObservationResponse]:
-    """Reads observation_responses from endpoint bounded by start & end time."""
+    """Reads `ObservationResponse` messages within a specified time range.
+
+    Args:
+      start_time (pd.Timestamp): The inclusive start timestamp for the data query.
+      end_time (pd.Timestamp): The inclusive end timestamp for the data query.
+
+    Returns:
+      Sequence[smart_control_building_pb2.ObservationResponse]: A sequence of
+      `ObservationResponse` protobuf messages.
+    """
 
   @abc.abstractmethod
   def read_action_responses(
       self, start_time: pd.Timestamp, end_time: pd.Timestamp
   ) -> Sequence[smart_control_building_pb2.ActionResponse]:
-    """Reads action_responses from endpoint bounded by start and end time."""
+    """Reads `ActionResponse` messages within a specified time range.
+
+    Args:
+      start_time (pd.Timestamp): The inclusive start timestamp for the data query.
+      end_time (pd.Timestamp): The inclusive end timestamp for the data query.
+
+    Returns:
+      Sequence[smart_control_building_pb2.ActionResponse]: A sequence of
+      `ActionResponse` protobuf messages.
+    """
 
   @abc.abstractmethod
   def read_reward_infos(
       self, start_time: pd.Timestamp, end_time: pd.Timestamp
   ) -> Sequence[smart_control_reward_pb2.RewardInfo]:
-    """Reads reward infos from endpoint bounded by start and end time."""
+    """Reads `RewardInfo` messages within a specified time range.
+
+    Args:
+      start_time (pd.Timestamp): The inclusive start timestamp for the data query.
+      end_time (pd.Timestamp): The inclusive end timestamp for the data query.
+
+    Returns:
+      Sequence[smart_control_reward_pb2.RewardInfo]: A sequence of `RewardInfo`
+      protobuf messages.
+    """
 
   @abc.abstractmethod
   def read_reward_responses(
       self, start_time: pd.Timestamp, end_time: pd.Timestamp
-  ) -> Sequence[smart_control_reward_pb2.RewardInfo]:
-    """Reads reward responses from endpoint bounded by start and end time."""
+  ) -> Sequence[smart_control_reward_pb2.RewardResponse]: # Corrected return type
+    """Reads `RewardResponse` messages within a specified time range.
+
+    Args:
+      start_time (pd.Timestamp): The inclusive start timestamp for the data query.
+      end_time (pd.Timestamp): The inclusive end timestamp for the data query.
+
+    Returns:
+      Sequence[smart_control_reward_pb2.RewardResponse]: A sequence of
+      `RewardResponse` protobuf messages.
+    """
 
   @abc.abstractmethod
   def read_normalization_info(
@@ -64,26 +100,59 @@ class BaseReader(metaclass=abc.ABCMeta):
   ) -> Mapping[
       VariableId, smart_control_normalization_pb2.ContinuousVariableInfo
   ]:
-    """Reads variable normalization info from RecordIO."""
+    """Reads normalization parameters for continuous variables.
+
+    Returns:
+      Mapping[VariableId, ContinuousVariableInfo]: A dictionary mapping
+      variable IDs to their `ContinuousVariableInfo` protobuf messages,
+      which contain statistics like mean and variance.
+    """
 
   @abc.abstractmethod
   def read_zone_infos(self) -> Sequence[smart_control_building_pb2.ZoneInfo]:
-    """Reads the zone infos for the Building."""
+    """Reads static information about all zones in the building.
+
+    Returns:
+      Sequence[smart_control_building_pb2.ZoneInfo]: A sequence of `ZoneInfo`
+      protobuf messages.
+    """
 
   @abc.abstractmethod
   def read_device_infos(
       self,
   ) -> Sequence[smart_control_building_pb2.DeviceInfo]:
-    """Reads the device infos for the Building."""
+    """Reads static information about all devices in the building.
+
+    Returns:
+      Sequence[smart_control_building_pb2.DeviceInfo]: A sequence of
+      `DeviceInfo` protobuf messages.
+    """
 
 
 @gin.configurable
 class Readers:
+  """A container class for managing a sequence of `BaseReader` instances.
+
+  This class can be used to group multiple data readers, for example, if
+  different types of data or data from different sources are handled by
+  separate reader implementations. It is Gin-configurable, allowing the
+  sequence of readers to be defined in configuration files.
+
+  Attributes:
+    readers (Sequence[BaseReader]): A sequence of `BaseReader` instances.
+  """
 
   def __init__(self, readers: Sequence[BaseReader]):
+    """Initializes the Readers collection.
+
+    Args:
+      readers (Sequence[BaseReader]): A sequence of objects that adhere to the
+        `BaseReader` interface.
+    """
     self._readers: Final[Sequence[BaseReader]] = readers
-    logging.info('There are %d readers available.', len(readers))
+    logging.info("Readers manager initialized with %d reader(s).", len(readers))
 
   @property
   def readers(self) -> Sequence[BaseReader]:
+    """Provides access to the sequence of managed `BaseReader` instances."""
     return self._readers
