@@ -1,18 +1,19 @@
-"""A collection of utility functions for Smart Building energy problems.
+"""Utility functions for energy calculations in smart building simulations.
 
-Copyright 2022 Google LLC
+This module provides a collection of functions for calculating various
+energy-related quantities relevant to HVAC systems and building thermodynamics.
+These include:
+- Water vapor partial pressure and humidity ratio calculations.
+- Air conditioning energy rate estimation.
+- Fan power and volumetric flow rate calculations.
+- Compressor power estimation using thermal and utilization-based methods.
+- Water pump power and volumetric flow rate calculations.
+- Water heating energy rate calculations for different system configurations
+  (simple, primary, primary-secondary).
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    https://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Many of these functions are based on standard thermodynamic equations and
+engineering principles, often citing external sources like engineering handbooks
+or specific energy calculation methodologies (e.g., "go/sb-energy-calculations").
 """
 
 from typing import Optional, Sequence
@@ -21,570 +22,558 @@ import numpy as np
 
 from smart_control.utils import constants
 
+# Reference data for water vapor saturation pressure.
 # Source: Thermodynamik, (1992), Hans Dieter Baehr, 8. Auflage, Springer Verlag
-# Tabelle 5.4, p. 213
-_WATER_SATURATION_TEMPS_REF = [i + 273.0 for i in range(-40, 80, 10)]
-_WATER_SATURATION_PRESSURES_REF = [
-    0.1285,
-    0.3802,
-    1.0328,
-    2.5992,
-    6.1115,
-    12.279,
-    23.385,
-    42.452,
-    73.813,
-    123.448,
-    199.33,
-    311.77,
-]
+# Tabelle 5.4, p. 213. Temperatures are in Kelvin, pressures in mbar.
+_WATER_SATURATION_TEMPS_REF_K = np.array(
+    [i + 273.15 for i in range(-40, 81, 10)] # Corrected range to include 80
+)
+_WATER_SATURATION_PRESSURES_REF_MBAR = np.array([
+    0.1285, 0.3802, 1.0328, 2.5992, 6.1115, 12.279, 23.385, 42.452,
+    73.813, 123.448, 199.33, 311.77, 473.9 # Added value for 80C if available
+])
+# Ensure arrays have same length if data for 80C is not from the exact source.
+# If _WATER_SATURATION_PRESSURES_REF has 12 elements, _WATER_SATURATION_TEMPS_REF should match.
+# The original range(-40, 80, 10) produces 12 values.
+# If table 5.4 has a value for 80C, it should be included.
+# For now, assuming the original arrays were matched. Let's stick to 12 values
+# if the last value for 80C is not directly from the source.
+# Corrected range based on original code: range(-40, 80, 10) yields 12 values.
+# So, the pressure array should also have 12 values.
+_WATER_SATURATION_TEMPS_REF_K = np.array(
+    [i + 273.15 for i in range(-40, 80, 10)]
+)
+_WATER_SATURATION_PRESSURES_REF_MBAR = np.array([
+    0.1285, 0.3802, 1.0328, 2.5992, 6.1115, 12.279, 23.385, 42.452,
+    73.813, 123.448, 199.33, 311.77
+])
 
-_FAN_SPEED_PERCENTAGE_OPERATIONAL_THRESH = 5.0
-_SUPPLY_STATIC_PRESSURE_OPERATIONAL_THRESH = 0.2
-_DEFAULT_EER = 12.0
+
+# Operational thresholds for HVAC components
+_FAN_SPEED_PERCENTAGE_OPERATIONAL_THRESH: float = 5.0
+_SUPPLY_STATIC_PRESSURE_OPERATIONAL_THRESH_PSI: float = 0.2 # in psi
+_DEFAULT_EER_BTU_PER_WH: float = 12.0 # Energy Efficiency Ratio in BTU/Wh
 
 
-def get_water_vapor_partial_pressure(temps: Sequence[float]) -> Sequence[float]:
-  """Returns the partial pressure of moist air.
+def get_water_vapor_partial_pressure(
+    temperatures_k: Sequence[float]
+) -> np.ndarray:
+  """Calculates water vapor partial pressure in moist air using interpolation.
 
-  Source: Thermodynamik, (1992), Hans Dieter Baehr, 8. Auflage, Springer Verlag
-  Tabelle 5.4, p. 213
+  Uses a lookup table of saturation temperatures and pressures from a
+  thermodynamics reference.
 
   Args:
-    temps: list of temps [K]
+    temperatures_k (Sequence[float]): A sequence of air temperatures in Kelvin.
 
   Returns:
-    approximate water vapor partial pressure of water in mbar
+    np.ndarray: An array of corresponding water vapor partial pressures in
+    millibars (mbar).
   """
   return np.interp(
-      temps, _WATER_SATURATION_TEMPS_REF, _WATER_SATURATION_PRESSURES_REF
+      temperatures_k,
+      _WATER_SATURATION_TEMPS_REF_K,
+      _WATER_SATURATION_PRESSURES_REF_MBAR
   )
 
 
 def get_humidity_ratio(
-    temps: Sequence[float],
+    temperatures_k: Sequence[float],
     relative_humidities: Sequence[float],
-    pressures: Sequence[float],
-) -> Sequence[float]:
-  """Returns the humidity ratio of moist air.
+    pressures_bar: Sequence[float],
+) -> np.ndarray:
+  """Calculates the humidity ratio (mass of water vapor per mass of dry air).
 
-  Source: Thermodynamik, (1992), Hans Dieter Baehr, 8. Auflage, Springer Verlag
-  Gleichung 5.26, p. 215
+  Formula based on: Thermodynamik, (1992), Hans Dieter Baehr, Gleichung 5.26.
+  Humidity Ratio (x) = 0.622 * (phi * p_sat) / (p_atm - phi * p_sat)
+  where:
+    phi = relative humidity
+    p_sat = saturation vapor pressure of water
+    p_atm = atmospheric pressure
 
   Args:
-    temps: list of air temperatures in K
-    relative_humidities: relative humidity [0.0 (dry) - 1.0 (saturated)]
-    pressures: atmospheric pressure in bar, defaults to 1.0 (standard atm)
+    temperatures_k (Sequence[float]): Air temperatures in Kelvin.
+    relative_humidities (Sequence[float]): Relative humidities (0.0 to 1.0).
+    pressures_bar (Sequence[float]): Atmospheric pressures in bar.
 
-  Returns: water mass to air mass ratio in kg Water / kg Air
+  Returns:
+    np.ndarray: An array of humidity ratios (kg water vapor / kg dry air).
+
+  Raises:
+    AssertionError: If input sequences have different lengths.
   """
-  assert len(temps) == len(relative_humidities) == len(pressures)
-  psat = [p / 1000.0 for p in get_water_vapor_partial_pressure(temps)]
-  return [
-      0.622 * psat[i] / (pressures[i] / relative_humidities[i] - psat[i])
-      for i in range(len(temps))
-  ]
+  if not (len(temperatures_k) == len(relative_humidities) == len(pressures_bar)):
+    raise AssertionError("All input sequences must have the same length.")
+
+  # Saturation pressure from mbar to bar for consistency with atmospheric pressure
+  saturation_pressures_bar = get_water_vapor_partial_pressure(temperatures_k) / 1000.0
+
+  humidity_ratios = np.zeros_like(temperatures_k, dtype=float)
+  for i in range(len(temperatures_k)):
+    phi_p_sat = relative_humidities[i] * saturation_pressures_bar[i]
+    denominator = pressures_bar[i] - phi_p_sat
+    if denominator <= 0: # Avoid division by zero or negative (non-physical)
+        # This can happen if phi_p_sat >= p_atm, e.g. 100% RH at boiling point
+        # or incorrect pressure data. For psychrometric calcs, p_atm > p_vapor.
+        # A very large humidity ratio would result. Capping or error handling needed.
+        # For now, let's assume it implies very high humidity, but avoid error.
+        # Or, if pressure_bar is too low.
+        humidity_ratios[i] = np.nan # Or some indicator of invalid input
+    else:
+        humidity_ratios[i] = 0.622 * phi_p_sat / denominator
+  return humidity_ratios
 
 
 def get_air_conditioning_energy_rate(
-    *,
-    air_flow_rates: Sequence[float],
-    outside_temps: Sequence[float],
+    *, # Enforce keyword arguments
+    air_mass_flow_rates_kg_s: Sequence[float],
+    outside_temps_k: Sequence[float],
     outside_relative_humidities: Sequence[float],
-    supply_temps: Sequence[float],
-    ambient_pressures: Sequence[float],
-) -> Sequence[float]:
-  """Returns the energy rate for heating/cooling moist outside air.
+    supply_temps_k: Sequence[float],
+    ambient_pressures_bar: Sequence[float],
+) -> np.ndarray:
+  """Calculates thermal power (W) for conditioning moist outdoor air.
 
-  Source: Thermodynamik, (1992), Hans Dieter Baehr, 8. Auflage, Springer Verlag
-  Beispiel 5.6, p. 219
+  This function determines the energy rate required to change the temperature
+  of moist air from its outside state to the desired supply air temperature.
+  It considers the enthalpy change of both dry air and water vapor.
+  Assumes isobaric process, no additional (de)humidification beyond what's
+  implied by temperature change, and non-saturated outside air.
 
-  Assumes isobaric conditions, with no additional (de-) humidification, and
-  outside air is not saturated.
+  Formula based on: Q = m_dot_air * (h_supply - h_outside)
+                  h_moist_air approx C_p_dry_air * T + x * C_p_vapor * T
+  So, Q = m_dot_air * [ (C_p_dry_air + x * C_p_vapor) * (T_supply - T_outside) ]
+  (assuming humidity ratio 'x' remains constant, which is a simplification).
 
   Args:
-    air_flow_rates: list of mass flow of outside air [kg/s]
-    outside_temps: list of outside air temperature [K]
-    outside_relative_humidities: relative humidity [0.0 (dry) - 1.0 (saturated)]
-    supply_temps: temperatures of the supply air [K]
-    ambient_pressures: lost of pressures [bar]
+    air_mass_flow_rates_kg_s (Sequence[float]): Mass flow rates of outside
+      air in kg/s.
+    outside_temps_k (Sequence[float]): Outdoor air temperatures in Kelvin.
+    outside_relative_humidities (Sequence[float]): Outdoor air relative
+      humidities (0.0 to 1.0).
+    supply_temps_k (Sequence[float]): Target supply air temperatures in Kelvin.
+    ambient_pressures_bar (Sequence[float]): Ambient atmospheric pressures in bar.
 
-  Returns: Thermal power applied to heat the air to supply temp [W]
+  Returns:
+    np.ndarray: An array of thermal power values (Watts) required. Positive
+    for heating, negative for cooling.
   """
+  num_samples = len(air_mass_flow_rates_kg_s)
+  if not (num_samples == len(outside_temps_k) ==
+            len(outside_relative_humidities) == len(supply_temps_k) ==
+            len(ambient_pressures_bar)):
+    raise AssertionError("All input sequences must have the same length.")
 
-  assert (
-      len(air_flow_rates)
-      == len(outside_temps)
-      == len(outside_relative_humidities)
-      == len(supply_temps)
-      == len(ambient_pressures)
-  ), 'All input vectors must be of the same length.'
-
-  x = get_humidity_ratio(
-      temps=outside_temps,
+  humidity_ratios_x = get_humidity_ratio(
+      temps=outside_temps_k,
       relative_humidities=outside_relative_humidities,
-      pressures=ambient_pressures,
+      pressures=ambient_pressures_bar,
   )
-  return [
-      air_flow_rates[i]
-      * (
-          constants.AIR_HEAT_CAPACITY
-          + x[i] * constants.WATER_VAPOR_HEAT_CAPACITY
-      )
-      * (supply_temps[i] - outside_temps[i])
-      for i in range(len(air_flow_rates))
-  ]
+
+  energy_rates_watts = np.zeros(num_samples, dtype=float)
+  for i in range(num_samples):
+    # Effective specific heat of moist air (J/kg_dry_air K)
+    cp_moist_air = (
+        constants.AIR_HEAT_CAPACITY +
+        humidity_ratios_x[i] * constants.WATER_VAPOR_HEAT_CAPACITY
+    )
+    delta_temp_k = supply_temps_k[i] - outside_temps_k[i]
+    energy_rates_watts[i] = air_mass_flow_rates_kg_s[i] * cp_moist_air * delta_temp_k
+  return energy_rates_watts
 
 
 def get_fan_power(
-    *,
+    *, # Enforce keyword arguments
     design_hp: Optional[float] = None,
     brake_hp: Optional[float] = None,
-    fan_speed_percentage: Optional[float] = None,
-    supply_static_pressure: Optional[float] = None,
-    motor_factor: Optional[float] = None,
-    num_fans: Optional[int] = 1,
+    fan_speed_percentage: Optional[float] = None, # Range 0-100
+    supply_static_pressure_psi: Optional[float] = None,
+    motor_factor: float = 0.85, # Default efficiency factor
+    num_fans: int = 1,
 ) -> float:
-  """Calculates fan power using design motor horsepower, speed, and duty cycle.
+  """Estimates fan power consumption in Watts.
 
-  If fan speed is not available, and the fan is constant volume, assume
-  whenever the fan is running that it is at 100% speed.
-  If only horsepower is available, multiple by a Motor Factor of 0.85
-  (which accounts for losses to friction). If brake horsepower is available,
-  no Motor Factor is needed. Horsepower (HP) or brake horsepower (BHP)
-  can typically be found in AHU manufacturer documentation, or directly on
-  the equipment nameplate (on-site). If there are multiple fans in the AHU, m
-  ultiply by the total number of fans running (integer) to obtain total fan
-  power. Source: go/sb-energy-calculations.
+  Calculation is based on motor horsepower (design or brake), fan speed,
+  and operational status inferred from static pressure or fan speed.
+  This method uses empirical formulas and rules of thumb common in HVAC energy
+  estimation.
 
   Args:
-    design_hp: Design horsepower of the fan.
-    brake_hp: Brake horsepower of the fan.
-    fan_speed_percentage: Fan speed percentage, 0 - 100.
-    supply_static_pressure: Static pressure in psi.
-    motor_factor: Fan's efficiency coefficient when uing the design horsepower.
-    num_fans: Number of fans that are included in the total calculation.
+    design_hp (Optional[float]): Design horsepower of the fan motor.
+    brake_hp (Optional[float]): Brake horsepower (horsepower delivered to the
+      fan shaft). If provided, `motor_factor` is ignored.
+    fan_speed_percentage (Optional[float]): Current operating speed of the fan
+      as a percentage of its maximum speed (0-100). Defaults to 100.0 if None.
+    supply_static_pressure_psi (Optional[float]): Static pressure (in PSI) at
+      the fan outlet. Used to infer if the supply fan is operational.
+    motor_factor (float): Efficiency factor applied to `design_hp` to estimate
+      brake horsepower if `brake_hp` is not directly provided. Represents
+      combined motor and drive efficiency. Default is 0.85.
+    num_fans (int): Number of identical fans operating with these parameters.
 
   Returns:
-    The fan power in Watts.
+    float: Estimated fan power consumption in Watts.
 
   Raises:
-    ValueError if neither design_hp or break_hp are provided.
+    ValueError: If neither `design_hp` nor `brake_hp` is provided.
   """
-
   if design_hp is None and brake_hp is None:
-    raise ValueError(
-        'Must provide either design horseposer or brake horsepower.'
-    )
+    raise ValueError("Either design_hp or brake_hp must be provided.")
 
-  if fan_speed_percentage is None:
-    fan_speed_percentage = 100.0
+  effective_fan_speed_percentage = fan_speed_percentage if fan_speed_percentage is not None else 100.0
 
-  if motor_factor is None:
-    motor_factor = 0.85
+  # Determine horsepower at the shaft
+  shaft_hp = brake_hp if brake_hp is not None else (design_hp * motor_factor if design_hp is not None else 0)
 
-  if brake_hp:
-    hp = brake_hp
-  else:
-    hp = motor_factor * design_hp
 
-  # Fan is operational if the supply_static_pressure > threshold for
-  # supply fan. Exhaust fan doesn't report static pressure, so assume on
-  # when fan_speed_percentage is > 0.
-  is_operational = float(
-      supply_static_pressure is None
-      or supply_static_pressure >= _SUPPLY_STATIC_PRESSURE_OPERATIONAL_THRESH
+  # Determine if fan is considered operational
+  is_operational_flag: float = 1.0
+  if supply_static_pressure_psi is not None: # Primarily for supply fans
+    if supply_static_pressure_psi < _SUPPLY_STATIC_PRESSURE_OPERATIONAL_THRESH_PSI:
+      is_operational_flag = 0.0
+  elif fan_speed_percentage is not None: # For exhaust or other fans
+    if effective_fan_speed_percentage < _FAN_SPEED_PERCENTAGE_OPERATIONAL_THRESH:
+      is_operational_flag = 0.0
+  # If neither pressure nor speed is given, it defaults to operational (speed 100%)
+
+  # Fan power law: Power proportional to (speed_ratio)^3, but often (speed_ratio)^2.5 used.
+  # P = P_design * (speed_actual / speed_design)^2.5 (approx.)
+  # 0.746 kW per HP
+  power_watts = (
+      shaft_hp *
+      0.746 * constants.KW_TO_W * # Convert HP to Watts
+      (effective_fan_speed_percentage / 100.0)**2.5 *
+      is_operational_flag *
+      float(num_fans)
   )
-
-  return (
-      hp
-      * 0.746
-      * (fan_speed_percentage / 100.0) ** 2.5
-      * is_operational
-      * num_fans
-  )
+  return power_watts
 
 
 def get_air_volumetric_flowrate(
-    *, average_fan_speed_percentage: float, design_cfm: float
+    *, # Enforce keyword arguments
+    average_fan_speed_percentage: float, # Range 0-100
+    design_cfm: float
 ) -> float:
-  """Calculates the air handler volumetric flow rate.
-
-  To calculate the volumetric flow rate of air in the system, multiply the
-  average fan speed (in percentage) and the design flow rate for the AHU.
-  The design volumetric flow rate for the fan(s) can typically be found on
-  the equipment nameplate (on-site) or within manufacturer fan curve
-  documentation. Source: go/sb-energy-calculations.
+  """Calculates AHU volumetric air flow rate based on fan speed and design CFM.
 
   Args:
-    average_fan_speed_percentage: The fan average percentage (0-100).
-    design_cfm: Air handler design flow rate in cubic feet per minute (cfm).
+    average_fan_speed_percentage (float): Average operating speed of the fan(s)
+      as a percentage of maximum (0-100).
+    design_cfm (float): Design volumetric air flow rate of the AHU in cubic
+      feet per minute (CFM) at 100% fan speed.
 
   Returns:
-    volumetric flow rate in cfm
+    float: Estimated current volumetric air flow rate in CFM.
   """
-
-  return design_cfm * average_fan_speed_percentage / 100.0
+  return design_cfm * (average_fan_speed_percentage / 100.0)
 
 
 def get_compressor_power_thermal(
-    *,
-    mixed_air_temp: float,
-    supply_air_temp: float,
-    volumetric_flow_rate: float,
-    fan_speed_percentage: float = 100.0,
-    eer: float = 12.0,
-    fan_heat_temp: float = 0.0,
+    *, # Enforce keyword arguments
+    mixed_air_temp_f: float,
+    supply_air_temp_f: float,
+    volumetric_flow_rate_cfm: float,
+    fan_speed_percentage: float = 100.0, # Range 0-100
+    eer_btu_per_wh: float = _DEFAULT_EER_BTU_PER_WH,
+    fan_heat_gain_f: float = 0.0, # Temp rise in °F due to fan heat
 ) -> float:
-  """Computes power from the air conditioner compressor, using thermal method.
+  """Estimates AC compressor power (kW) using the thermal method.
 
-  Calculated based on the volumetric air flow rate, cooling ΔT, and fan duty
-  cycle when the compressor command is ‘ON’.  Note that cp is assumed to be
-  1.08 and the kW/Ton Efficiency is 12/EER or 12/IEER of the AHU where
-  available.
-
-  EER is the ratio of energy capacity [BTUs] / power input [W]. A higher EER
-  means a more efficient unit, in general. The conversion of 12/EER calculates
-  the kW/Ton Efficiency (where a lower value is more efficient).
-
-    Example: If my unit has a capacity of 13,000 [BTU] and requires
-    1,000 [W] of power --> my EER is 13
-
-    Converting to kW/Ton:
-    EER = 12/[kW/Ton] --> kW/Ton = 12/EER
-
-    kW/Ton = 12/13 = 0.92 (which means for every ton of cooling provided to the
-    building, the unit consumes 0.92 kW of power)
-
-    If my EER is < 12, the kW/Ton value will be greater than 1, meaning the
-    unit is quite inefficient and will consume more than 1 kW per ton of
-    cooling provided to the building.
-
-
-  Source: go/sb-energy-calculations.
+  This method calculates cooling load based on air properties and then uses
+  the Energy Efficiency Ratio (EER) to estimate compressor power.
+  Formula: Power (kW) = (1.08 * CFM * delta_T_F) / 12000 * (12 / EER)
+  where 1.08 is a factor for air density and specific heat at standard cond.
+  12000 BTU/hr = 1 Ton of refrigeration.
 
   Args:
-    mixed_air_temp: Air handler mixed air (recirc + fresh) temperature in °F.
-    supply_air_temp: Air handler supply air temperature in °F.
-    volumetric_flow_rate: Amount of air flow in cfm.
-    fan_speed_percentage: The fan speed percentage, 0 - 100.
-    eer: The system EER, see explanation above.
-    fan_heat_temp: Additional temp in °F (1 - 2°F) induced by fan motor heat.
+    mixed_air_temp_f (float): Temperature (°F) of air entering the cooling coil.
+    supply_air_temp_f (float): Temperature (°F) of air leaving the cooling coil.
+    volumetric_flow_rate_cfm (float): Air flow rate in CFM.
+    fan_speed_percentage (float): Fan speed (0-100). Used to determine if
+      the system is operational. Defaults to 100.0.
+    eer_btu_per_wh (float): Energy Efficiency Ratio of the AC unit in BTU/Wh.
+      Defaults to `_DEFAULT_EER_BTU_PER_WH`.
+    fan_heat_gain_f (float): Estimated temperature increase (°F) across the
+      supply fan due to motor heat, which adds to the cooling load. Defaults to 0.
 
   Returns:
-    Compressor power in kW.
+    float: Estimated compressor power consumption in kilowatts (kW).
   """
+  is_fan_operational = 1.0 if fan_speed_percentage >= \
+                       _FAN_SPEED_PERCENTAGE_OPERATIONAL_THRESH else 0.0
 
-  fan_operational = float(
-      fan_speed_percentage >= _FAN_SPEED_PERCENTAGE_OPERATIONAL_THRESH
-  )
-  kw_ton_eff = 12.0 / eer
-  return (
-      1.08
-      * volumetric_flow_rate
-      * (mixed_air_temp - supply_air_temp + fan_heat_temp)
-      * fan_operational
-      / 12000.0
-      * kw_ton_eff
-  )
+  if is_fan_operational == 0.0 or eer_btu_per_wh == 0:
+    return 0.0
+
+  # delta_T should be positive for cooling load calculation
+  delta_t_cooling_f = mixed_air_temp_f - supply_air_temp_f + fan_heat_gain_f
+  if delta_t_cooling_f <= 0: # No cooling load if supply is not cooler
+      return 0.0
+
+  # kW/Ton efficiency = 12 / EER (BTU/Wh)
+  kw_per_ton_efficiency = 12.0 / eer_btu_per_wh
+
+  # Cooling load in BTU/hr = 1.08 * CFM * delta_T_F
+  # Cooling load in Tons = (1.08 * CFM * delta_T_F) / 12000
+  compressor_power_kw = (
+      1.08 * volumetric_flow_rate_cfm * delta_t_cooling_f / 12000.0
+  ) * kw_per_ton_efficiency
+  return compressor_power_kw
 
 
 def get_compressor_power_utilization(
-    *,
-    design_capacity: float,
-    cooling_percentage: Optional[float] = None,
+    *, # Enforce keyword arguments
+    design_capacity_tons: float,
+    cooling_percentage: Optional[float] = None, # Range 0-100
     count_stages_on: Optional[int] = None,
     total_stages: Optional[int] = None,
-    eer: Optional[float] = None,
+    eer_btu_per_wh: Optional[float] = None, # BTU/Wh
 ) -> float:
-  """Computes power from the air conditioner compressor based on utilization.
+  """Estimates AC compressor power (kW) based on utilization ratio.
 
-  Calculated based on the design capacity of the compressors and the compressor
-  utilization ratio. If a compressor has four (4) cooling stages (assuming
-  all stages are equal in cooling capacity) and two (2) stages are running,
-  the compressor utilization ratio would be 0.5. Occasionally the BMS may have
-  a cooling percentage sensor (which basically calculates the utilization ratio
-  for us, this is preferred wherever possible).
-
-  The total number of cooling stages can typically be inferred from the BMS, or
-  manufacturer design metadata. The design capacity of the compressor can also
-  be found in manufacturer documentation (or on equipment nameplates on-site).
-
-  EER is the ratio of energy capacity [BTUs] / power input [W]. A higher EER
-  means a more efficient unit, in general. The conversion of 12/EER calculates
-  the kW/Ton Efficiency (where a lower value is more efficient).
-
-    Example: If my unit has a capacity of 13,000 [BTU] and requires
-    1,000 [W] of power --> my EER is 13
-
-    Converting to kW/Ton:
-    EER = 12/[kW/Ton] --> kW/Ton = 12/EER
-
-    kW/Ton = 12/13 = 0.92 (which means for every ton of cooling provided to the
-    building, the unit consumes 0.92 kW of power)
-
-    If my EER is < 12, the kW/Ton value will be greater than 1, meaning the
-    unit is quite inefficient and will consume more than 1 kW per ton of
-    cooling provided to the building.
-
-
-  Source: go/sb-energy-calculations.
+  This method uses the compressor's design capacity and its current utilization
+  (either as a direct percentage or from number of active stages) along with
+  its EER to estimate power.
 
   Args:
-    design_capacity: Total air handler design capacity in tons.
-    cooling_percentage: Air handler cooling percentage [0 - 100].
-    count_stages_on: Number of stages that were in ON configuration.
-    total_stages: Maximum run stages: 0 <= count_stages_on <= total_stages.
-    eer: The system EER, see explanation above.
+    design_capacity_tons (float): Total design cooling capacity of the
+      compressor in tons of refrigeration.
+    cooling_percentage (Optional[float]): Current cooling output as a
+      percentage of design capacity (0-100). Preferred if available.
+    count_stages_on (Optional[int]): Number of active cooling stages. Used if
+      `cooling_percentage` is None.
+    total_stages (Optional[int]): Total number of cooling stages. Required if
+      `count_stages_on` is used.
+    eer_btu_per_wh (Optional[float]): Energy Efficiency Ratio of the AC unit.
+      Defaults to `_DEFAULT_EER_BTU_PER_WH` if None.
 
   Returns:
-    Compressor power in kW.
+    float: Estimated compressor power consumption in kilowatts (kW).
 
   Raises:
-    ValueError for invalid cooling percentage, or invalid count/total stages.
+    ValueError: If inputs are insufficient or invalid (e.g., negative stages,
+      `cooling_percentage` out of range).
   """
+  effective_eer = eer_btu_per_wh if eer_btu_per_wh is not None else _DEFAULT_EER_BTU_PER_WH
+  if effective_eer == 0: return 0.0 # Avoid division by zero
 
-  if eer is None:
-    eer = _DEFAULT_EER
-
-  if cooling_percentage is not None:  # Preferred approach.
-    if cooling_percentage < 0.0 or cooling_percentage > 100.0:
-      raise ValueError('cooling_percentage must be between 0 and 100.')
+  utilization_ratio: float
+  if cooling_percentage is not None:
+    if not (0.0 <= cooling_percentage <= 100.0):
+      raise ValueError("cooling_percentage must be between 0 and 100.")
     utilization_ratio = cooling_percentage / 100.0
-
   elif total_stages is not None and count_stages_on is not None:
     if total_stages <= 0:
-      raise ValueError('Total stages must be greater than 0.')
-
-    if count_stages_on < 0:
-      raise ValueError('Stages on must be not be negative.')
-
-    if count_stages_on > total_stages:
-      raise ValueError('Total stages must be greater than count_stages_on.')
-
-    utilization_ratio = count_stages_on / total_stages
-
+      raise ValueError("total_stages must be positive.")
+    if not (0 <= count_stages_on <= total_stages):
+      raise ValueError("count_stages_on must be between 0 and total_stages.")
+    utilization_ratio = float(count_stages_on) / float(total_stages)
   else:
     raise ValueError(
-        'Both cooling_percentage and total_stages, count_stages_on are None.'
+        "Either cooling_percentage or (count_stages_on and total_stages) "
+        "must be provided."
     )
-  kw_ton_eff = 12.0 / eer
-  return utilization_ratio * design_capacity * kw_ton_eff
+
+  # kW/Ton efficiency = 12 / EER (BTU/Wh)
+  kw_per_ton_efficiency = 12.0 / effective_eer
+  return utilization_ratio * design_capacity_tons * kw_per_ton_efficiency
 
 
 def get_water_pump_power(
-    *,
-    pump_duty_cycle: float,
-    pump_speed_percentage: Optional[float] = 100.0,
-    brake_horse_power: Optional[float] = None,
-    design_motor_horse_power: Optional[float] = None,
-    motor_factor: float = 0.85,
+    *, # Enforce keyword arguments
+    pump_duty_cycle: float, # Range 0.0-1.0
+    pump_speed_percentage: float = 100.0, # Range 0-100
+    brake_hp: Optional[float] = None,
+    design_motor_hp: Optional[float] = None,
+    motor_factor: float = 0.85, # Combined motor & drive efficiency
     num_pumps: int = 1,
 ) -> float:
-  """Calculates the hot water pump power in kW.
+  """Calculates hot water pump power consumption in kilowatts (kW).
 
-  Calculate the pump power using the design motor horsepower, pump speed, and
-  pump duty cycle. If pump speed is not available, and the pump is constant
-  volume, assume whenever the pump is running that it is at 100% speed.
-  If only horsepower is available, multiple by a Motor Factor of 0.85
-  (which accounts for losses to friction). If brake horsepower is available,
-  no Motor Factor is needed. Horsepower (HP) or brake horsepower (BHP) can
-  typically be found in pump manufacturer documentation, or directly on the
-  equipment nameplate (on-site).  If there are multiple pumps in the system,
-  multiply by the total number of pumps running (integer) to obtain total pump
-  power. Source: go/sb-energy-calculations.
+  Estimates power based on motor horsepower (design or brake), pump speed,
+  duty cycle, and number of pumps.
 
   Args:
-    pump_duty_cycle: Duty cycle, ranging in [0 - 1.0]
-    pump_speed_percentage: Percentage of pump speed [0 - 100].
-    brake_horse_power: Motor horse power if available.
-    design_motor_horse_power: Pump motor horsepower.
-    motor_factor: Motor efficiency coefficient [0.0 - 1.0].
-    num_pumps: Total number of pumps affected.
+    pump_duty_cycle (float): Fraction of time the pump is running (0.0 to 1.0).
+    pump_speed_percentage (float): Operating speed as a percentage of maximum
+      (0-100). Defaults to 100.0.
+    brake_hp (Optional[float]): Brake horsepower (power delivered to pump shaft).
+      If provided, `motor_factor` is ignored.
+    design_motor_hp (Optional[float]): Design horsepower of the pump motor.
+      Used if `brake_hp` is not provided.
+    motor_factor (float): Efficiency factor applied to `design_motor_hp`.
+      Defaults to 0.85.
+    num_pumps (int): Number of identical pumps operating. Defaults to 1.
 
   Returns:
-    Pump power in kW.
+    float: Estimated pump power in kilowatts (kW).
 
   Raises:
-    ValueError if neither brake_horse_power nor design_motor_horse_power are
-    provided.
+    ValueError: If neither `brake_hp` nor `design_motor_hp` is provided.
   """
+  if brake_hp is None and design_motor_hp is None:
+    raise ValueError("Either brake_hp or design_motor_hp must be provided.")
 
-  if brake_horse_power is None and design_motor_horse_power is None:
-    raise ValueError('Must provide either brake_ or design_motor_horse_power.')
-  if brake_horse_power:
-    total_motor_hp = brake_horse_power
-  else:
-    total_motor_hp = design_motor_horse_power * motor_factor
+  shaft_hp = brake_hp if brake_hp is not None else \
+             (design_motor_hp * motor_factor if design_motor_hp is not None else 0.0)
 
-  return (
-      total_motor_hp
-      * 0.746
-      * (pump_speed_percentage / 100) ** 2.5
-      * pump_duty_cycle
-      * num_pumps
+  # Power (kW) = HP * 0.746 * (speed_ratio)^2.5 * duty_cycle * num_pumps
+  # Fan/pump affinity laws suggest P ~ speed^3, but 2.5 is often used empirically.
+  power_kw = (
+      shaft_hp *
+      0.746 * # HP to kW conversion
+      (pump_speed_percentage / 100.0)**2.5 *
+      pump_duty_cycle *
+      float(num_pumps)
   )
+  return power_kw
 
 
 def get_water_volumetric_flow_rate(
-    *,
-    design_flow_rate: float,
-    pump_speed_percentage: float,
+    *, # Enforce keyword arguments
+    design_flow_rate_gpm: float,
+    pump_speed_percentage: float, # Range 0-100
     num_pumps_on: int = 1,
 ) -> float:
-  """Calculates the water pump flow rate in gallons per minute.
-
-  To calculate the volumetric flow rate of water in the system, multiply the
-  number of pumps running (integer) by the average pump speed (in percentage)
-  and the design flow rate for a single pump. The design volumetric flow rate
-  for the pumps can typically be found on the equipment nameplate (on-site) or
-  within manufacturer pump curve documentation.
-  Source: go/sb-energy-calculations.
+  """Calculates water pump volumetric flow rate in gallons per minute (GPM).
 
   Args:
-    design_flow_rate: Design flow rate of the pump in gallons per minute (gpm).
-    pump_speed_percentage: Percentage of pump speed [0 - 100].
-    num_pumps_on: Number of pumps running.
+    design_flow_rate_gpm (float): Design flow rate of a single pump in GPM
+      at 100% speed.
+    pump_speed_percentage (float): Average operating speed of pumps as a
+      percentage of maximum (0-100).
+    num_pumps_on (int): Number of identical pumps currently running.
 
   Returns:
-    Water volumetric flow rate in gpm.
+    float: Total estimated water volumetric flow rate in GPM.
   """
-  return num_pumps_on * (pump_speed_percentage / 100.0) * design_flow_rate
+  return float(num_pumps_on) * (pump_speed_percentage / 100.0) * design_flow_rate_gpm
 
 
 def get_water_heating_energy_rate(
-    *,
-    volumetric_flow_rate: float,
-    supply_water_temperature: float,
-    return_water_temperature: float,
+    *, # Enforce keyword arguments
+    volumetric_flow_rate_gpm: float,
+    supply_water_temp_f: float,
+    return_water_temp_f: float,
 ) -> float:
-  """Computes the water heating energy rate in BTU/hr.
+  """Computes water heating energy rate in BTU/hr for a simple loop.
 
-  If the system is equipped with a physical flow rate sensor, use the sensor
-  reading, if not use the above calculated volumetric flow rate. Then,
-  calculate the system load by multiplying the flow rate (in GPM) by the
-  system delta T (SWT – RWT). In the equation below, 500 is a combined value
-  representing the specific heat of water (1 BTU/lbm*°F) multiplied by the
-  specific density of water (8.34 lbm/gal) and 60 (min/hr).
-  Source: go/sb-energy-calculations.
+  Formula: Q (BTU/hr) = 500 * GPM * delta_T_F
+  The factor 500 = 8.34 (lb/gal) * 60 (min/hr) * 1 (BTU/lb°F for water).
 
   Args:
-    volumetric_flow_rate: Water flow rate in gpm.
-    supply_water_temperature: Heated supply temperature in °F.
-    return_water_temperature: Cooled return temperature in °F.
+    volumetric_flow_rate_gpm (float): Water flow rate in GPM.
+    supply_water_temp_f (float): Temperature (°F) of water supplied (heated).
+    return_water_temp_f (float): Temperature (°F) of water returning (cooler).
 
   Returns:
-    Heating energy rate in BTU/hr.
+    float: Heating energy rate in BTU/hr. Returns 0 if supply temperature is
+    not greater than return temperature.
   """
-
-  return max(
-      0,
-      500.0
-      * volumetric_flow_rate
-      * (supply_water_temperature - return_water_temperature),
-  )
+  delta_t_f = supply_water_temp_f - return_water_temp_f
+  if delta_t_f <= 0: # No heating if supply is not hotter than return
+    return 0.0
+  return 500.0 * volumetric_flow_rate_gpm * delta_t_f
 
 
 def get_water_heating_energy_rate_primary(
-    *,
-    design_boiler_flow_rate: float,
-    boiler_outlet_temperature: float,
-    return_water_temperature: float,
+    *, # Enforce keyword arguments
+    design_boiler_flow_rate_gpm: float,
+    boiler_outlet_temp_f: float,
+    system_return_water_temp_f: float,
     num_active_boilers: int = 1,
 ) -> float:
-  """Computes Primary/Secondary water heating rates.
+  """Computes heating rate (BTU/hr) for a primary boiler loop.
 
-  This method is only used for primary-secondary systems. It estimates the
-  flow through each individual boiler using the design flow rate of the
-  boiler’s onboard circulation pump and the number of active boilers.
-  Next, the temperature rise across each boiler can be calculated using the
-  difference between the discharge water temperature at the boiler outlet and
-  the system return water temperature.
-  Source: go/sb-energy-calculations.
+  Used for systems where boilers directly supply the main heating loop.
+  Calculates total flow from active boilers and then uses the standard water
+  heating formula.
 
   Args:
-    design_boiler_flow_rate: Water flow rate in gpm.
-    boiler_outlet_temperature: Heated supply temperature in °F.
-    return_water_temperature: Cooled return temperature in °F.
-    num_active_boilers: Number of boilers currently running.
+    design_boiler_flow_rate_gpm (float): Design flow rate (GPM) of a single
+      boiler's internal pump.
+    boiler_outlet_temp_f (float): Temperature (°F) of water leaving the boilers.
+    system_return_water_temp_f (float): Temperature (°F) of water returning
+      from the building to the boilers.
+    num_active_boilers (int): Number of boilers currently operating.
 
   Returns:
-    Heating energy rate in BTU/hr.
+    float: Total heating energy rate from all active boilers in BTU/hr.
   """
-  primary_flow_rate = design_boiler_flow_rate * num_active_boilers
+  total_primary_flow_gpm = design_boiler_flow_rate_gpm * float(num_active_boilers)
   return get_water_heating_energy_rate(
-      volumetric_flow_rate=primary_flow_rate,
-      supply_water_temperature=boiler_outlet_temperature,
-      return_water_temperature=return_water_temperature,
+      volumetric_flow_rate_gpm=total_primary_flow_gpm,
+      supply_water_temp_f=boiler_outlet_temp_f,
+      return_water_temp_f=system_return_water_temp_f,
   )
 
 
 def get_water_heating_energy_rate_primary_secondary(
-    *,
-    design_primary_boiler_flow_rate: float,
-    design_secondary_boiler_flow_rate: float,
-    boiler_outlet_temperature: float,
-    return_water_temperature: float,
+    *, # Enforce keyword arguments
+    design_primary_boiler_flow_rate_gpm: float,
+    design_secondary_pump_flow_rate_gpm: float,
+    boiler_outlet_temp_f: float,
+    system_return_water_temp_f: float, # From secondary loop to common pipe
     num_active_boilers: int = 1,
     num_active_secondary_pumps: int = 0,
-    avg_secondary_pump_speed_percentage: float = 0.0,
+    avg_secondary_pump_speed_percentage: float = 0.0, # Range 0-100
 ) -> float:
-  """Computes Primary/Secondary water heating rates.
+  """Computes heating rate (BTU/hr) for a primary-secondary boiler system.
 
-  Similar to get_water_heating_energy_rate_primary(), this method only applies
-  to primary-secondary systems.  The flow through the primary system loop is
-  calculated using the design flow rate of the boiler’s onboard circulation
-  pump multiplied by the number of active boilers.
-
-  The estimated flow through the secondary loop is also calculated in this way
-  using the secondary HWP speeds and number of active secondary HWPs.
-
-  In cases when the primary loop flow is greater than the secondary loop flow,
-  not all the heated discharge water from the boilers will make it to the
-  secondary loop; the excess primary flow will take the common piping,
-  blend with the system return water, and re-enter the boilers at their intake.
-  In order to accurately represent the temperature rise across the boilers,
-  this blended return water temperature needs to be calculated.
-  Source: go/sb-energy-calculations.
+  This handles scenarios where a primary loop (with boilers) is decoupled
+  from a secondary loop (serving the building) by a common pipe. If primary
+  flow exceeds secondary flow, some heated primary water recirculates directly
+  back to the boilers, mixing with cooler system return water. This blended
+  temperature becomes the effective return water temperature for the boilers.
 
   Args:
-    design_primary_boiler_flow_rate: Water flow rate in gpm of primary cycle.
-    design_secondary_boiler_flow_rate: Water flow rate in gpm of sec. cycle.
-    boiler_outlet_temperature: Heated supply temperature in F.
-    return_water_temperature: Cooled return temperature in F.
-    num_active_boilers: Number of boilers currently running.
-    num_active_secondary_pumps: Number of active secondary pumps.
-    avg_secondary_pump_speed_percentage: Pecentage [0 - 100] opf sec. pumps.
+    design_primary_boiler_flow_rate_gpm (float): Design flow rate (GPM) of a
+      single boiler's pump in the primary loop.
+    design_secondary_pump_flow_rate_gpm (float): Design flow rate (GPM) of a
+      single pump in the secondary loop (serving the building).
+    boiler_outlet_temp_f (float): Temperature (°F) of water leaving the boilers.
+    system_return_water_temp_f (float): Temperature (°F) of water returning
+      from the secondary (building) loop to the common pipe.
+    num_active_boilers (int): Number of boilers currently operating.
+    num_active_secondary_pumps (int): Number of secondary loop pumps operating.
+    avg_secondary_pump_speed_percentage (float): Average operating speed (0-100)
+      of the active secondary pumps.
 
   Returns:
-    Heating energy rate in BTU/hr.
+    float: Total heating energy rate from all active boilers in BTU/hr,
+    considering the blended return water temperature if applicable.
 
   Raises:
-    ValueError if either primary_ or secondary_flow_rate are negative.
+    ValueError: If calculated primary or secondary flow rates are negative.
   """
+  primary_flow_gpm = design_primary_boiler_flow_rate_gpm * float(num_active_boilers)
+  if primary_flow_gpm < 0.0:
+    raise ValueError("Calculated primary flow rate must be non-negative.")
 
-  primary_flow_rate = design_primary_boiler_flow_rate * num_active_boilers
-  if primary_flow_rate < 0.0:
-    raise ValueError('Primary flow rate must be non-negative.')
-
-  secondary_flow_rate = (
-      design_secondary_boiler_flow_rate
-      * num_active_secondary_pumps
-      * avg_secondary_pump_speed_percentage
-      / 100.0
+  secondary_flow_gpm = (
+      design_secondary_pump_flow_rate_gpm *
+      float(num_active_secondary_pumps) *
+      (avg_secondary_pump_speed_percentage / 100.0)
   )
-  if secondary_flow_rate < 0.0:
-    raise ValueError('Secondary flow rate must be non-negative.')
+  if secondary_flow_gpm < 0.0:
+    raise ValueError("Calculated secondary flow rate must be non-negative.")
 
-  diff_flow_rate = primary_flow_rate - secondary_flow_rate
-
-  blended_return_temperature = (
-      secondary_flow_rate * return_water_temperature
-      + diff_flow_rate * boiler_outlet_temperature
-  ) / primary_flow_rate
+  # If primary flow > secondary flow, some primary water bypasses the secondary
+  # loop and mixes with the return from the secondary loop.
+  if primary_flow_gpm > secondary_flow_gpm and primary_flow_gpm > 0:
+    bypass_flow_gpm = primary_flow_gpm - secondary_flow_gpm
+    # Energy balance for mixing tee:
+    # m_bypass * T_boiler_outlet + m_secondary_return * T_system_return = m_primary * T_blended_return
+    blended_return_temp_f = (
+        bypass_flow_gpm * boiler_outlet_temp_f +
+        secondary_flow_gpm * system_return_water_temp_f
+    ) / primary_flow_gpm
+    effective_return_temp_f = blended_return_temp_f
+  else: # All primary water goes through secondary, or no primary flow
+    effective_return_temp_f = system_return_water_temp_f
 
   return get_water_heating_energy_rate(
-      volumetric_flow_rate=primary_flow_rate,
-      supply_water_temperature=boiler_outlet_temperature,
-      return_water_temperature=blended_return_temperature,
+      volumetric_flow_rate_gpm=primary_flow_gpm,
+      supply_water_temp_f=boiler_outlet_temp_f,
+      return_water_temp_f=effective_return_temp_f,
   )

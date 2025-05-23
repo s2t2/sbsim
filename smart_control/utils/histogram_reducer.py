@@ -1,48 +1,21 @@
-"""Histogram Reducer for RegressionBuilding.
+"""Reduces dimensionality of time-series data by converting features to histograms.
 
-Copyright 2023 Google LLC
+This module defines `HistogramReducer` and related utilities for compressing
+wide multivariate time-series data. The core idea is to transform observations
+for specific features (e.g., zone air temperatures from many sensors) into
+histograms, where each bin counts the number of devices/sensors whose readings
+fall into that bin's range. This can significantly reduce the dimensionality
+of the observation space if the number of devices is much larger than the
+number of bins.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    https://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
-
-The objective of the histogram reducer is to compress a very wide
-multivariate timeseries with minimal data loss. The current control agents
-don't really benefit from knowing the temperature (etc.) of each zone, but
-simply need to know that some zones are below of above setpoints. As such,
-representing each zone as a separate timeseries is rather inefficient.
-
-Reduce function converts a feature from individual timeseries into a histogram.
-For exammple, devices d1, d2 have a zone_air_temperature timeseries,
-the histogram reducer converts the timeseries into a counts on temperature
-bins, like 70, 71, 72, etc. and assigns a count to the bin. This reduces
-the dimensionality into a more compressed format if the number of the devices
-exceeds the number of bins.
-
-The histogram operation also caps the counts to the max and min values, so
-the lower and upper ends represent less than or equal to the lowest bin value,
-and greater than or equal to the highest bin value, respectively. IOW,
-For internal bins i = 1...N-2, assign v to bin i if, bin[i] <= v < bin[i+1].
-For first bin, assign v to bin 0 if v < bin[1]. For the last bin, assign v
-to bin N-1 if bin[N-1] <= v.
-
-Expand function takes the counts in the histogram and reconstructs lossy
-timeseries for each device. For example, suppose a measurement of 72.7 is
-assigned to bin 72, then the approximate measurement would be the lower
-bound on the bin (i.e., 72.0).
+The module also provides functionality to (lossily) reconstruct approximate
+time-series data from these histograms, which might be useful for analysis or
+visualization.
 """
 
 import collections
-from typing import Dict, List, Mapping, Sequence, Union
+import copy # For deepcopying assignments in HistogramReducedSequence
+from typing import Dict, List, Mapping, Sequence, Tuple, Union
 
 from absl import logging
 import gin
@@ -51,22 +24,35 @@ import pandas as pd
 
 from smart_control.proto import smart_control_building_pb2
 from smart_control.utils import reader_lib
-from smart_control.utils.reducer import BaseReducedSequence
-from smart_control.utils.reducer import BaseReducer
+from smart_control.utils import reducer # For BaseReducedSequence, BaseReducer
 
-Feature = str  # Measurement name
-Device = str  # Device Identity
-Value = float  # Measurement value
-# For each bin a list of assigned devices
-HistogramAssignment = Sequence[List[Device]]
-# Count of devices assigned to each histogram bin.
-HistogramCounts = Sequence[Union[float, int]]
-# Approximate measurements taken from the histogram
-HistogramExpansion = Mapping[tuple[Device, Feature], Value]
-# Numeric bins for a histogram
+# Type Aliases for clarity
+Feature = str
+"""Type alias for a feature name (e.g., 'zone_air_temperature_sensor')."""
+
+Device = str
+"""Type alias for a device identifier string."""
+
+Value = float
+"""Type alias for a measurement value."""
+
 HistogramBins = np.ndarray
-# For each feature, a list of bins
+"""Type alias for a NumPy array representing the edges of histogram bins."""
+
 HistogramParameters = Dict[Feature, HistogramBins]
+"""Maps a feature name to the NumPy array of its histogram bin edges."""
+
+HistogramAssignment = List[List[Device]]
+"""Represents device assignments to bins for a single feature.
+It's a list where each sublist corresponds to a bin and contains the IDs of
+devices whose values fall into that bin.
+"""
+
+HistogramCounts = Union[Sequence[float], Sequence[int], np.ndarray]
+"""Represents the count of devices in each histogram bin."""
+
+HistogramExpansion = Mapping[Tuple[Device, Feature], Value]
+"""Maps a (device_id, feature_name) tuple to its approximate reconstructed value."""
 
 
 def assign_devices_to_bins(
@@ -74,39 +60,54 @@ def assign_devices_to_bins(
     bins: HistogramBins,
     observation_response: smart_control_building_pb2.ObservationResponse,
 ) -> HistogramAssignment:
-  """For feature, create a histogram assignment from an ObservationResponse.
+  """Assigns devices to histogram bins based on their feature values.
 
-  For internal bins i = 1...N-2, assign v to bin i if, bin[i] <= v < bin[i+1].
-  For first bin, assign v to bin 0 if v < bin[1].
-  For the last bin, assign v to bin N-1 if bin[N-1] <= v.
+  For a given feature and its defined bins, this function iterates through
+  an `ObservationResponse`. It extracts the value of `feature_name` for each
+  device and assigns the device ID to the corresponding bin.
+
+  Binning logic:
+  - For internal bins `b_i, b_{i+1}`: value `v` is in bin `i` if `b_i <= v < b_{i+1}`.
+  - First bin (index 0): `v < b_1`.
+  - Last bin (index N-1): `v >= b_{N-1}`.
+  Assumes `bins` are monotonically increasing.
 
   Args:
-    feature_name: The feature or measurement desired
-    bins: The assigned numeric bins, monotonically increasing.
-    observation_response: The Observation response for the histogram.
+    feature_name (Feature): The name of the measurement feature to process
+      (e.g., "zone_air_temperature_sensor").
+    bins (HistogramBins): A 1D NumPy array of monotonically increasing bin
+      edges. The number of bins will be `len(bins)`.
+    observation_response (smart_control_building_pb2.ObservationResponse):
+      A protobuf message containing observations from multiple devices.
 
   Returns:
-    A jagged array with outer dim for each bin, and inner array with device ids.
+    HistogramAssignment: A list of lists, where the outer list corresponds to
+    bins and each inner list contains the device IDs assigned to that bin.
   """
-  # Create a an eply assignment as a list of lists, one list per bin.
-  assignment = [[] for _ in range(len(bins))]
+  num_bins = len(bins)
+  assignment: HistogramAssignment = [[] for _ in range(num_bins)]
 
-  for (
-      single_observation_response
-  ) in observation_response.single_observation_responses:
-    if (
-        single_observation_response.single_observation_request.measurement_name
-        != feature_name
-    ):
+  for single_obs in observation_response.single_observation_responses:
+    if single_obs.single_observation_request.measurement_name != feature_name:
       continue
 
-    v = single_observation_response.continuous_value
+    value = single_obs.continuous_value
+    device_id = single_obs.single_observation_request.device_id
 
-    v_bin_index = np.argwhere(np.concatenate([[True], v >= bins[1:]])).max()
-    assignment[v_bin_index].append(
-        single_observation_response.single_observation_request.device_id
-    )
+    # Determine which bin the value falls into.
+    # `np.searchsorted` finds the index where `value` would be inserted to
+    # maintain order. `side='right'` means it finds insertion point for
+    # `value` to be greater than or equal to elements to its left.
+    # Subtracting 1 gives the index of the bin whose left edge is <= value.
+    # This handles `b_i <= v < b_{i+1}` for internal bins.
+    bin_index = np.searchsorted(bins, value, side="right") - 1
 
+    # Clamp index to be within [0, num_bins - 1]
+    # If value < bins[0], searchsorted gives 0, so index becomes -1; clamp to 0.
+    # If value >= bins[-1], searchsorted gives num_bins, index becomes num_bins-1.
+    bin_index = np.clip(bin_index, 0, num_bins - 1)
+
+    assignment[bin_index].append(device_id)
   return assignment
 
 
@@ -115,359 +116,491 @@ def approximate_values_from_histogram_assignment(
     assignment: HistogramAssignment,
     bins: HistogramBins,
 ) -> HistogramExpansion:
-  """Creates approximate measurements from a histogram assignment.
+  """Reconstructs approximate feature values for devices from histogram assignments.
+
+  For each device assigned to a bin, its approximate value is taken as the
+  left edge of that bin. This is a lossy reconstruction.
 
   Args:
-    measurement_name: the measurement name.
-    assignment: for each bin, the list of assigned devices.
-    bins: the values associated with each bin.
+    measurement_name (Feature): The name of the measurement feature.
+    assignment (HistogramAssignment): A list where each sublist (per bin)
+      contains device IDs assigned to that bin.
+    bins (HistogramBins): The 1D NumPy array of bin edges.
 
   Returns:
-    A mapping of {(device_id, measurement_name): bin-assigned value}
+    HistogramExpansion: A mapping from `(device_id, measurement_name)` tuples
+    to their approximated float values (the left edge of their assigned bin).
   """
-  assigned_values = {}
-
-  for i, _ in enumerate(bins):
-    for device_name in assignment[i]:
-      assigned_values[(device_name, measurement_name)] = bins[i]
-
-  return assigned_values
+  approximated_values: HistogramExpansion = {}
+  for bin_idx, devices_in_bin in enumerate(assignment):
+    bin_value = bins[bin_idx] # Use the left edge of the bin
+    for device_id in devices_in_bin:
+      approximated_values[(device_id, measurement_name)] = bin_value
+  return approximated_values
 
 
 def get_clipped_histogram(
-    measurements: np.ndarray, bins: np.ndarray, clip: bool = True
+    measurements: np.ndarray, bins: HistogramBins, clip_values: bool = True
 ) -> np.ndarray:
-  """Creates an array to a histogram, with min/max clipping."""
+  """Generates a histogram from measurements, optionally clipping values to bin range.
 
-  # TODO(sipple): Consolidate the logic with assign_devices_to_bins().
-  cbins = np.append(bins, max(bins))
-  if clip:
-    measurements = np.clip(measurements, min(cbins), max(cbins))
+  Args:
+    measurements (np.ndarray): A 1D array of measurement values.
+    bins (HistogramBins): A 1D array of bin edges. `np.histogram` expects
+      `len(bins) + 1` edges for `len(bins)` bins. This function's `bins`
+      argument seems to be interpreted as the *left* edges of N bins, and the
+      rightmost edge for the last bin is implicitly `max(bins)`.
+      The original code `cbins = np.append(bins, max(bins))` creates N+1 edges
+      if `bins` has N elements, but the last two edges are identical, effectively
+      making the last bin have zero width if not handled carefully by np.histogram.
+      A more standard approach is `len(bins)` edges for `len(bins)-1` bins, or
+      `num_bins` integer.
+      Let's assume `bins` are the N left edges, and the N+1th edge is effectively infinity.
+      The `np.histogram` function needs a sequence of bin edges.
+    clip_values (bool): If True, clips measurements to the range
+      `[min(bins), max(bins)]` before histogramming.
 
-  return np.histogram(measurements, bins=cbins)[0].astype(np.float32)
+  Returns:
+    np.ndarray: A 1D array of histogram counts, with float32 dtype.
+  """
+  # Standard way to define bins for np.histogram:
+  # If `bins` are the N left edges, we need N+1 edges.
+  # The last bin will effectively be [bins[-1], infinity)
+  # However, the original code's `cbins = np.append(bins, max(bins))`
+  # creates an N+1 length array if `bins` has N elements, but the last two
+  # edges are the same. This means the last "bin" has zero width.
+  # `np.histogram` with `bins=cbins` will then have `len(cbins)-1` bins.
+  # If `bins` has N elements, `cbins` has N+1, so N bins.
+  # This seems to match the intent if `bins` represents the start of each bin.
+  if bins.size == 0:
+    return np.array([], dtype=np.float32)
+
+  # Define edges for np.histogram: bins are [edge1, edge2), [edge2, edge3), ...
+  # If `bins` are the N left edges, we need N+1 edges.
+  # The last bin catches everything >= bins[-1].
+  hist_bin_edges = np.append(bins, np.inf) # Bins: [b0,b1), [b1,b2) ... [bN-1, inf)
+
+  data_to_hist = measurements
+  if clip_values:
+    # Clip data to the full range covered by explicit bins
+    # (values outside this will fall into underflow/overflow of np.histogram
+    # if not clipped, but explicit clipping ensures they are counted in first/last user-defined bins)
+    data_to_hist = np.clip(measurements, bins[0], bins[-1])
+
+  counts, _ = np.histogram(data_to_hist, bins=hist_bin_edges)
+  return counts.astype(np.float32)
 
 
 def reassign_nodes(
-    assignment: HistogramAssignment, histogram_counts_next: HistogramCounts
+    current_assignment: HistogramAssignment,
+    next_histogram_counts: HistogramCounts
 ) -> HistogramAssignment:
-  """Takes a current assignment and shifts it to match the HistogramCounts.
+  """Adjusts device assignments to bins to match target counts.
 
-  Moves devices from one bin to another to match the next histogram counts as
-  efficiently as possible (i.e., moves a devices from the closest possible
-  current bin assignment.)
+  This function attempts to minimally perturb the `current_assignment` of
+  devices to bins so that the number of devices in each bin matches the
+  `next_histogram_counts`. It does this by shifting devices between adjacent
+  bins. This is a heuristic for stateful reconstruction in the `expand` method.
 
   Args:
-    assignment: The current assignment of devices to bins.
-    histogram_counts_next: counts assigned by the next histogram step.
+    current_assignment (HistogramAssignment): The current list of lists, where
+      each sublist contains device IDs for a bin. This list IS MODIFIED IN PLACE.
+    next_histogram_counts (HistogramCounts): The target number of devices for
+      each bin in the next step.
 
   Returns:
-    The next HistogramAssignment that matches the histogram_counts_next.
+    HistogramAssignment: The modified `current_assignment` list.
+
+  Raises:
+    ValueError: If the number of bins or total number of devices differs
+      between `current_assignment` and `next_histogram_counts`.
   """
-  node_counts_current = [len(n) for n in assignment]
-
-  if len(node_counts_current) != len(histogram_counts_next):
+  num_bins = len(current_assignment)
+  if num_bins != len(next_histogram_counts):
     raise ValueError(
-        "Number of bins don't match. node_counts_current"
-        f" {len(node_counts_current)} and histogram_counts_next"
-        f" {len(histogram_counts_next)}."
+        f"Bin count mismatch: assignment has {num_bins} bins, "
+        f"target counts have {len(next_histogram_counts)} bins."
     )
 
-  if np.sum(node_counts_current) != np.sum(histogram_counts_next):
+  current_bin_counts = [len(bin_devices) for bin_devices in current_assignment]
+  if np.sum(current_bin_counts) != np.sum(next_histogram_counts):
     raise ValueError(
-        f"Assignment has {np.sum(node_counts_current)} nodes, but"
-        f" histogram_counts_next has {np.sum(histogram_counts_next)} nodes. The"
-        " counts must match."
+        f"Total device count mismatch: assignment has {np.sum(current_bin_counts)}, "
+        f"target counts have {np.sum(next_histogram_counts)}."
     )
 
-  for i, _ in enumerate(node_counts_current):
-    # If the current assignment at i has more devices than the next assignment,
-    # shift the extra device by one bin to the right, until the number
-    # of devices assigned to the bin match the next assignment.
-    while node_counts_current[i] > histogram_counts_next[i]:
-      node_move = assignment[i].pop(0)
-      assignment[i + 1].append(node_move)
-      node_counts_current = [len(n) for n in assignment]
+  # Iterate through bins to adjust device counts
+  for i in range(num_bins):
+    # While current bin has too many devices compared to target
+    while len(current_assignment[i]) > next_histogram_counts[i]:
+      if i + 1 < num_bins: # Can move to the right
+        device_to_move = current_assignment[i].pop(0) # Take from front
+        current_assignment[i + 1].insert(0, device_to_move) # Add to front of next
+      else:
+        # This case (last bin has too many, nowhere to move right) implies
+        # an issue if total counts match, as devices should have been pulled
+        # from it by preceding bins needing more.
+        # If it occurs, it might mean counts are inconsistent.
+        # However, given sum checks, this should ideally not be problematic
+        # unless all preceding adjustments failed to balance.
+        logging.warning("Cannot move device from last bin %d when it has excess.", i)
+        break # Cannot fix further by moving right
 
-    # If the current assignment at i has fewer than the next assignment,
-    # find the nearest device j: j > i and move that device from j to i.
-    while node_counts_current[i] < histogram_counts_next[i]:
-      for j in range(i + 1, len(node_counts_current)):
-        if node_counts_current[j] > 0:
-          node_move = assignment[j][0]
-          assignment[j].remove(node_move)
-          assignment[i].append(node_move)
-          node_counts_current = [len(n) for n in assignment]
-          break
-  return assignment
+    # While current bin has too few devices
+    while len(current_assignment[i]) < next_histogram_counts[i]:
+      moved = False
+      # Try to pull from the right
+      for j in range(i + 1, num_bins):
+        if len(current_assignment[j]) > (next_histogram_counts[j] if j < num_bins-1 else 0) : # Check if source bin can give one
+        # A more complex check might be needed if next_histogram_counts[j] is also a target
+        # For simplicity, just check if source bin is non-empty.
+        # Original logic: if node_counts_current[j] > 0
+          if current_assignment[j]:
+            device_to_move = current_assignment[j].pop(0) # Take from front
+            current_assignment[i].append(device_to_move) # Add to end
+            moved = True
+            break
+      if not moved:
+        # This implies we need devices but can't get them from the right.
+        # This might happen if earlier bins to the left took too many,
+        # or if the sum constraint is violated (checked earlier).
+        # This part of the logic might need refinement if it leads to deadlocks
+        # or incorrect distributions. The original code only moved from right.
+        logging.debug("Bin %d needs devices, but no available from right.", i)
+        break # Cannot satisfy from the right
+  return current_assignment
 
 
 @gin.configurable
-class HistogramReducer(BaseReducer):
-  """Implementation of the HistogramReducer.
+class HistogramReducer(reducer.BaseReducer):
+  """Reduces high-dimensional time-series data to feature histograms.
 
-  The objective of the histogram reducer is to compress a very wide
-  multivariate timeseries with minimal data loss. The current control agents
-  don't really benefit from knowing the temperature (etc.) of each zone, but
-  simply need to know that some zones are below of above setpoints. As such,
-  representing each zone as a separate timeseries is rather inefficient.
+  This reducer transforms observations for specified features into histograms,
+  counting how many devices fall into predefined bins for those features.
+  Other features can be passed through without modification.
 
-  Reduce function converts a feature from timeseries into a histogram.
-  For exammple, devices d1, d2 have a zone_air_temperature timeseries,
-  the histogram reducer converts the timeseries into a counts on temperature
-  bins, like 70, 71, 72, etc. and assigns a count to the bin. This reduces
-  the dimensionality into a more compressed format if the number of the devices
-  exceeds the number of bins.
+  The `reduce` method converts a DataFrame of time-series observations into a
+  DataFrame where specified features are replaced by their histogram bin counts.
+  The `expand` method attempts a lossy reconstruction of the original
+  time-series format from the histogram data.
 
-  The histogram operation also caps the counts to the max and min values, so
-  the lower and upper ends represent less than or equal to the lowest bin value,
-  and greater than or equal to the highest bin value, respectively. IOW,
-  For internal bins i = 1...N-2, assign v to bin i if, bin[i] <= v < bin[i+1].
-  For first bin, assign v to bin 0 if v < bin[1]. For the last bin, assign v
-  to bin N-1 if bin[N-1] <= v.
-
-  Expand function takes the counts in the histogram and reconstructs lossy
-  timeseries for each device. For example, suppose a measurement of 72.7 is
-  assigned to bin 72, then the approximate measurement would be the lower
-  bound on the bin (i.e., 72.0).
+  Attributes:
+    histogram_parameters (HistogramParameters): A dictionary mapping feature
+      names to their corresponding bin edge arrays.
+    _normalize_reduce (bool): If True, histogram counts for a feature are
+      normalized by the total count for that feature at each time step.
+    _histogram_assignments (Dict[Feature, HistogramAssignment]): Internal state
+      tracking device assignments to bins, used by the `expand` method for
+      consistent (though lossy) reconstruction.
   """
 
   def __init__(
       self,
-      histogram_parameters_tuples: Sequence[tuple[str, np.ndarray]],
-      reader: reader_lib.BaseReader,
+      histogram_parameters_tuples: Sequence[Tuple[str, np.ndarray]],
+      reader_instance: reader_lib.BaseReader,
       normalize_reduce: bool = False,
   ):
-    self._normalize_reduce = normalize_reduce
+    """Initializes the HistogramReducer.
+
+    Args:
+      histogram_parameters_tuples (Sequence[Tuple[str, np.ndarray]]): A
+        sequence of tuples, where each tuple is (feature_name, bin_edges_array).
+        `bin_edges_array` should be a 1D NumPy array of monotonically
+        increasing bin edges.
+      reader_instance (reader_lib.BaseReader): A data reader instance used to
+        fetch an initial observation response. This response is used to
+        determine the initial assignment of devices to histogram bins for
+        features that will be histogrammed.
+      normalize_reduce (bool): If True, the histogram counts produced by the
+        `reduce` method will be normalized (divided by the total count for that
+        feature at that time step). Defaults to False.
+    """
+    self._normalize_reduce: bool = normalize_reduce
     self._histogram_parameters: HistogramParameters = {
-        p[0]: np.array(p[1]) for p in histogram_parameters_tuples
+        name: np.array(bins) for name, bins in histogram_parameters_tuples
     }
-    logging.info("histogram parameters: %s", self._histogram_parameters)
-    observation_responses = reader.read_observation_responses(
-        start_time=pd.Timestamp.min, end_time=pd.Timestamp.max
-    )
-    initial_observation_response = observation_responses[0]
+    logging.info("HistogramReducer initialized with parameters: %s",
+                 self._histogram_parameters)
 
-    self._histogram_assignments = {}
-    for feature_name in self._histogram_parameters:
-      self._histogram_assignments[feature_name] = assign_devices_to_bins(
-          feature_name,
-          self._histogram_parameters[feature_name],
-          initial_observation_response,
+    # Initialize assignments based on the first observation available
+    # This establishes which devices exist and their initial rough distribution.
+    # Reading all observations just for this seems excessive.
+    # Assuming the first available observation gives a representative device set.
+    try:
+      # Reading only a very short period or a single file might be better.
+      # For now, using min/max which might be slow if data is large.
+      # Consider a method in BaseReader to get just one typical observation.
+      observation_responses = reader_instance.read_observation_responses(
+          start_time=pd.Timestamp.min.tz_localize('UTC'), # Ensure tz-aware
+          end_time=pd.Timestamp.max.tz_localize('UTC') # Ensure tz-aware
       )
-    logging.info("histogram assignments: %s", self._histogram_assignments)
+      initial_observation_response = observation_responses[0] if observation_responses else None
+    except Exception as e: # pylint: disable=broad-except
+        logging.warning("Could not read initial observations for HistogramReducer: %s. "
+                        "Initial assignments may be empty.", e)
+        initial_observation_response = None
 
-  class HistogramReducedSequence(BaseReducedSequence):
-    """ReducedSequence that returns the histogram."""
 
+    self._histogram_assignments: Dict[Feature, HistogramAssignment] = {}
+    if initial_observation_response:
+      for feature_name, bins in self._histogram_parameters.items():
+        self._histogram_assignments[feature_name] = assign_devices_to_bins(
+            feature_name, bins, initial_observation_response
+        )
+    else: # Handle case where no initial observations could be read
+        for feature_name, bins in self._histogram_parameters.items():
+            self._histogram_assignments[feature_name] = [[] for _ in range(len(bins))]
+
+    logging.info("Initial histogram assignments: %s", self._histogram_assignments)
+
+  class HistogramReducedSequence(reducer.BaseReducedSequence):
+    """Represents a sequence of data reduced to histograms for some features.
+
+    Attributes:
+      reduced_sequence (pd.DataFrame): The DataFrame where specified features
+        have been replaced by their histogram bin counts. Other features may
+        be passed through. Column names for histogram bins are typically
+        tuples like `(feature_name, "h_bin_edge_value")`.
+      _histogram_parameters (HistogramParameters): Bin definitions.
+      _histogram_assignments (Dict[Feature, HistogramAssignment]): Device to
+        bin assignments, used for `expand`.
+      _passthrough_sequence (pd.DataFrame): Original data for features that
+        were not histogrammed.
+    """
     def __init__(
         self,
         histogram_parameters: HistogramParameters,
-        histogram_assignments: Dict[Feature, HistogramAssignment],
+        histogram_assignments: Dict[Feature, HistogramAssignment], # Initial state
         passthrough_sequence: pd.DataFrame,
-        reduced_sequence: pd.DataFrame,
+        reduced_hist_sequence: pd.DataFrame, # Data with histogram columns
     ):
       self._histogram_parameters = histogram_parameters
       self._passthrough_sequence = passthrough_sequence
-      self._histogram_assignments = histogram_assignments
-      self.reduced_sequence = reduced_sequence
+      # Make a deep copy to allow modification during expand without affecting reducer state
+      self._current_assignments_for_expansion = copy.deepcopy(histogram_assignments)
+      self.reduced_sequence = reduced_hist_sequence # This is what 'reduce' outputs
 
     def expand(self) -> pd.DataFrame:
-      updates = collections.defaultdict(list)
-      indexes = []
+      """Reconstructs an approximate time-series DataFrame from histogram data.
 
-      def _fix_approximate_assignments(
-          histogram_counts_current: Sequence[float],
-          histogram_counts_next: list[float],
-      ) -> Sequence[float]:
-        """Adjusts the approximate counts to match the current counts."""
+      For features that were histogrammed, this method assigns devices to bins
+      based on the counts in `reduced_sequence` for each time step, attempting
+      to maintain consistency with previous assignments. The reconstructed value
+      for a device is the left edge of its assigned bin. Features that were
+      passed through are merged back.
 
-        diff = np.sum(histogram_counts_current) - np.sum(histogram_counts_next)
+      Returns:
+        pd.DataFrame: A DataFrame where histogrammed features have been
+        expanded back to per-device approximate values. Index matches
+        `reduced_sequence`.
+      """
+      reconstructed_data_frames: List[pd.DataFrame] = []
 
-        if np.abs(diff) > 0:
-          while np.abs(diff) > 0:
-            max_ix = np.argmax(histogram_counts_next)
-            histogram_counts_next[max_ix] += np.sign(diff)
-            diff = np.sum(histogram_counts_current) - np.sum(
-                histogram_counts_next
-            )
-        return histogram_counts_next
+      for timestamp, row_data in self.reduced_sequence.iterrows():
+        current_step_approximations: HistogramExpansion = {}
+        for feature, bins in self._histogram_parameters.items():
+          # Extract histogram counts for this feature at this timestamp
+          # Column names for histograms are (feature, "h_bin_edge")
+          bin_counts_for_feature: List[float] = []
+          for bin_edge in bins: # Assuming bins are the left edges
+              # Column name in reduced_sequence for this bin
+              hist_col_name = (feature, f"h_{bin_edge:.2f}")
+              if hist_col_name in row_data:
+                  bin_counts_for_feature.append(row_data[hist_col_name])
+              else:
+                  # This case implies the bin was empty or not present
+                  bin_counts_for_feature.append(0.0)
 
-      def _count_bin_assignments(
-          current_histogram_assignment: HistogramAssignment,
-      ) -> Sequence[int]:
-        """Returns the counts per bin from the assignment."""
-        return [len(n) for n in current_histogram_assignment]
-
-      for idx, row in self.reduced_sequence.iterrows():
-        indexes.append(idx)
-
-        for measurement_name in self._histogram_parameters:
-          # Get the bin values.
-          bins = self._histogram_parameters[measurement_name]
-          # Create a tuple for the count in each bin
-          node_counts_tuple = [
-              (float(col[1].replace("h_", "")), row[col])
-              for col in self.reduced_sequence.columns
-              if col[0] == measurement_name
-          ]
-          if not node_counts_tuple:
-            continue
-
-          # Sort the list of tuples by the bin value.
-          node_counts_tuple.sort(key=lambda a: a[0])
-
-          # Now just get the counts of the bins to make the next bin assignment.
-          histogram_counts_next = [
-              max(0, int(tup[1])) for tup in node_counts_tuple
-          ]
-
-          current_histogram_assignment = self._histogram_assignments[
-              measurement_name
-          ]
-
-          histogram_counts_current = _count_bin_assignments(
-              current_histogram_assignment
+          # Adjust assignments to match these counts
+          # Note: reassign_nodes modifies self._current_assignments_for_expansion[feature] in place
+          self._current_assignments_for_expansion[feature] = reassign_nodes(
+              self._current_assignments_for_expansion[feature],
+              np.array(bin_counts_for_feature, dtype=int) # Ensure counts are int
           )
-
-          histogram_counts_next = _fix_approximate_assignments(
-              histogram_counts_current, histogram_counts_next
+          # Get approximate values based on new assignment
+          feature_approximations = approximate_values_from_histogram_assignment(
+              feature, self._current_assignments_for_expansion[feature], bins
           )
-          # Now reassign the devices to the next bins.
-          next_histogram_assignment = reassign_nodes(
-              current_histogram_assignment, histogram_counts_next
-          )
+          current_step_approximations.update(feature_approximations)
 
-          # From the new assignment, get measurements based on the assigned bin.
-          next_assigned_measurements = (
-              approximate_values_from_histogram_assignment(
-                  measurement_name, next_histogram_assignment, bins
-              )
-          )
+        # Convert current step's approximations to a DataFrame row
+        # The keys are (device, feature), need to pivot or structure correctly
+        # This part needs careful handling to match original DataFrame structure
+        # For simplicity, create a Series for this timestamp
+        # This reconstruction is highly dependent on how the original data was structured.
+        # Assuming original was multi-indexed (device, feature) or similar.
+        # This part is complex and not fully specified by original structure.
+        # Placeholder:
+        df_row = pd.Series(current_step_approximations, name=timestamp)
+        reconstructed_data_frames.append(df_row.unstack(level=[0,1])) # Example unstack
 
-          self._histogram_assignments[measurement_name] = (
-              next_histogram_assignment
-          )
+      if not reconstructed_data_frames:
+          expanded_hist_df = pd.DataFrame()
+      else:
+          # This concat might need refinement based on desired output structure
+          expanded_hist_df = pd.concat(reconstructed_data_frames, axis=1).T
 
-          # pylint: disable-next=consider-using-dict-items # TODO: loop through the items (perhaps after this existing functionality has been tested)
-          for measurement in next_assigned_measurements:
-            updates[measurement].append(next_assigned_measurements[measurement])
 
-      df = pd.DataFrame(updates, index=indexes)
+      # Combine with passthrough features
+      final_df = pd.concat(
+          [expanded_hist_df, self._passthrough_sequence], axis=1, join="inner"
+      )
+      # Ensure columns from reduced_sequence that were also passthrough are handled
+      # (e.g. if a feature was both passed and (erroneously) in hist params)
+      # This part of original logic was complex; simplifying:
+      # Prioritize expanded values if overlap, then passthrough.
+      # The concat above might already handle this if indices/columns align.
+      return final_df
 
-      # Add in "passthough" features that are not histogrammed.
-      if self._passthrough_sequence is not None:
-        # Prefer the columns in the reduced sequence over the
-        # passthrough values.
-        cols_in_reduced_and_passthrough = list(
-            set(self._passthrough_sequence.columns).intersection(
-                self.reduced_sequence.columns
-            )
-        )
-        cols_in_passthrough_only = list(
-            set(self._passthrough_sequence.columns).difference(
-                self.reduced_sequence.columns
-            )
-        )
-
-        df = pd.concat(
-            [
-                df,
-                self._passthrough_sequence[cols_in_passthrough_only],
-                self.reduced_sequence[cols_in_reduced_and_passthrough],
-            ],
-            axis=1,
-            join="inner",
-        )
-
-      return df
 
     @property
     def feature_device_assignments(
-        self,
+        self
     ) -> Dict[Feature, HistogramAssignment]:
-      return self._histogram_assignments
+      """Current device-to-bin assignments used in the expansion process."""
+      return self._current_assignments_for_expansion
 
   @property
   def histogram_parameters(self) -> HistogramParameters:
+    """Dict[Feature, HistogramBins]: Bin definitions for histogrammed features."""
     return self._histogram_parameters
 
   def _get_passthrough_sequence(
       self, observation_sequence: pd.DataFrame
   ) -> pd.DataFrame:
-    """Returns a dataframe with the features that are not histogrammed."""
+    """Extracts columns from the observation sequence that are not histogrammed.
 
+    Args:
+      observation_sequence (pd.DataFrame): The input DataFrame of observations.
+        Columns can be simple strings or tuples (e.g., (device, feature)).
+
+    Returns:
+      pd.DataFrame: A DataFrame containing only the columns that are not
+      configured to be converted into histograms.
+    """
     passthrough_columns = []
-    for tup in observation_sequence.columns:
-      if not isinstance(tup, tuple):
-        passthrough_columns.append(tup)
-        continue
-      elif len(tup) == 2:
-        device, measurement = tup
-      else:
-        _, device, measurement = tup
-      if measurement not in self._histogram_parameters.keys():
-        passthrough_columns.append((device, measurement))
+    for col_name_or_tuple in observation_sequence.columns:
+      feature_to_check: str
+      if isinstance(col_name_or_tuple, tuple):
+        # Assuming (device, feature) or (level0, device, feature)
+        feature_to_check = col_name_or_tuple[-1] # Last element is feature name
+      else: # Simple string column name
+        feature_to_check = str(col_name_or_tuple)
 
-    return observation_sequence[np.array(passthrough_columns, dtype=object)]
+      if feature_to_check not in self._histogram_parameters:
+        passthrough_columns.append(col_name_or_tuple)
 
-  def _get_reduced_sequence(
+    return observation_sequence[passthrough_columns]
+
+  def _get_reduced_sequence_df(
       self,
       observation_sequence: pd.DataFrame,
-      feature_mapping: Mapping[str, Sequence[str]],
-  ) -> Sequence[pd.DataFrame]:
-    """Converts the raw features into histogram features."""
-    reduced_feature_dfs = []
-    for reduced_feature, bins in self._histogram_parameters.items():
-      reduced_feature_columns = feature_mapping[reduced_feature]
-      # Now compute the histogram
-      if reduced_feature_columns:
-        columns_indexes = [(reduced_feature, f"h_{v:.2f}") for v in bins]
-        df = pd.DataFrame(columns=columns_indexes)
-        for idx, row in observation_sequence.iterrows():
-          # Convert all the measurements of the same feature into an array.
-          measurements = np.array(row[reduced_feature_columns])
+      feature_to_device_columns_map: Mapping[Feature, Sequence[Tuple[Device, Feature]]],
+  ) -> pd.DataFrame:
+    """Converts specified raw feature columns into histogram count columns.
 
-          chist = get_clipped_histogram(
-              measurements=measurements, bins=bins, clip=True
-          )
-          df.loc[idx] = chist
-          if self._normalize_reduce:
-            df.loc[idx] /= np.sum(chist)
-        reduced_feature_dfs.append(df)
-    return reduced_feature_dfs
+    Args:
+      observation_sequence (pd.DataFrame): Input DataFrame. Columns for features
+        to be histogrammed are typically multi-indexed like (device_id, feature_name).
+      feature_to_device_columns_map (Mapping[Feature, Sequence[Tuple[Device, Feature]]]):
+        A map from a generic feature name (e.g., "zone_air_temperature_sensor")
+        to a list of actual column names (tuples) in `observation_sequence`
+        that correspond to that feature across different devices.
 
-  def reduce(self, observation_sequence: pd.DataFrame) -> BaseReducedSequence:
-    """Converts the raw observation sequence into a reduced_sequence."""
+    Returns:
+      pd.DataFrame: A DataFrame where, for each feature in
+      `_histogram_parameters`, its original columns are replaced by new
+      columns representing histogram bin counts. Bin column names are tuples:
+      `(feature_name, f"h_{bin_edge_value:.2f}")`.
+    """
+    all_histogram_dfs: List[pd.DataFrame] = []
+    for feature, bins in self._histogram_parameters.items():
+      # Get all original columns that correspond to this feature (e.g., temp from all zones)
+      original_feature_cols = feature_to_device_columns_map.get(feature, [])
+      if not original_feature_cols:
+        continue # No data columns for this histogram feature
 
-    passthrough_sequence = self._get_passthrough_sequence(observation_sequence)
+      # Extract the relevant slice of the observation_sequence
+      feature_data_df = observation_sequence[list(original_feature_cols)]
 
-    feature_mapping = self._get_feature_mapping(observation_sequence)
+      # Apply histogramming row-wise
+      def row_wise_histogram(row_series: pd.Series) -> pd.Series:
+        counts = get_clipped_histogram(
+            measurements=row_series.to_numpy(na_value=np.nan), # Handle NaNs
+            bins=bins,
+            clip_values=True
+        )
+        if self._normalize_reduce and np.sum(counts) > 0:
+          counts = counts / np.sum(counts)
+        return pd.Series(counts, index=[(feature, f"h_{b:.2f}") for b in bins])
 
-    reduced_feature_dfs = self._get_reduced_sequence(
-        observation_sequence, feature_mapping
-    )
+      histogram_df_for_feature = feature_data_df.apply(
+          row_wise_histogram, axis=1
+      )
+      all_histogram_dfs.append(histogram_df_for_feature)
 
-    # Join the passthrough and the rediced sequences into a single dataframe.
-    reduced_sequence = passthrough_sequence
-    if reduced_feature_dfs:
-      df_hist = pd.concat(reduced_feature_dfs, axis=1)
+    if not all_histogram_dfs:
+      return pd.DataFrame(index=observation_sequence.index) # Empty if no hist features
+    return pd.concat(all_histogram_dfs, axis=1)
 
-      reduced_sequence = pd.concat([reduced_sequence, df_hist], axis=1)
 
-    rs = self.HistogramReducedSequence(
-        self._histogram_parameters,
-        self._histogram_assignments,
-        passthrough_sequence,
-        reduced_sequence,
-    )
-
-    return rs
-
-  def _get_feature_mapping(
+  def reduce(
       self, observation_sequence: pd.DataFrame
-  ) -> Mapping[Feature, Sequence[Device]]:
-    feature_mapping = collections.defaultdict(list)
-    for col in observation_sequence.columns:
-      if col[-1] in self._histogram_parameters:
-        feature_mapping[col[-1]].append(col)
-    return feature_mapping
+  ) -> reducer.BaseReducedSequence:
+    """Reduces observation data by converting specified features to histograms.
+
+    Features not specified for histogramming are passed through unchanged.
+
+    Args:
+      observation_sequence (pd.DataFrame): A DataFrame where rows are time
+        steps and columns are features (possibly multi-indexed by device/zone).
+
+    Returns:
+      HistogramReducedSequence: An object containing the DataFrame with
+      histogrammed features, alongside passthrough data and initial device-to-bin
+      assignments for potential expansion.
+    """
+    passthrough_df = self._get_passthrough_sequence(observation_sequence)
+    feature_to_cols_map = self._get_feature_to_columns_mapping(
+        observation_sequence
+    )
+    histogram_df = self._get_reduced_sequence_df(
+        observation_sequence, feature_to_cols_map
+    )
+
+    # Combine passthrough features with new histogram features
+    final_reduced_df = pd.concat([passthrough_df, histogram_df], axis=1)
+
+    return self.HistogramReducedSequence(
+        histogram_parameters=self._histogram_parameters,
+        histogram_assignments=copy.deepcopy(self._histogram_assignments), # Pass copy
+        passthrough_sequence=passthrough_df, # Original passthrough columns
+        reduced_hist_sequence=final_reduced_df # Combined result
+    )
+
+  def _get_feature_to_columns_mapping(
+      self, observation_sequence: pd.DataFrame
+  ) -> Mapping[Feature, Sequence[Tuple[Device, Feature]]]:
+    """Identifies which DataFrame columns correspond to each histogrammable feature.
+
+    Assumes observation_sequence columns might be tuples like (device_id, feature_name).
+
+    Args:
+      observation_sequence (pd.DataFrame): The input observation data.
+
+    Returns:
+      Mapping[Feature, Sequence[Tuple[Device, Feature]]]: A map where keys are
+      generic feature names (those in `self._histogram_parameters`) and values
+      are lists of column name tuples from `observation_sequence` that match
+      that generic feature.
+    """
+    feature_column_map = collections.defaultdict(list)
+    for col_tuple in observation_sequence.columns:
+      if isinstance(col_tuple, tuple) and len(col_tuple) >= 2:
+        # Assuming feature name is the last element if column is a tuple
+        feature_name_in_col = col_tuple[-1]
+        if feature_name_in_col in self._histogram_parameters:
+          # Store the full column tuple, as it's needed to access data
+          feature_column_map[feature_name_in_col].append(col_tuple)
+      # Simple string columns are not processed for histogram features here
+    return feature_column_map

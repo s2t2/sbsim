@@ -1,18 +1,13 @@
-"""Base Reward Function for Smart Buildings.
+"""Abstract base class for reward functions considering setpoints, energy, and carbon.
 
-Copyright 2024 Google LLC
+This module defines `BaseSetpointEnergyCarbonRewardFunction`, an abstract
+class that serves as a foundation for reward functions that incorporate
+occupant productivity (based on thermal comfort relative to setpoints),
+energy costs, and carbon emissions.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    https://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Concrete implementations are expected to provide specific models for energy
+cost and carbon emissions, and to define how these components are weighted
+to form a scalar reward.
 """
 
 from typing import Tuple
@@ -20,162 +15,230 @@ from typing import Tuple
 import gin
 import numpy as np
 
-from smart_control.models.base_reward_function import BaseRewardFunction
+from smart_control.models import base_reward_function
 from smart_control.proto import smart_control_reward_pb2
 from smart_control.utils import conversion_utils
 
 
 @gin.configurable()
-class BaseSetpointEnergyCarbonRewardFunction(BaseRewardFunction):
-  """Reward function based on productivity, energy cost and carbon emission.
+class BaseSetpointEnergyCarbonRewardFunction(
+    base_reward_function.BaseRewardFunction
+):
+  """Calculates reward based on productivity, energy cost, and carbon emission.
+
+  This base class provides the framework and common calculations for determining
+  occupant productivity based on deviations from heating and cooling setpoints.
+  Derived classes must implement the `compute_reward` method to integrate
+  this productivity component with specific energy cost and carbon emission
+  models to produce a final reward signal.
+
+  The productivity model uses a logistic decay function to penalize temperatures
+  outside the comfortable deadband defined by heating and cooling setpoints.
 
   Attributes:
-    max_productivity_personhour_usd: max productivity for average occupancy in $
-    productivity_midpoint_delta: temp difference from setpoint of half prod.
-    productivity_decay_stiffness: midpoint slope of the decay curve
+    _max_productivity_personhour_usd (float): The maximum productivity value
+      (e.g., in USD) per person per hour, achieved when the zone temperature
+      is within the setpoint deadband.
+    _productivity_midpoint_delta (float): The temperature difference (in
+      Kelvin) from a setpoint at which productivity drops to 50% of its
+      maximum. This defines the center of the logistic decay.
+    _productivity_decay_stiffness (float): A parameter controlling the
+      steepness of the logistic decay curve for productivity as temperature
+      deviates from the comfortable range.
   """
 
-  @gin.configurable()
   def __init__(
       self,
       max_productivity_personhour_usd: float,
       productivity_midpoint_delta: float,
       productivity_decay_stiffness: float,
   ):
+    """Initializes the BaseSetpointEnergyCarbonRewardFunction.
+
+    Args:
+      max_productivity_personhour_usd (float): Maximum productivity value per
+        person per hour (e.g., in USD) when conditions are comfortable.
+      productivity_midpoint_delta (float): Temperature difference (K) from a
+        setpoint where productivity is 50% of maximum. This determines the
+        midpoint of the logistic decay for productivity loss.
+      productivity_decay_stiffness (float): Controls the slope of the
+        logistic decay curve for productivity. Higher values mean a steeper
+        drop in productivity as temperature deviates.
+    """
     self._max_productivity_personhour_usd = max_productivity_personhour_usd
     self._productivity_midpoint_delta = productivity_midpoint_delta
     self._productivity_decay_stiffness = productivity_decay_stiffness
 
+  @abc.abstractmethod
   def compute_reward(
       self, reward_info: smart_control_reward_pb2.RewardInfo
   ) -> smart_control_reward_pb2.RewardResponse:
-    """Returns the real-valued reward for the current state of the building."""
-    raise NotImplementedError()
-
-  def _sum_zone_productivities(
-      self, energy_reward_info: smart_control_reward_pb2.RewardInfo
-  ) -> Tuple[float, float]:
-    """Calculates cumulative productivity and total occupancy across all zones.
+    """Calculates the overall reward. Must be implemented by subclasses.
 
     Args:
-      energy_reward_info: A RewardInfo object containing zone-specific
-        information, including setpoint temperatures, zone air temperatures, and
-        average occupancies.
+      reward_info (smart_control_reward_pb2.RewardInfo): Proto message
+        containing all necessary data for reward calculation (energy use,
+        zone temperatures, setpoints, occupancy, etc.).
 
     Returns:
-      A tuple containing:
-        - The cumulative productivity across all zones (float).
-        - The total average occupancy across all zones (float).
+      smart_control_reward_pb2.RewardResponse: Proto message containing the
+      final agent reward and its disaggregated components.
     """
-    time_interval_sec = self._get_delta_time_sec(energy_reward_info)
-    cumulative_productivity = 0.0
-    total_occupancy = 0.0
+    raise NotImplementedError("Subclasses must implement compute_reward.")
 
-    for zid in energy_reward_info.zone_reward_infos:
-      occupancy = energy_reward_info.zone_reward_infos[zid].average_occupancy
+  def _sum_zone_productivities(
+      self, reward_info: smart_control_reward_pb2.RewardInfo
+  ) -> Tuple[float, float]:
+    """Calculates total productivity and occupancy across all zones.
+
+    Args:
+      reward_info (smart_control_reward_pb2.RewardInfo): Proto message
+        containing zone-specific data like temperatures, setpoints, and
+        average occupancy.
+
+    Returns:
+      Tuple[float, float]: A tuple where the first element is the cumulative
+      estimated productivity (e.g., in USD) across all zones for the given
+      time interval, and the second element is the total average occupancy
+      across all zones.
+    """
+    time_interval_sec = self._get_delta_time_sec(reward_info)
+    cumulative_productivity: float = 0.0
+    total_occupancy: float = 0.0
+
+    for zone_id in reward_info.zone_reward_infos:
+      zone_info = reward_info.zone_reward_infos[zone_id]
+      occupancy = zone_info.average_occupancy
       total_occupancy += occupancy
       cumulative_productivity += self._get_zone_productivity_reward(
-          energy_reward_info.zone_reward_infos[zid].heating_setpoint_temperature,  # pylint:disable=line-too-long
-          energy_reward_info.zone_reward_infos[zid].cooling_setpoint_temperature,  # pylint:disable=line-too-long
-          energy_reward_info.zone_reward_infos[zid].zone_air_temperature,
-          time_interval_sec,
-          occupancy,
+          heating_setpoint=zone_info.heating_setpoint_temperature,
+          cooling_setpoint=zone_info.cooling_setpoint_temperature,
+          zone_temp=zone_info.zone_air_temperature,
+          time_interval_sec=time_interval_sec,
+          average_occupancy=occupancy,
       )
-
     return cumulative_productivity, total_occupancy
 
   def _get_zone_productivity_reward(
       self,
       heating_setpoint: float,
-      cooling_setpoint,
+      cooling_setpoint: float,
       zone_temp: float,
       time_interval_sec: float,
-      average_occupancy,
+      average_occupancy: float,
   ) -> float:
-    """Computes the productivity for person hour from the zone temp."""
+    """Computes estimated productivity for a single zone over an interval.
 
-    x0low = heating_setpoint - self._productivity_midpoint_delta  # pytype: disable=attribute-error  # trace-all-classes
-    x0high = cooling_setpoint + self._productivity_midpoint_delta  # pytype: disable=attribute-error  # trace-all-classes
-    if zone_temp < heating_setpoint:
-      productivity = (
-          self._max_productivity_personhour_usd
-          / (  # pytype: disable=attribute-error  # trace-all-classes
-              1.0
-              + np.exp(
-                  -self._productivity_decay_stiffness
-                  * (  # pytype: disable=attribute-error  # trace-all-classes
-                      zone_temp - x0low
-                  )
-              )
+    Productivity is assumed to be at maximum within the deadband defined by
+    heating and cooling setpoints. Outside this deadband, it decreases
+    following a logistic decay curve.
+
+    Args:
+      heating_setpoint (float): The heating setpoint temperature (K).
+      cooling_setpoint (float): The cooling setpoint temperature (K).
+      zone_temp (float): The actual average air temperature in the zone (K).
+      time_interval_sec (float): Duration of the interval in seconds.
+      average_occupancy (float): Average number of occupants in the zone during
+        the interval.
+
+    Returns:
+      float: Estimated productivity (e.g., in USD) for the zone during the
+      interval, considering the number of occupants.
+    """
+    # Midpoints for the logistic decay curves
+    temp_low_midpoint = heating_setpoint - self._productivity_midpoint_delta
+    temp_high_midpoint = cooling_setpoint + self._productivity_midpoint_delta
+
+    if zone_temp < heating_setpoint: # Temperature is below heating setpoint
+      # Productivity decays as temperature drops further below heating setpoint
+      productivity_per_person_hour = self._max_productivity_personhour_usd / (
+          1.0 + np.exp(-self._productivity_decay_stiffness *
+                       (zone_temp - temp_low_midpoint))
+      )
+    elif zone_temp > cooling_setpoint: # Temperature is above cooling setpoint
+      # Productivity decays as temperature rises further above cooling setpoint
+      productivity_per_person_hour = self._max_productivity_personhour_usd * (
+          1.0 - 1.0 / (
+              1.0 + np.exp(-self._productivity_decay_stiffness *
+                           (zone_temp - temp_high_midpoint))
           )
       )
-    elif zone_temp > cooling_setpoint:
-      productivity = (
-          self._max_productivity_personhour_usd
-          * (  # pytype: disable=attribute-error  # trace-all-classes
-              1.0
-              - 1.0
-              / (
-                  1.0
-                  + np.exp(
-                      -self._productivity_decay_stiffness
-                      * (  # pytype: disable=attribute-error  # trace-all-classes
-                          zone_temp - x0high
-                      )
-                  )
-              )
-          )
-      )
-    else:
-      productivity = self._max_productivity_personhour_usd  # pytype: disable=attribute-error  # trace-all-classes
+    else: # Temperature is within the deadband
+      productivity_per_person_hour = self._max_productivity_personhour_usd
 
-    return productivity * average_occupancy * time_interval_sec / 3600.0
+    # Total productivity for the zone over the interval
+    total_zone_productivity = (
+        productivity_per_person_hour *
+        average_occupancy *
+        (time_interval_sec / 3600.0) # Convert interval to hours
+    )
+    return total_zone_productivity
 
   def _get_delta_time_sec(
-      self, energy_reward_info: smart_control_reward_pb2.RewardInfo
+      self, reward_info: smart_control_reward_pb2.RewardInfo
   ) -> float:
-    """Gets the time interval in seconds."""
+    """Calculates the duration of the reward interval in seconds.
+
+    Args:
+      reward_info (smart_control_reward_pb2.RewardInfo): Proto message
+        containing start and end timestamps for the reward period.
+
+    Returns:
+      float: The duration of the interval in seconds.
+    """
     start_time = conversion_utils.proto_to_pandas_timestamp(
-        energy_reward_info.start_timestamp
+        reward_info.start_timestamp
     )
     end_time = conversion_utils.proto_to_pandas_timestamp(
-        energy_reward_info.end_timestamp
+        reward_info.end_timestamp
     )
     return (end_time - start_time).total_seconds()
 
   def _sum_electricity_energy_rate(
-      self, energy_reward_info: smart_control_reward_pb2.RewardInfo
+      self, reward_info: smart_control_reward_pb2.RewardInfo
   ) -> float:
-    """Returns the sum of electrical energy rate over the interval in W."""
+    """Calculates the total electrical power consumption rate from RewardInfo.
 
-    # Sum up the power in Watts for the total power. Take the abs of the
-    # AC to ensure both heating (positive), and cooling (negative) are assessed
-    # as energy consumed.
-    electrical_energy_rate = 0.0
-    for ahid in energy_reward_info.air_handler_reward_infos:
-      electrical_energy_rate += energy_reward_info.air_handler_reward_infos[
-          ahid
-      ].blower_electrical_energy_rate + np.abs(
-          energy_reward_info.air_handler_reward_infos[
-              ahid
-          ].air_conditioning_electrical_energy_rate
+    Sums electrical power rates from air handlers (blower and air conditioning)
+    and boiler pumps. Air conditioning power is taken as absolute to account
+    for both heating and cooling energy use if applicable.
+
+    Args:
+      reward_info (smart_control_reward_pb2.RewardInfo): Proto message
+        containing energy consumption data for various components.
+
+    Returns:
+      float: Total electrical power consumption rate in Watts.
+    """
+    electrical_power_watts: float = 0.0
+    for ah_id in reward_info.air_handler_reward_infos:
+      ah_info = reward_info.air_handler_reward_infos[ah_id]
+      electrical_power_watts += ah_info.blower_electrical_energy_rate
+      electrical_power_watts += np.abs(
+          ah_info.air_conditioning_electrical_energy_rate
       )
 
-    for bid in energy_reward_info.boiler_reward_infos:
-      electrical_energy_rate += energy_reward_info.boiler_reward_infos[
-          bid
-      ].pump_electrical_energy_rate
-    return electrical_energy_rate
+    for boiler_id in reward_info.boiler_reward_infos:
+      boiler_info = reward_info.boiler_reward_infos[boiler_id]
+      electrical_power_watts += boiler_info.pump_electrical_energy_rate
+    return electrical_power_watts
 
   def _sum_natural_gas_energy_rate(
-      self, energy_reward_info: smart_control_reward_pb2.RewardInfo
+      self, reward_info: smart_control_reward_pb2.RewardInfo
   ) -> float:
-    """Returns the sum of nat gas energy rate over the interval in W."""
+    """Calculates the total natural gas consumption rate from RewardInfo.
 
-    # Sum up the power in Watts for the total power.
-    gas_energy_rate = 0.0
-    for bid in energy_reward_info.boiler_reward_infos:
-      gas_energy_rate += energy_reward_info.boiler_reward_infos[
-          bid
-      ].natural_gas_heating_energy_rate
-    return gas_energy_rate
+    Sums natural gas heating power rates from all boilers.
+
+    Args:
+      reward_info (smart_control_reward_pb2.RewardInfo): Proto message
+        containing energy consumption data for boilers.
+
+    Returns:
+      float: Total natural gas power consumption rate in Watts.
+    """
+    gas_power_watts: float = 0.0
+    for boiler_id in reward_info.boiler_reward_infos:
+      boiler_info = reward_info.boiler_reward_infos[boiler_id]
+      gas_power_watts += boiler_info.natural_gas_heating_energy_rate
+    return gas_power_watts
