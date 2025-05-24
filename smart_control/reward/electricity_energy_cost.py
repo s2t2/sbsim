@@ -142,7 +142,7 @@ class ElectricityEnergyCost(BaseEnergyCost):
     if len(carbon_emission_rates) != 24:
       raise ValueError("Carbon emission rates must have 24 entries.")
 
-    # Convert the emission rates from kg / MWh to kg / Ws.
+    # Convert the emission rates from kg / MWh to kg / Was.
     self._carbon_emission_rates = (
         np.array(carbon_emission_rates) / 1.0e6 / 3600.0
     )

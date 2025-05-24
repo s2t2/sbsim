@@ -8,7 +8,7 @@ In Comfort mode, the thermostat can be in one of 3 states.  If the temperature
 goes beneath the heating setpoint, Heat mode is activated until the temperature
 reaches midway between the 2 setpoints. Similarly, if the temperature is higher
 than the cooling setpoint, the thermostat enters Cool mode until the mid-point.
-Otherways, it enters Off mode.
+Otherwise, it enters Off mode.
 
 In Eco mode, there is an additional state, Passive Cool mode. Upon entering
 Eco mode, the thermostate is initially placed in this state, and remains that

@@ -554,7 +554,7 @@ def get_water_heating_energy_rate_primary_secondary(
     return_water_temperature: Cooled return temperature in F.
     num_active_boilers: Number of boilers currently running.
     num_active_secondary_pumps: Number of active secondary pumps.
-    avg_secondary_pump_speed_percentage: Pecentage [0 - 100] opf sec. pumps.
+    avg_secondary_pump_speed_percentage: Percentage [0 - 100] opf sec. pumps.
 
   Returns:
     Heating energy rate in BTU/hr.

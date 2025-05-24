@@ -68,7 +68,7 @@ class SimulatorFlexibleGeometries(simulator.Simulator):
       building: Refactored flexible FloorPlanBasedBuilding object controlling
         the control volumes.
       hvac: Hvac for the building.
-      weather_controller: Weather Controller for modelling ambient temperature.
+      weather_controller: Weather Controller for modeling ambient temperature.
       time_step_sec: Size of each time step in seconds.
       convergence_threshold: Minimum iteration temperature change to finish a
         FDM time step.

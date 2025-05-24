@@ -49,7 +49,7 @@ RoomIndicesDict = collections.defaultdict[str, Any]
   (3) Connections: the floorplan format after opencv's connectedComponents is
     run on it. The Connections floorplan has each connected component, defined
     as the contiguous space within each component of interest (room, zone, etc.)
-    labelled with an increasing integer indexing the component. It is an
+    labeled with an increasing integer indexing the component. It is an
     np.ndarray where 0's are walls and connected contiguous space are increasing
     integers.
   (4) ExteriorSpace: the floorplan format serves an auxiliary store of
@@ -298,7 +298,7 @@ def _set_exterior_space_neg(
   """Modifies the connections array so that exterior space is negative.
 
   Encoding the exterior space as negative is important in the connections array
-  as it will encode an aribtrarily large number of rooms as positive integers.
+  as it will encode an arbitrarily large number of rooms as positive integers.
   Thus, setting the exterior space as negative ensures that we will always be
   able to deal with it as its own category of space.
 

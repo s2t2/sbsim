@@ -97,11 +97,11 @@ INTERIOR_WALL_VALUE_IN_FILE_INPUT = 1
 # nonzero integers to count upwards in an unbounded way.
 INTERIOR_WALL_VALUE_IN_FUNCTION = -3
 
-# Here we set a specific string for exterior space to be labelled as in
+# Here we set a specific string for exterior space to be labeled as in
 # constructing a room dictionary.
 EXTERIOR_SPACE_NAME_IN_ROOM_DICT = "exterior_space"
 
-# Here we set a specific string for interior_walls to be labelled as in
+# Here we set a specific string for interior_walls to be labeled as in
 # constructing a room dictionary.
 INTERIOR_WALL_NAME_IN_ROOM_DICT = "interior_wall"
 

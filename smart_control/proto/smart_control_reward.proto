@@ -30,7 +30,7 @@
 //     r = s(setpoint) - u x f(energy_cost) - w x g(carbon_emission)
 // where:
 //   r: the total reward for the timestep,
-//   s(setpoint): reward function for maintiaining setpoint,
+//   s(setpoint): reward function for maintaining setpoint,
 //   f(energy_cost): total cost in energy for the period,
 //   g(carbon_emission): total cost associated with carbon emissions, and
 //   u, w are importance weights defined by the energy policy.
