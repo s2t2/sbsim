@@ -41,6 +41,35 @@ py_library(
     ],
 )
 
+py_library(
+    name = "factory_utils",
+    srcs = ["factory_utils.py"],
+    deps = [
+        ":conversion_utils",
+        "//smart_control/environment:environment_test_utils",
+        "//smart_control/proto:smart_control_building_py_pb2",
+        "//smart_control/simulator:building",
+        "@pip//factory_boy",
+        "@pip//numpy",
+        "@pip//pandas",
+    ],
+)
+
+py_strict_test(
+    name = "factory_utils_test",
+    srcs = ["factory_utils_test.py"],
+    deps = [
+        ":conversion_utils",
+        ":factory_utils",
+        "//smart_control/environment:environment_test_utils",
+        "//smart_control/proto:smart_control_building_py_pb2",
+        "//smart_control/simulator:building",
+        "@pip//absl_py",
+        "@pip//numpy",
+        "@pip//pandas",
+    ],
+)
+
 py_strict_test(
     name = "agent_utils_test",
     srcs = ["agent_utils_test.py"],
