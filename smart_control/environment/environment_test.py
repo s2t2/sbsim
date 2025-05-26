@@ -29,6 +29,7 @@ from tf_agents.trajectories import time_step as ts
 
 from smart_control.environment import environment
 from smart_control.environment import environment_test_utils
+from smart_control.utils import factory_utils # Added import
 from smart_control.models import base_building
 from smart_control.models import base_reward_function
 from smart_control.proto import smart_control_building_pb2
@@ -187,7 +188,7 @@ class EnvironmentTest(parameterized.TestCase, tf.test.TestCase):
     self.assertCountEqual(expected_field_ids, output_field_ids)
 
   def test_init(self):
-    building = environment_test_utils.SimpleBuilding()
+    building = factory_utils.SimpleBuildingFactory()
     reward_function = environment_test_utils.SimpleRewardFunction()
     action_config = self._create_bounded_action_config(200, 300)
     obs_normalizer = self._create_observation_normalizer()
@@ -201,7 +202,7 @@ class EnvironmentTest(parameterized.TestCase, tf.test.TestCase):
     self.assertEqual(env.reward_function, reward_function)
 
   def test_init_default(self):
-    building = environment_test_utils.SimpleBuilding()
+    building = factory_utils.SimpleBuildingFactory()
     reward_function = environment_test_utils.SimpleRewardFunction()
     action_config = self._create_bounded_action_config(200, 300)
     obs_normalizer = self._create_observation_normalizer()
@@ -232,7 +233,7 @@ class EnvironmentTest(parameterized.TestCase, tf.test.TestCase):
       ("1_param", [("boiler_1", "setpoint_1")], ["boiler_1_setpoint_1"]),
   )
   def test_init_device_action_tuples(self, device_action_tuples, action_names):
-    building = environment_test_utils.SimpleBuilding()
+    building = factory_utils.SimpleBuildingFactory()
     reward_function = environment_test_utils.SimpleRewardFunction()
     action_config = self._create_bounded_action_config(200, 300)
     obs_normalizer = self._create_observation_normalizer()
@@ -255,7 +256,7 @@ class EnvironmentTest(parameterized.TestCase, tf.test.TestCase):
     self.assertListEqual(action_names, env._action_names)
 
   def test_init_raises_value_error(self):
-    building = environment_test_utils.SimpleBuilding()
+    building = factory_utils.SimpleBuildingFactory()
     reward_function = environment_test_utils.SimpleRewardFunction()
     action_config = self._create_bounded_action_config(200, 300)
     obs_normalizer = self._create_observation_normalizer()
@@ -269,7 +270,7 @@ class EnvironmentTest(parameterized.TestCase, tf.test.TestCase):
       )
 
   def test_init_steps_per_episode(self):
-    building = environment_test_utils.SimpleBuilding()
+    building = factory_utils.SimpleBuildingFactory()
     reward_function = environment_test_utils.SimpleRewardFunction()
     action_config = self._create_bounded_action_config(200, 300)
     obs_normalizer = self._create_observation_normalizer()
@@ -280,7 +281,7 @@ class EnvironmentTest(parameterized.TestCase, tf.test.TestCase):
     self.assertEqual(864.0, env.steps_per_episode)
 
   def test_init_action_spec(self):
-    building = environment_test_utils.SimpleBuilding()
+    building = factory_utils.SimpleBuildingFactory()
     reward_function = environment_test_utils.SimpleRewardFunction()
     action_config = self._create_bounded_action_config(200, 300)
     obs_normalizer = self._create_observation_normalizer()
@@ -310,7 +311,7 @@ class EnvironmentTest(parameterized.TestCase, tf.test.TestCase):
       ),
   )
   def test_init_observation_spec(self, observation_histogram_reducer, expected):
-    building = environment_test_utils.SimpleBuilding()
+    building = factory_utils.SimpleBuildingFactory()
     reward_function = environment_test_utils.SimpleRewardFunction()
     action_config = self._create_bounded_action_config(200, 300)
     obs_normalizer = self._create_observation_normalizer()
@@ -326,38 +327,42 @@ class EnvironmentTest(parameterized.TestCase, tf.test.TestCase):
     self.assertEqual(env.observation_spec(), expected)
 
   def test_create_action_request(self):
-    building = environment_test_utils.SimpleBuilding()
+    building = factory_utils.SimpleBuildingFactory()
     reward_function = environment_test_utils.SimpleRewardFunction()
     action_config = self._create_bounded_action_config(200, 300)
     obs_normalizer = self._create_observation_normalizer()
     env = environment.Environment(
         building, reward_function, obs_normalizer, action_config
     )
-    env.reset()
+    env.reset() # Populates _id_map, _action_names
 
     action = [1.0, -0.25, -0.456, 0.001, 0.12, -0.3]
-
-    timestamp = conversion_utils.pandas_to_proto_timestamp(
-        pd.Timestamp("2021-06-07 12:00:01")
-    )
+    
+    # Ensure simulation time is deterministic for timestamp comparison
+    timestamp_pd = pd.Timestamp("2021-06-07 12:00:01", tz="UTC") # Original test didn't specify tz, but SimpleBuilding uses UTC
+    env._simulation_time = timestamp_pd
+    proto_timestamp = conversion_utils.pandas_to_proto_timestamp(timestamp_pd)
 
     actual_request = env._create_action_request(action)
-    expected_request = smart_control_building_pb2.ActionRequest(
-        timestamp=timestamp
-    )
-    # for field_id in env._action_names:
+
+    expected_single_requests = []
     for i in range(len(env._action_names)):
       field_id = env._action_names[i]
       device, setpoint = env._id_map.inv[field_id]
-      action_normalizer = action_config.action_normalizers[setpoint]
-      normalized_value = action_normalizer.setpoint_value(action[i])
-      expected_request.single_action_requests.append(
-          smart_control_building_pb2.SingleActionRequest(
+      action_normalizer_instance = action_config.action_normalizers[setpoint]
+      normalized_value = action_normalizer_instance.setpoint_value(action[i])
+      expected_single_requests.append(
+          factory_utils.SingleActionRequestFactory(
               device_id=device,
               setpoint_name=setpoint,
               continuous_value=normalized_value,
           )
       )
+    
+    expected_request = factory_utils.ActionRequestFactory(
+        timestamp=proto_timestamp,
+        single_action_requests=expected_single_requests
+    )
 
     self.assertEqual(actual_request, expected_request)
 
@@ -370,7 +375,7 @@ class EnvironmentTest(parameterized.TestCase, tf.test.TestCase):
       ) -> smart_control_building_pb2.ActionResponse:
         raise RuntimeError("PhysicalAssetService.WriteFieldValues")
 
-    building = RejectionBuilding()
+    building = RejectionBuilding(start_time=pd.Timestamp("2022-03-13 00:00:00", tz="UTC")) # Needs start_time
     reward_function = environment_test_utils.SimpleRewardFunction()
     action_config = self._create_bounded_action_config(200, 300)
     obs_normalizer = self._create_observation_normalizer()
@@ -398,7 +403,7 @@ class EnvironmentTest(parameterized.TestCase, tf.test.TestCase):
         )
         return action_response
 
-    building = StatusRejectionBuilding()
+    building = StatusRejectionBuilding(start_time=pd.Timestamp("2022-03-13 00:00:00", tz="UTC")) # Needs start_time
     reward_function = environment_test_utils.SimpleRewardFunction()
     action_config = self._create_bounded_action_config(200, 300)
     obs_normalizer = self._create_observation_normalizer()
@@ -414,7 +419,7 @@ class EnvironmentTest(parameterized.TestCase, tf.test.TestCase):
     self.assertEqual(time_step.reward, -np.inf)
 
   def test_get_observation(self):
-    building = environment_test_utils.SimpleBuilding()
+    building = factory_utils.SimpleBuildingFactory()
     reward_function = environment_test_utils.SimpleRewardFunction()
     action_config = self._create_bounded_action_config(200, 300)
     obs_normalizer = self._create_observation_normalizer()
@@ -494,7 +499,7 @@ class EnvironmentTest(parameterized.TestCase, tf.test.TestCase):
     self.assertAllClose(actual_observation, expected_observation)
 
   def test_get_observation_histogram_reducer(self):
-    building = environment_test_utils.SimpleBuilding()
+    building = factory_utils.SimpleBuildingFactory()
     reward_function = environment_test_utils.SimpleRewardFunction()
     action_config = self._create_bounded_action_config(200, 300)
     obs_normalizer = self._create_observation_normalizer()
@@ -609,7 +614,7 @@ class EnvironmentTest(parameterized.TestCase, tf.test.TestCase):
         )
         return bad_observation_response
 
-    building = BadObservationBuilding()
+    building = BadObservationBuilding(start_time=pd.Timestamp("2022-03-13 00:00:00", tz="UTC")) # Needs start_time
     reward_function = environment_test_utils.SimpleRewardFunction()
     action_config = self._create_bounded_action_config(200, 300)
     obs_normalizer = self._create_observation_normalizer()
@@ -621,7 +626,7 @@ class EnvironmentTest(parameterized.TestCase, tf.test.TestCase):
       env.reset()
 
   def test_compute_reward(self):
-    building = environment_test_utils.SimpleBuilding()
+    building = factory_utils.SimpleBuildingFactory()
     reward_function = environment_test_utils.SimpleRewardFunction()
     action_config = self._create_bounded_action_config(200, 300)
     obs_normalizer = self._create_observation_normalizer()
@@ -638,7 +643,7 @@ class EnvironmentTest(parameterized.TestCase, tf.test.TestCase):
     )
 
   def test_reset(self):
-    building = environment_test_utils.SimpleBuilding()
+    building = factory_utils.SimpleBuildingFactory()
     reward_function = environment_test_utils.SimpleRewardFunction()
     action_config = self._create_bounded_action_config(200, 300)
     obs_normalizer = self._create_observation_normalizer()
@@ -653,7 +658,7 @@ class EnvironmentTest(parameterized.TestCase, tf.test.TestCase):
     self._assert_time_step(actual_time_step, expected_time_step)
 
   def test_action_spec(self):
-    building = environment_test_utils.SimpleBuilding()
+    building = factory_utils.SimpleBuildingFactory()
     reward_function = environment_test_utils.SimpleRewardFunction()
     action_config = self._create_bounded_action_config(200, 300)
     obs_normalizer = self._create_observation_normalizer()
@@ -663,7 +668,7 @@ class EnvironmentTest(parameterized.TestCase, tf.test.TestCase):
     self.assertEqual(env._action_spec, env.action_spec())
 
   def test_observation_spec(self):
-    building = environment_test_utils.SimpleBuilding()
+    building = factory_utils.SimpleBuildingFactory()
     reward_function = environment_test_utils.SimpleRewardFunction()
     action_config = self._create_bounded_action_config(200, 300)
     obs_normalizer = self._create_observation_normalizer()
@@ -673,7 +678,7 @@ class EnvironmentTest(parameterized.TestCase, tf.test.TestCase):
     self.assertEqual(env._observation_spec, env.observation_spec())
 
   def test_step(self):
-    building = environment_test_utils.SimpleBuilding()
+    building = factory_utils.SimpleBuildingFactory()
     reward_function = environment_test_utils.SimpleRewardFunction()
     action_config = self._create_bounded_action_config(200, 300)
     obs_normalizer = self._create_observation_normalizer()
@@ -753,7 +758,7 @@ class EnvironmentTest(parameterized.TestCase, tf.test.TestCase):
           return time_step
         return ts.termination(env._get_observation(), reward=0.0)
 
-    building = environment_test_utils.SimpleBuilding()
+    building = factory_utils.SimpleBuildingFactory()
     reward_function = environment_test_utils.SimpleRewardFunction()
     action_config = self._create_bounded_action_config(200, 300)
     obs_normalizer = self._create_observation_normalizer()

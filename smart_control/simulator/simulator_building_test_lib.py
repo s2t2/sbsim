@@ -19,6 +19,7 @@ from absl.testing import parameterized
 import pandas as pd
 
 from smart_control.proto import smart_control_building_pb2
+from smart_control.utils import factory_utils # Added import
 from smart_control.simulator import air_handler as air_handler_py
 from smart_control.simulator import boiler as boiler_py
 from smart_control.simulator import building as building_py
@@ -51,29 +52,29 @@ class SimulatorBuildingTestBase(parameterized.TestCase):
     Args:
       initial_temp: Initial temperature of all CVs in building.
     """
-    cv_size_cm = 20.0
-    floor_height_cm = 300.0
-    room_shape = (8, 6)
-    building_shape = (2, 1)
-    inside_air_properties = building_py.MaterialProperties(
-        conductivity=50.0, heat_capacity=700.0, density=1.0
-    )
-    inside_wall_properties = building_py.MaterialProperties(
-        conductivity=2.0, heat_capacity=500.0, density=1800.0
-    )
-    building_exterior_properties = building_py.MaterialProperties(
-        conductivity=0.05, heat_capacity=500.0, density=3000.0
-    )
+    # Original parameters for reference:
+    # cv_size_cm = 20.0
+    # floor_height_cm = 300.0
+    # room_shape = (8, 6)
+    # building_shape = (2, 1)
+    # inside_air_properties values: conductivity=50.0, heat_capacity=700.0, density=1.0
+    # inside_wall_properties values: conductivity=2.0, heat_capacity=500.0, density=1800.0
+    # building_exterior_properties values: conductivity=0.05, heat_capacity=500.0, density=3000.0
 
-    building = building_py.Building(
-        cv_size_cm,
-        floor_height_cm,
-        room_shape,
-        building_shape,
-        initial_temp,
-        inside_air_properties,
-        inside_wall_properties,
-        building_exterior_properties,
+    building = factory_utils.DeprecatedBuildingFactory(
+        initial_temp=initial_temp,
+        room_shape=(8, 6),
+        building_shape=(2, 1),
+        inside_air_properties=factory_utils.MaterialPropertiesFactory(
+            conductivity=50.0, heat_capacity=700.0, density=1.0
+        ),
+        inside_wall_properties=factory_utils.MaterialPropertiesFactory(
+            conductivity=2.0, heat_capacity=500.0, density=1800.0
+        ),
+        building_exterior_properties=factory_utils.MaterialPropertiesFactory(
+            conductivity=0.05, heat_capacity=500.0, density=3000.0
+        )
+        # cv_size_cm and floor_height_cm match factory defaults
     )
     return building
 
@@ -177,12 +178,12 @@ class SimulatorBuildingTestBase(parameterized.TestCase):
     """Tests request observations."""
     simulator_building = self.get_sim_building()
 
-    observation_request = smart_control_building_pb2.ObservationRequest()
-    single_field_request = smart_control_building_pb2.SingleObservationRequest(
+    single_field_request = factory_utils.SingleObservationRequestFactory(
         device_id='boiler_id', measurement_name=measurement_name
     )
-
-    observation_request.single_observation_requests.append(single_field_request)
+    observation_request = factory_utils.ObservationRequestFactory(
+        single_observation_requests=[single_field_request]
+    )
 
     observation_response = simulator_building.request_observations(
         observation_request
@@ -207,24 +208,14 @@ class SimulatorBuildingTestBase(parameterized.TestCase):
     """Tests request multiple observations."""
     simulator_building = self.get_sim_building()
 
-    observation_request = smart_control_building_pb2.ObservationRequest()
-
-    single_field_request_1 = (
-        smart_control_building_pb2.SingleObservationRequest(
-            device_id='boiler_id', measurement_name='supply_water_setpoint'
-        )
+    single_field_request_1 = factory_utils.SingleObservationRequestFactory(
+        device_id='boiler_id', measurement_name='supply_water_setpoint'
     )
-    observation_request.single_observation_requests.append(
-        single_field_request_1
+    single_field_request_2 = factory_utils.SingleObservationRequestFactory(
+        device_id='boiler_id', measurement_name='heating_request_count'
     )
-
-    single_field_request_2 = (
-        smart_control_building_pb2.SingleObservationRequest(
-            device_id='boiler_id', measurement_name='heating_request_count'
-        )
-    )
-    observation_request.single_observation_requests.append(
-        single_field_request_2
+    observation_request = factory_utils.ObservationRequestFactory(
+        single_observation_requests=[single_field_request_1, single_field_request_2]
     )
 
     observation_response = simulator_building.request_observations(
@@ -258,12 +249,12 @@ class SimulatorBuildingTestBase(parameterized.TestCase):
     """Tests when an observation is requested on a nonexistent device."""
     simulator_building = self.get_sim_building()
 
-    observation_request = smart_control_building_pb2.ObservationRequest()
-    single_field_request = smart_control_building_pb2.SingleObservationRequest(
+    single_field_request = factory_utils.SingleObservationRequestFactory(
         device_id='wrong_device', measurement_name='measurement_name'
     )
-
-    observation_request.single_observation_requests.append(single_field_request)
+    observation_request = factory_utils.ObservationRequestFactory(
+        single_observation_requests=[single_field_request]
+    )
 
     observation_response = simulator_building.request_observations(
         observation_request
@@ -277,12 +268,12 @@ class SimulatorBuildingTestBase(parameterized.TestCase):
     """Tests when an observation is requested for a nonexistnt measurement."""
     simulator_building = self.get_sim_building()
 
-    observation_request = smart_control_building_pb2.ObservationRequest()
-    single_field_request = smart_control_building_pb2.SingleObservationRequest(
+    single_field_request = factory_utils.SingleObservationRequestFactory(
         device_id='boiler_id', measurement_name='incorrect_measurement'
     )
-
-    observation_request.single_observation_requests.append(single_field_request)
+    observation_request = factory_utils.ObservationRequestFactory(
+        single_observation_requests=[single_field_request]
+    )
 
     observation_response = simulator_building.request_observations(
         observation_request
@@ -299,14 +290,14 @@ class SimulatorBuildingTestBase(parameterized.TestCase):
     """Tests request single action with success."""
     simulator_building = self.get_sim_building()
 
-    action_request = smart_control_building_pb2.ActionRequest()
-    single_field_request = smart_control_building_pb2.SingleActionRequest(
+    single_field_request = factory_utils.SingleActionRequestFactory(
         device_id='boiler_id',
         setpoint_name=setpoint_name,
-        continuous_value=set_value,
+        continuous_value=set_value
     )
-
-    action_request.single_action_requests.append(single_field_request)
+    action_request = factory_utils.ActionRequestFactory(
+        single_action_requests=[single_field_request]
+    )
 
     action_response = simulator_building.request_action(action_request)
 
@@ -324,12 +315,12 @@ class SimulatorBuildingTestBase(parameterized.TestCase):
     """Tests when an action is sent to a nonexistent device."""
     simulator_building = self.get_sim_building()
 
-    action_request = smart_control_building_pb2.ActionRequest()
-    single_field_request = smart_control_building_pb2.SingleActionRequest(
+    single_field_request = factory_utils.SingleActionRequestFactory(
         device_id='wrong_device', setpoint_name='setpoint_name'
     )
-
-    action_request.single_action_requests.append(single_field_request)
+    action_request = factory_utils.ActionRequestFactory(
+        single_action_requests=[single_field_request]
+    )
 
     action_response = simulator_building.request_action(action_request)
 
@@ -342,12 +333,12 @@ class SimulatorBuildingTestBase(parameterized.TestCase):
     """Tests when an action is sent to a nonexistent setpoint."""
     simulator_building = self.get_sim_building()
 
-    action_request = smart_control_building_pb2.ActionRequest()
-    single_field_request = smart_control_building_pb2.SingleActionRequest(
+    single_field_request = factory_utils.SingleActionRequestFactory(
         device_id='boiler_id', setpoint_name='incorrect_setpoint'
     )
-
-    action_request.single_action_requests.append(single_field_request)
+    action_request = factory_utils.ActionRequestFactory(
+        single_action_requests=[single_field_request]
+    )
 
     action_response = simulator_building.request_action(action_request)
 

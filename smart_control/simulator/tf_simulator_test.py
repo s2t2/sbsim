@@ -24,8 +24,10 @@ import tensorflow as tf
 
 from smart_control.simulator import air_handler as air_handler_py
 from smart_control.simulator import boiler as boiler_py
-from smart_control.simulator import building as building_py
+# building_py is no longer directly used for instantiation in _create_test_building
+# from smart_control.simulator import building as building_py 
 from smart_control.simulator import hvac_floorplan_based as floorplan_hvac_py
+from smart_control.utils import factory_utils # Added import
 from smart_control.simulator import setpoint_schedule
 from smart_control.simulator import tf_simulator as tf_simulator_py
 from smart_control.simulator import weather_controller as weather_controller_py
@@ -107,36 +109,22 @@ class TFSimulatorTest(absltest.TestCase):
     }
 
   def _create_test_building(self):
-    cv_size_cm = 20.0
-    floor_height_cm = 300.0
-    initial_temp = 292.0
-    inside_air_properties = building_py.MaterialProperties(
-        conductivity=50.0, heat_capacity=700.0, density=1.0
-    )
-    inside_wall_properties = building_py.MaterialProperties(
-        conductivity=2.0, heat_capacity=1000.0, density=1800.0
-    )
-    building_exterior_properties = building_py.MaterialProperties(
-        conductivity=0.05, heat_capacity=1000.0, density=3000.0
-    )
+    # cv_size_cm = 20.0 (matches factory default)
+    # floor_height_cm = 300.0 (matches factory default)
+    # initial_temp = 292.0 (matches factory default)
+
+    # Original inside_air_properties values: conductivity=50.0, heat_capacity=700.0, density=1.0 (matches factory default for inside_air_properties)
+    # Original inside_wall_properties values: conductivity=2.0, heat_capacity=1000.0, density=1800.0 (matches factory default for inside_wall_properties)
+    # Original building_exterior_properties values: conductivity=0.05, heat_capacity=1000.0, density=3000.0 (matches factory default for building_exterior_properties)
 
     floor_plan = self._create_test_floor_plan()
-    zone_map = self._create_test_floor_plan()
+    # zone_map is the same as floor_plan in the original code
 
-    b = building_py.FloorPlanBasedBuilding(
-        cv_size_cm=cv_size_cm,
-        floor_height_cm=floor_height_cm,
-        initial_temp=initial_temp,
-        inside_air_properties=inside_air_properties,
-        inside_wall_properties=inside_wall_properties,
-        building_exterior_properties=building_exterior_properties,
+    b = factory_utils.FloorPlanBasedBuildingFactory(
         floor_plan=floor_plan,
-        floor_plan_filepath=None,
-        zone_map=zone_map,
-        zone_map_filepath=None,
-        buffer_from_walls=0,
+        zone_map=floor_plan
+        # All other parameters match the factory defaults or the specific MaterialProperty sub-factory defaults.
     )
-
     return b
 
   def _create_small_hvac(self):

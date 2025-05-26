@@ -38,6 +38,7 @@ isort = "^6.0.1"
 pylint = "^3.3.6"
 pylint-per-file-ignores = "^1.4.0"
 mdformat = "^0.7.22"
+factory_boy = "^3.2.0"
 
 [tool.pyink]
 line-length = 80
