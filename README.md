@@ -53,10 +53,11 @@ libraries are not supported by other operating systems.
    cd ../..
    ```
 
-6. Currently simulation videos are configured to be stored in "simulator/videos"
-   directory. If you would like to customize the directory where simulation
-   videos will be stored, create a local ".env" file and set your desired value
-   of the `SIM_VIDEOS_DIRPATH` environment variable. For example:
+6. By default, simulation videos are stored in the "simulator/videos" directory
+   (which is ignored from version control). If you would like to customize this
+   location, use the `SIM_VIDEOS_DIRPATH` environment variable. You can pass
+   this environment variable at runtime, or create a local ".env" file and set
+   your desired value there:
 
    ```bash
    # this is the ".env" file:
