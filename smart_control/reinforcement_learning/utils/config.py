@@ -23,15 +23,14 @@ from smart_control.simulator.tf_simulator import TFSimulator
 from smart_control.simulator.weather_controller import ReplayWeatherController
 from smart_control.utils import controller_reader
 from smart_control.utils import histogram_reducer
+from smart_control.utils.constants import ROOT_DIR
 from smart_control.utils.controller_writer import ProtoWriterFactory
 from smart_control.utils.environment_utils import to_timestamp
 from smart_control.utils.observation_normalizer import StandardScoreObservationNormalizer
 
 # pylint: enable=unused-import
 
-# Path to the root directory of the project:
-ROOT_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "..")
-# fmt: off
+# Relative filepaths. Consider moving to reinforcement_learning/constants.py
 # pylint: disable=line-too-long
 DATA_PATH = os.path.join(ROOT_DIR, "smart_control", "configs", "resources", "sb1")
 CONFIG_PATH = os.path.join(ROOT_DIR, "smart_control", "configs", "resources", "sb1", "train_sim_configs")
@@ -40,7 +39,6 @@ RENDERS_PATH = os.path.join(ROOT_DIR, "smart_control", "reinforcement_learning",
 OUTPUT_DATA_PATH = os.path.join(ROOT_DIR, "smart_control", "reinforcement_learning", "data", "starter_buffers")
 EXPERIMENT_RESULTS_PATH = os.path.join(ROOT_DIR, "smart_control", "reinforcement_learning", "experiment_results")
 # pylint: enable=line-too-long
-# fmt: on
 
 
 @gin.configurable
@@ -104,7 +102,6 @@ def get_histogram_reducer() -> Any:
   Returns:
       Histogram reducer.
   """
-  # fmt: off
   # pylint: disable=bad-continuation
   histogram_parameters_tuples = (
       ("zone_air_temperature_sensor", (
@@ -117,7 +114,6 @@ def get_histogram_reducer() -> Any:
       )),
   )
   # pylint: enable=bad-continuation
-  # fmt: on
   reader = controller_reader.ProtoReader(DATA_PATH)
 
   hr = histogram_reducer.HistogramReducer(

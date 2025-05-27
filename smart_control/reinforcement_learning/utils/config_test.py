@@ -19,7 +19,7 @@ import os
 
 from absl.testing import absltest
 
-from smart_control.reinforcement_learning.utils.config import ROOT_DIR
+from smart_control.utils.constants import ROOT_DIR
 
 
 class TestConfigPaths(absltest.TestCase):
