@@ -200,7 +200,7 @@ class SimulatorFlexibleGeometries(simulator.Simulator):
       zone_id: str,
       zone_air_temperature: float,
   ) -> RewardInfo.ZoneRewardInfo:
-    """Returns a messagde with zone data to compute the instantaneous reward."""
+    """Returns a message with zone data to compute the instantaneous reward."""
     schedule = self._hvac.vavs[zone_coords].thermostat.get_setpoint_schedule()
     heating_setpoint_temperature, cooling_setpoint_temperature = (
         schedule.get_temperature_window(self._current_timestamp)
