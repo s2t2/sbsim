@@ -20,7 +20,7 @@ from typing import Final
 
 # --------- Relative Filepaths ---------------
 
-# Path to the root directory of the project:
+# Path to the root directory of the project (where the main README is):
 ROOT_DIR = os.path.join(os.path.dirname(__file__), '..', '..')
 
 # --------- Thermal Constants ---------------
