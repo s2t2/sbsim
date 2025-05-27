@@ -53,9 +53,16 @@ libraries are not supported by other operating systems.
    cd ../..
    ```
 
-6. Modify the value of `VIDEO_PATH_ROOT` at
-   `smart_control/simulator/constants.py`. This is the path where simulation
-   videos will be stored
+6. Currently simulation videos are configured to be stored in "simulator/videos"
+   directory. If you would like to customize the directory where simulation
+   videos will be stored, create a local ".env" file and set your desired value
+   of the `VIDEO_PATH_ROOT` environment variable. For example:
+
+```
+# this is the ".env" file:
+
+VIDEO_PATH_ROOT="/cns/oz-d/home/smart-buildings-control-team/smart-buildings/geometric_sim_videos/"
+```
 
 7. Now in the `notebooks/SAC_Demo.ipynb` notebook, modify the values of
    `data_path`, `metrics_path`, `output_data_path` and `root_dir`. In
