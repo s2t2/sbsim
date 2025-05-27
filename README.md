@@ -58,11 +58,11 @@ libraries are not supported by other operating systems.
    videos will be stored, create a local ".env" file and set your desired value
    of the `VIDEO_PATH_ROOT` environment variable. For example:
 
-```
-# this is the ".env" file:
+   ```bash
+   # this is the ".env" file:
 
-VIDEO_PATH_ROOT="/cns/oz-d/home/smart-buildings-control-team/smart-buildings/geometric_sim_videos/"
-```
+   VIDEO_PATH_ROOT="/cns/oz-d/home/smart-buildings-control-team/smart-buildings/geometric_sim_videos/"
+   ```
 
 7. Now in the `notebooks/SAC_Demo.ipynb` notebook, modify the values of
    `data_path`, `metrics_path`, `output_data_path` and `root_dir`. In
