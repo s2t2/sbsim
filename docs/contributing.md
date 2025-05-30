@@ -1,4 +1,4 @@
-# How to Contribute
+# Contributor's Guide
 
 We welcome your contributions to this repository!
 

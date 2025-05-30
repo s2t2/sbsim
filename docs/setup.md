@@ -1,4 +1,4 @@
-# Setup Guide
+# Local Development Setup Guide
 
 This document provides instructions for getting the repository set up for local
 development. By default, we use Linux OS, as some dependencies are not supported
