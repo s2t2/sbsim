@@ -1,7 +1,7 @@
-# NOTE: you have to use tabs not spaces to define commands in the Makefile
+# NOTE: you have to use tabs (not spaces) to define commands in the Makefile
 
 # these are commands to be run, not files to be created:
-.PHONY: activate mdformat pyink isort pylint lint
+.PHONY: activate mdformat pyink isort pylint lint test
 
 # variable pointing to the virtual environment executable files:
 VENV_BIN := .venv/bin
