@@ -7,10 +7,13 @@ facilitate running the code on non-Linux (Mac and Windows) systems.
 
 This project requires the following dependencies:
 
-- Python (>=3.10.12 and \<3.12)
-- [Protocol Buffer Compiler](https://grpc.io/docs/protoc-installation/)
-  ("protoc")
+- [Protocol Buffer Compiler](https://grpc.io/docs/protoc-installation/) (i.e.
+  "protoc")
 - [FFmpeg](https://ffmpeg.org/)
+- Python (>=3.10.12 and \<3.12), as installed using
+  [Pyenv](https://github.com/pyenv/pyenv)
+- [Venv](https://docs.python.org/3/library/venv.html), for managing a Python
+  virtual environment
 
 ## Repository Setup
 
@@ -18,7 +21,7 @@ Clone the repository, for example using an SSH approach:
 
 ```sh
 git clone git@github.com:google/sbsim.git
-cd sbsim
+cd sbsim/
 ```
 
 ## Linux Package Installation
@@ -30,15 +33,65 @@ sudo apt install -y protobuf-compiler
 sudo apt install -y ffmpeg
 ```
 
+You may need to also install `venv`:
+
+```sh
+sudo apt install python3.12-venv
+```
+
+## Python Installation
+
+We are using `pyenv` to manage and install specific versions of Python.
+
+First
+[install and configure `pyenv`](https://github.com/pyenv/pyenv?tab=readme-ov-file#installation).
+
+The configuration results in adding some lines like the following to your
+"~/.bashrc" file:
+
+```sh
+# this is the "~/.bashrc" file...
+
+# Load pyenv automatically:
+export PYENV_ROOT="$HOME/.pyenv"
+[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init - bash)"
+
+# Load pyenv-virtualenv automatically:
+eval "$(pyenv virtualenv-init -)"
+```
+
+Remember to restart your shell afterwards.
+
+Then use `pyenv` to install a compatible Python version (e.g. Python 3.11):
+
+```sh
+pyenv install 3.11
+```
+
+Listing the installed versions:
+
+```sh
+pyenv versions
+```
+
+Use a specific version that was installed (e.g. 3.11.11):
+
+```sh
+pyenv global 3.11.11
+```
+
 ## Virtual Environment Setup
 
-Create a virtual environment:
+Create a Python virtual environment:
 
 ```sh
 python -m venv .venv
 ```
 
-Activate the environment:
+> NOTE: on Google machines you may need to use `python3` instead of `python`.
+
+Activate the virtual environment:
 
 ```sh
 source .venv/bin/activate
@@ -46,10 +99,20 @@ source .venv/bin/activate
 
 ## Python Package Installation
 
+We are using [Poetry](https://python-poetry.org/) to manage, install, and
+configure Python package dependencies.
+
 Install poetry:
 
 ```sh
 pip install poetry
+```
+
+You may need to specify a Python version that is compatible with this project
+(e.g. Python version 3.11):
+
+```sh
+poetry env use 3.11
 ```
 
 Use poetry to install dependencies:
@@ -83,22 +146,51 @@ You can pass environment variable(s) at runtime, or create a local ".env" file
 and set your desired value(s) there:
 
 ```bash
-# this is the ".env" file:
+# this is the ".env" file...
 
+# customizing the directory where simulation videos are stored:
 SIM_VIDEOS_DIRPATH="/cns/oz-d/home/smart-buildings-control-team/smart-buildings/geometric_sim_videos/"
 ```
 
 ## Notebook Setup
 
-If you are running the Demo notebooks in the "notebook" directory, you must
-modify the values of `data_path`, `metrics_path`, `output_data_path` and
-`root_dir` in those notebooks. Specifically, the `data_path` should point to the
-"sim_config.gin" file located at "smart_control/configs/sim_config.gin".
+If you are running the Demo notebooks in the "smart_control/notebooks"
+directory, you must modify the values of `data_path`, `metrics_path`,
+`output_data_path` and `root_dir` in those notebooks. Specifically, the
+`data_path` should point to the directory where the "sim_config.gin" file is
+located (i.e. "smart_control/configs/sim_config.gin").
 
 > NOTE: in the future we plan on refactoring notebook code to leverage the local
 > module code and simplify this notebook setup experience. See
 > [issue #83](https://github.com/google/sbsim/issues/83) (contributions
 > welcome)!
+
+You can run the notebooks using Jupyter or VS Code. Either approach requires you
+to first install Jupyter. We have defined a separate installation group for
+notebook-related dependencies:
+
+```sh
+poetry install --with notebooks
+```
+
+Create a kernel (required for VS Code, optional for Jupyter):
+
+```sh
+poetry run python -m ipykernel install --user --name=sbsim-kernel
+```
+
+Finally you can run the notebook using Jupyter or VS Code.
+
+A. Run the notebooks using Jupyter (then visit the resulting localhost:8000 URL
+in the browser, and optionally choose the "sbsim-kernel" from the kernel
+drop-down menu):
+
+```sh
+poetry run jupyter notebook
+```
+
+B. Run the notebooks using VS Code (choosing the "sbsim-kernel" kernel from the
+kernel drop-down menu).
 
 <hr>
 

@@ -21,3 +21,6 @@ smart_control/learning/
 smart_control/simulator/videos
 smart_control/refactor/data/
 smart_control/refactor/experiment_results/
+
+# jupyter notebook checkpoints:
+smart_control/notebooks/.ipynb_checkpoints/
