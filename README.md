@@ -31,7 +31,8 @@ containing more information about the project and the codebase.
 A great place to start is by reviewing the Soft Actor Critic Demo notebook
 ("smart_control/notebooks/SAC_Demo.ipynb"). This notebook will walk you through:
 
-1. Creating a gym-compatible Reinforcement Learning (RL) environment.
+1. Creating a [gym](https://www.gymlibrary.dev/)-compatible Reinforcement
+   Learning (RL) environment.
 
 2. Visualizing the environment.
 
