@@ -40,6 +40,10 @@ pylint = "^3.3.6"
 pylint-per-file-ignores = "^1.4.0"
 mdformat = "^0.7.22"
 
+
+[tool.poetry.group.notebooks.dependencies]
+jupyter = "^1.1.1"
+
 [tool.pyink]
 line-length = 80
 unstable = true
