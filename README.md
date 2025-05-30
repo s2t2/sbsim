@@ -10,13 +10,13 @@ BuildSys '23, November 15–16, 2023, Istanbul, Turkey
 ## Real World Data
 
 In addition to our calibrated simulator, we have released six years of data from
-three buildings, This data can be used for further simulator calibration, and
+three buildings. This data can be used for further simulator calibration, and
 for training and evaluating reinforcement learning (RL) models.
 
-The dataset is part of
+The dataset is available for download from
 [Tensorflow Datasets](https://www.tensorflow.org/datasets/catalog/smart_buildings).
 
-Alternatively, for exploration purposes, the dataset can be downloaded as a
+Alternatively, the dataset can be downloaded as a
 [zip file](https://storage.googleapis.com/gresearch/smart_buildings_dataset/tabular_data/sb1.zip)
 from cloud storage.
 
@@ -29,7 +29,7 @@ containing more information about the project and the codebase.
 ## Getting Started
 
 A great place to start is by reviewing the Soft Actor Critic Demo notebook
-("notebooks/SAC_Demo.ipynb"). This notebook will walk you through:
+("smart_control/notebooks/SAC_Demo.ipynb"). This notebook will walk you through:
 
 1. Creating a gym-compatible Reinforcement Learning (RL) environment.
 
@@ -39,7 +39,7 @@ A great place to start is by reviewing the Soft Actor Critic Demo notebook
    [Tensorflow Agents Library](https://www.tensorflow.org/agents).
 
 Alternatively, RL agents can be trained by running various scripts in the
-"reinforcement_learning/scripts" directory.
+"smart_control/reinforcement_learning/scripts" directory.
 
 Before running notebooks or scripts, make sure to complete the setup
 instructions linked below.

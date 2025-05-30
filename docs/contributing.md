@@ -2,8 +2,8 @@
 
 We welcome your contributions to this repository!
 
-Consult the sections below for more information about code documentation,
-testing, and formatting.
+Consult the sections below for more information about the contribution process,
+including guidelines about code documentation, testing, and formatting.
 
 ## Contributor License Agreement
 
@@ -43,8 +43,8 @@ outlined in the Google Python Style Guide.
 We encourage you to add tests to ensure your code is working as expected.
 
 Tests should be placed in a new file next to the file under test. The test file
-name should be the same as the name of the file under test, with an additional
-"\_test.py" appended at the end. For example, if you are testing a file called
+name should be the same as the name of the file under test, with "\_test.py"
+appended at the end. For example, if you are testing a file called
 "my_library.py", the test file should be named "my_library_test.py".
 
 We primarily leverage the `unittest`, `absltest`, and `tf.test` frameworks for
@@ -53,12 +53,11 @@ writing tests, and we use the `pytest` tool for running tests.
 See existing test files for example structure. Here is a simplified example:
 
 ```py
-# this is a test file...
+# this is an example "_test.py" file...
 
 from absl.testing import absltest
 
 class TestCalculate(absltest.TestCase):
-
   def test_addition(self):
     self.assertEqual(2+2, 4)
 
@@ -125,10 +124,11 @@ example to leave a long line as-is), it is possible to
 [ignore formatting](https://black.readthedocs.io/en/stable/usage_and_configuration/the_basics.html#ignoring-sections)
 by adding a trailing comment of `# fmt: skip` to the right of the line / at the
 end of the expression, or by wrapping multiple lines of code between
-`# fmt: off` and `# fmt: on` comments. NOTE: `pyink` and `pylint` (see section
-below) may each require their own separate set of comments, however `pyink`
-respects many `pylint` comments, so you are recommended to try using a `pylint`
-comment first, and then only also add a `pyink` comment as necessary.
+`# fmt: off` and `# fmt: on` comments. NOTE: `pyink` and `pylint` (see "Python
+Style Checking" section below) may each require their own separate set of
+comments, however `pyink` respects many `pylint` comments, so you are
+recommended to try using a `pylint` comment first, and then only also add a
+`pyink` comment as necessary.
 
 ### Python Import Sorting
 
@@ -161,8 +161,8 @@ isort -v .
 ### Python Style Checking
 
 We are using [`pylint`](https://pylint.readthedocs.io/en/stable/index.html) to
-check for Python style formatting issues that `pyink` doesn't fix, to more
-closely follow
+check for additional Python style formatting issues that `pyink` doesn't fix, to
+more closely follow
 [Google Python style guidelines](https://google.github.io/styleguide/pyguide.html).
 The style checker will NOT automatically update files inplace, but rather will
 produce a report containing any errors that you will need to fix manually.
