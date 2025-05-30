@@ -47,9 +47,24 @@ name should be the same as the name of the file under test, with an additional
 "\_test.py" appended at the end. For example, if you are testing a file called
 "my_library.py", the test file should be named "my_library_test.py".
 
-See existing test files for example structure. We primarily leverage the
-`unittest`, `absltest`, and `tf.test` frameworks for writing tests, and we use
-the `pytest` tool for running tests.
+We primarily leverage the `unittest`, `absltest`, and `tf.test` frameworks for
+writing tests, and we use the `pytest` tool for running tests.
+
+See existing test files for example structure. Here is a simplified example:
+
+```py
+# this is a test file...
+
+from absl.testing import absltest
+
+class TestCalculate(absltest.TestCase):
+
+  def test_addition(self):
+    self.assertEqual(2+2, 4)
+
+if __name__ == "__main__":
+  absltest.main()
+```
 
 Running tests:
 
