@@ -1,0 +1,39 @@
+site_name: Smart Control Project Documentation
+
+site_dir: docs_site # should not be within the docs dir
+
+theme: material # material / readthedocs
+
+nav:
+  - Home: index.md
+  #- 'Code of Conduct': 'code-of-conduct.md'
+  - 'Setup': 'setup.md'
+  - 'Contributing': 'contributing.md'
+  #- 'API Reference': 'api.md' # We will create this file next
+
+#plugins:
+#  - search
+#  - mkdocstrings:
+#      default_handler: python
+#      handlers:
+#        python:
+#          options:
+#            docstring_style: google
+#            show_root_heading: true # Creates a heading for each module
+#            show_source: false # Keep it cleaner for now
+#            # Below setting is important to make mkdocstrings find modules in ../../smart_control
+#            # It assumes mkdocs build is run from the 'docs' directory.
+#            # Or, if mkdocs build is run from project root, paths should be relative to that.
+#            # The plugin searches sys.path. If smart_control is installable (via poetry),
+#            # it might be found automatically.
+#            # Adding it to selection paths explicitly is safer.
+#            selection:
+#              paths:
+#                # This path is relative to the mkdocs.yml file location (i.e., docs/)
+#                # or relative to the project root if `mkdocs build` is run from there.
+#                # Let's assume we run `mkdocs build` from project root later in GH actions.
+#                # For local `mkdocs serve` from `docs/`, this needs to be `../smart_control`
+#                # To be robust, we'll add smart_control to PYTHONPATH when building.
+#                # For now, let's assume the path is relative to the project root for mkdocstrings.
+#                - smart_control
+#

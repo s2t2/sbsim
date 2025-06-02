@@ -115,7 +115,7 @@ You may need to specify a Python version that is compatible with this project
 poetry env use 3.11
 ```
 
-Use poetry to install dependencies:
+Use poetry to install dependencies, including development dependencies:
 
 ```sh
 poetry install --with dev
