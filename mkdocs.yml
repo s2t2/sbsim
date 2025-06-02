@@ -4,17 +4,22 @@
 #
 
 site_name: Smart Control Project Documentation
-site_description:
+site_description: "Smart Buildings"
 site_dir: docs_site # NOTE: should not be within the docs dir
 site_url: https://google.github.io/sbsim/
 repo_url: https://github.com/google/sbsim
+repo_name: google/sbsim
+#repo_icon: fontawesome/brands/github
 
 #
 # THEME
 # default: (readthedocs / mkdocs), third-party: material
 #
 theme:
-  name: readthedocs
+  name: material
+  features:
+    #- navigation.tabs # puts tabs under top navbar
+    - navigation.sections # splits left sidebar into sections
 
 
 #
@@ -22,37 +27,43 @@ theme:
 #
 nav:
   - Home: index.md
-  #- 'Code of Conduct': 'code-of-conduct.md'
-  - 'Setup': 'setup.md'
-  - 'Contributing': 'contributing.md'
-  #- 'API Reference': 'api.md' # We will create this file next
+  - 'Setup': setup.md
+  - 'Contributing': contributing.md
+  - 'API Reference':
+    - api/dataset.md
+    - api/environment.md
+    - api/models.md
+    - api/reinforcement_learning.md
+    - api/reward.md
+    - api/simulator.md
+
+  #- 'Documentation': README.md
 
 #
 # API DOCS
 #
-#plugins:
-#  - search
-#  - mkdocstrings:
-#      default_handler: python
-#      handlers:
-#        python:
-#          options:
-#            docstring_style: google
-#            show_root_heading: true # Creates a heading for each module
-#            show_source: false # Keep it cleaner for now
-#            # Below setting is important to make mkdocstrings find modules in ../../smart_control
-#            # It assumes mkdocs build is run from the 'docs' directory.
-#            # Or, if mkdocs build is run from project root, paths should be relative to that.
-#            # The plugin searches sys.path. If smart_control is installable (via poetry),
-#            # it might be found automatically.
-#            # Adding it to selection paths explicitly is safer.
-#            selection:
-#              paths:
-#                # This path is relative to the mkdocs.yml file location (i.e., docs/)
-#                # or relative to the project root if `mkdocs build` is run from there.
-#                # Let's assume we run `mkdocs build` from project root later in GH actions.
-#                # For local `mkdocs serve` from `docs/`, this needs to be `../smart_control`
-#                # To be robust, we'll add smart_control to PYTHONPATH when building.
-#                # For now, let's assume the path is relative to the project root for mkdocstrings.
-#                - smart_control
-#
+
+plugins:
+  - search
+  - mkdocstrings:
+      default_handler: python
+      # You can configure options for the Python handler specifically here
+      handlers:
+        python:
+          # Paths where mkdocstrings should look for your Python code.
+          # Since your 'my_project' library is next to mkdocs.yml,
+          # you'd likely just need to include its root directory.
+          paths:
+            - .  # This tells mkdocstrings to look in the current directory (your project root)
+
+          # Options for how docstrings are parsed and rendered
+          options:
+            docstring_style: google
+            show_source: true       # Show the source code of documented objects
+            show_signature_annotations: true # Show type hints in signatures
+            show_root_heading: true # Show a top-level heading for modules/classes
+            show_root_full_path: true
+            members_order: alphabetical # Or "source", "__all__"
+            filters: ["!^_"] # Exclude private members (starting with _) by default
+            # You can add more specific filters, e.g., to exclude all private/protected
+            # but keep __init__ methods: filters: ["!^_", "^__init__$"]
