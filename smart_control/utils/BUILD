@@ -24,12 +24,12 @@ package(
     default_visibility = ["//visibility:public"],
 )
 
-py_library(
+pytype_strict_library(
     name = "constants",
     srcs = ["constants.py"],
 )
 
-py_library(
+pytype_strict_library(
     name = "conversion_utils",
     srcs = ["conversion_utils.py"],
     deps = [
