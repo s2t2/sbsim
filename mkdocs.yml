@@ -1,9 +1,25 @@
+#
+# MKDOCS CONFIGURATION FILE
+# see: https://www.mkdocs.org/user-guide/configuration/
+#
+
 site_name: Smart Control Project Documentation
+site_description:
+site_dir: docs_site # NOTE: should not be within the docs dir
+site_url: https://google.github.io/sbsim/
+repo_url: https://github.com/google/sbsim
 
-site_dir: docs_site # should not be within the docs dir
+#
+# THEME
+# default: (readthedocs / mkdocs), third-party: material
+#
+theme:
+  name: readthedocs
 
-theme: material # material / readthedocs
 
+#
+# NAVIGATION
+#
 nav:
   - Home: index.md
   #- 'Code of Conduct': 'code-of-conduct.md'
@@ -11,6 +27,9 @@ nav:
   - 'Contributing': 'contributing.md'
   #- 'API Reference': 'api.md' # We will create this file next
 
+#
+# API DOCS
+#
 #plugins:
 #  - search
 #  - mkdocstrings:
