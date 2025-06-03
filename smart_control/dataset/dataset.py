@@ -67,10 +67,13 @@ class SmartBuildingsDataset:
     if building not in self.partitions:
       raise ValueError("Invalid building")
 
-    floorplan = np.load(f"./{building}/tabular/floorplan.npy")
+    tabular_dirpath = os.path.join(DATA_DIR, building, "tabular")
 
-    json_filepath = f"./{building}/tabular/device_layout_map.json"
-    with open(json_filepath, encoding="utf-8") as json_file:
+    floorplan_filepath = os.path.join(tabular_dirpath, "floorplan.npy")
+    floorplan = np.load(floorplan_filepath)
+
+    device_layout_map_filepath = os.path.join(tabular_dirpath, "device_layout_map.json") # pylint:disable=line-too-long
+    with open(device_layout_map_filepath, encoding="utf-8") as json_file:
       device_layout_map = json.load(json_file)
 
     return floorplan, device_layout_map
@@ -86,22 +89,25 @@ class SmartBuildingsDataset:
       A tuple containing the data and metadata.
     """
     if building not in self.partitions:
-      raise ValueError("Invalid building")
+      raise ValueError(f"Invalid building: {building}")
 
     if partition not in self.partitions[building]:
-      raise ValueError("invalid partition")
+      raise ValueError(f"Invalid partition: {partition}.")
 
-    path = f"./{building}/tabular/{building}/{partition}/"
+    partition_dirpath = os.path.join(DATA_DIR, building, "tabular", building, partition) # pylint:disable=line-too-long
 
-    data = np.load(path + "data.npy.npz")
-    metadata = pickle.load(open(path + "metadata.pickle", "rb"))
+    data_filepath = os.path.join(partition_dirpath, "data.npy.npz")
+    data = np.load(data_filepath)
+
+    metadata_filepath = os.path.join(partition_dirpath, "metadata.pickle")
+    metadata = pickle.load(open(metadata_filepath, "rb"))
 
     if "device_infos" not in metadata.keys():
-      metadata["device_infos"] = pickle.load(
-          open(f"./{building}/tabular/device_info_dicts.pickle", "rb")
-      )
+      device_info_filepath = os.path.join(DATA_DIR, building, "tabular", "device_info_dicts.pickle") # pylint:disable=line-too-long
+      metadata["device_infos"] = pickle.load(open(device_info_filepath, "rb"))
+
     if "zone_infos" not in metadata.keys():
-      metadata["zone_infos"] = pickle.load(
-          open(f"./{building}/tabular/zone_info_dicts.pickle", "rb")
-      )
+      zone_info_filepath = os.path.join(DATA_DIR, building, "tabular", "zone_info_dicts.pickle") # pylint:disable=line-too-long
+      metadata["zone_infos"] = pickle.load(open(zone_info_filepath, "rb"))
+
     return data, metadata
