@@ -1,15 +1,20 @@
 """Smart Buildings Dataset implementation, including loading and downloading."""
 
 import json
+import os
 import pickle
 import shutil
 
 import numpy as np
 import requests
 
+from smart_control.utils.constants import ROOT_DIR
+
+DATA_DIR = os.path.join(ROOT_DIR, "data")
+
 
 class SmartBuildingsDataset:
-  """Smart Buildings Dataset"""
+  """Smart Buildings Dataset."""
 
   def __init__(self, download=True):
     self.partitions = {
@@ -24,25 +29,31 @@ class SmartBuildingsDataset:
     if download:
       self.download()
 
-  def download(self):
-    """Downloads the Smart Buildings Dataset from Google Cloud Storage."""
-    print("Downloading data...")
+  @staticmethod
+  def _download_file_if_not_exists(url, timeout=60):
+    local_filename = url.split("/")[-1]
+    local_filepath = os.path.join(DATA_DIR, local_filename)
 
-    def download_file(url, timeout=200):
-      local_filename = url.split("/")[-1]
+    if not os.path.isfile(local_filepath):
 
       with requests.get(url, stream=True, timeout=timeout) as r:
         r.raise_for_status()
 
-        with open(local_filename, "wb") as f:
+        with open(local_filepath, "wb") as f:
           for chunk in r.iter_content(chunk_size=8192):
             f.write(chunk)
 
-      return local_filename
+    return local_filepath
 
+  def download(self):
+    """Downloads the Smart Buildings Dataset from Google Cloud Storage."""
+    print("Downloading data...")
     url = "https://storage.googleapis.com/gresearch/smart_buildings_dataset/tabular_data/sb1.zip"  # pylint: disable=line-too-long
-    download_file(url)
-    shutil.unpack_archive("sb1.zip", "sb1/")
+    self._download_file_if_not_exists(url)
+
+    zip_filepath = os.path.join(DATA_DIR, "sb1.zip")
+    dataset_dir = os.path.join(DATA_DIR, "sb1/")
+    shutil.unpack_archive(zip_filepath, dataset_dir)
 
   def get_floorplan(self, building):
     """Gets the floorplan and device layout map for a specific building.

@@ -14,6 +14,9 @@ __pycache__/
 # data downloads:
 sb1.zip
 sb1/
+data/*
+data/sb1.zip
+data/sb1/
 
 # results files:
 */**/output_data/
