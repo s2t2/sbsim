@@ -29,6 +29,8 @@ nav:
   - Home: index.md
   - 'Setup': setup.md
   - 'Contributing': contributing.md
+  #- 'Guides':
+  #  - guides/
   - 'API Reference':
     - api/dataset.md
     - api/environment.md
@@ -37,33 +39,44 @@ nav:
     - api/reward.md
     - api/simulator.md
 
-  #- 'Documentation': README.md
 
 #
 # API DOCS
 #
 
+markdown_extensions:
+  - toc:
+      # adds clickable link anchors for all headings
+      permalink: "#" # true, "#", "¶", "⚓︎", etc
+
 plugins:
   - search
+
+  # https://mkdocstrings.github.io/python/usage/
   - mkdocstrings:
       default_handler: python
-      # You can configure options for the Python handler specifically here
       handlers:
         python:
-          # Paths where mkdocstrings should look for your Python code.
-          # Since your 'my_project' library is next to mkdocs.yml,
-          # you'd likely just need to include its root directory.
           paths:
-            - .  # This tells mkdocstrings to look in the current directory (your project root)
-
-          # Options for how docstrings are parsed and rendered
+            - .  # look in the current directory for the "smart_control" dir
           options:
             docstring_style: google
-            show_source: true       # Show the source code of documented objects
-            show_signature_annotations: true # Show type hints in signatures
-            show_root_heading: true # Show a top-level heading for modules/classes
-            show_root_full_path: true
-            members_order: alphabetical # Or "source", "__all__"
-            filters: ["!^_"] # Exclude private members (starting with _) by default
-            # You can add more specific filters, e.g., to exclude all private/protected
-            # but keep __init__ methods: filters: ["!^_", "^__init__$"]
+            docstring_section_style: "table" # "table", "list", "spacy"
+            show_source: false
+            show_signature_annotations: true # type hints
+            show_root_heading: true # HTML heading for the import path
+            show_root_full_path: true # show full module import path
+            show_root_members_full_path: false
+            show_members_full_path: false
+            show_root_toc_entry: true
+            members_order: alphabetical # "alphabetical", "source", "__all__"
+            filters: ["!^_"] # exclude private / protected members
+            inherited_members: true
+            show_inheritance_diagram: true # paid feature?
+            line_length: 80
+            show_category_heading: false # "Classes", "Functions" etc.
+            show_symbol_type_heading: true # "Class", "Function", etc
+            show_symbol_type_toc: true # "mod", "class", "meth", etc.
+            merge_init_into_class: true
+            show_if_no_docstring: true
+            separate_signature: false

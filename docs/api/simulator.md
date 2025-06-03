@@ -24,7 +24,7 @@
 
 ::: smart_control.simulator.simulator_building
 
-::: smart_control.simulator.simulator_flexible_floorplan
+::: smart_control.simulator.simulator_flexible_floor_plan
 
 ::: smart_control.simulator.simulator
 
