@@ -39,7 +39,13 @@ nav:
     - api/models.md
     - api/reinforcement_learning.md
     - api/reward.md
-    - api/simulator.md
+    - 'Simulator':
+      - 'Overview': api/simulator.md
+      - api/simulator/building.md
+      - api/simulator/devices.md
+      - api/simulator/occupancy.md
+      - api/simulator/weather.md
+      - api/simulator/utils.md
 
 
 #

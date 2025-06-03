@@ -1,6 +1,5 @@
-# Welcome to the Smart Control Project Documentation
+# Smart Control Project Documentation
 
-This site provides documentation for the Smart Control project, generated
-automatically from docstrings.
-
-Navigate using the menu on the left. Check out the [API Reference](api.md).
+The Smart Control project is a reinforcement learning (RL) environment designed
+for controlling building HVAC (Heating, Ventilation, and Air Conditioning)
+systems to optimize energy efficiency, cost, and occupant comfort.
