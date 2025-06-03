@@ -11,6 +11,10 @@
 __pycache__/
 .pytest_cache
 
+# data downloads:
+sb1.zip
+sb1/
+
 # results files:
 */**/output_data/
 */**/metrics/
