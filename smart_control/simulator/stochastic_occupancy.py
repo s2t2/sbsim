@@ -17,20 +17,6 @@ simulation frameworks.
 
 Debugging features are included to provide insights into sampling and state
 transition processes when `debug_print` is enabled.
-
-Copyright 2023 Google LLC
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    https://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
 """
 
 # Modify the code to include debug prints
@@ -200,7 +186,7 @@ class ZoneOccupant:
 
     # Handle lunch break
     if self._occupancy_state == OccupancyStateEnum.WORK:
-      lunch_start_time = datetime.time(hour=self._lunch_start_time, minute=0)
+      lunch_start_time = datetime.time(hour=self._lunch_start_hour, minute=0)
       lunch_end_time = (
           datetime.datetime.combine(datetime.date.today(), lunch_start_time)
           + pd.Timedelta(minutes=self._lunch_duration)
