@@ -15,6 +15,7 @@ repo_name: google/sbsim
 # THEME
 # default: (readthedocs / mkdocs), third-party: material
 #
+
 theme:
   name: material
   features:
@@ -25,6 +26,7 @@ theme:
 #
 # NAVIGATION
 #
+
 nav:
   - 'Home': index.md
   - 'Setup': setup.md
@@ -46,7 +48,7 @@ nav:
 
 markdown_extensions:
   - toc:
-      # adds clickable link anchors for all headings
+      # adds clickable link anchors for all headings:
       permalink: "#" # true, "#", "¶", "⚓︎", etc
 
 plugins:
@@ -67,7 +69,6 @@ plugins:
             show_root_heading: true # HTML heading for the import path
             show_root_full_path: true # show full module import path
             show_root_members_full_path: false
-            #show_members_full_path: false
             show_root_toc_entry: true
             members_order: alphabetical # "alphabetical", "source", "__all__"
             filters: ["!^_"] # exclude private / protected members
@@ -79,4 +80,5 @@ plugins:
             show_symbol_type_toc: true # "mod", "class", "meth", etc.
             merge_init_into_class: true
             show_if_no_docstring: true
-            separate_signature: false
+            separate_signature: true
+            annotations_path: "brief" # "brief", "source", or "full"

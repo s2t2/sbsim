@@ -23,7 +23,7 @@ First, navigate to the project root directory:
 cd path/to/sbsim
 ```
 
-## Previewing
+### Previewing
 
 Start a local server that auto-reloads when changes are detected:
 
@@ -33,7 +33,11 @@ poetry run mkdocs serve
 
 While the server is running you can view the site at `http://localhost:8000`.
 
-## Building
+> NOTE: the server hot reloads after configuration changes, however if you
+> change a docstring in one of the documented Python files, you may need to
+> restart the server for the changes to take effect.
+
+### Building
 
 Build the static site including HTML files (for deployment purposes):
 
