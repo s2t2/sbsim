@@ -26,12 +26,12 @@ theme:
 # NAVIGATION
 #
 nav:
-  - Home: index.md
+  - 'Home': index.md
   - 'Setup': setup.md
   - 'Contributing': contributing.md
-  #- 'Guides':
-  #  - guides/
+  - 'Documentation Site': docs-site.md
   - 'API Reference':
+    - api/config.md
     - api/dataset.md
     - api/environment.md
     - api/models.md
@@ -67,7 +67,7 @@ plugins:
             show_root_heading: true # HTML heading for the import path
             show_root_full_path: true # show full module import path
             show_root_members_full_path: false
-            show_members_full_path: false
+            #show_members_full_path: false
             show_root_toc_entry: true
             members_order: alphabetical # "alphabetical", "source", "__all__"
             filters: ["!^_"] # exclude private / protected members

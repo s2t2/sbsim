@@ -16,7 +16,7 @@ for training and evaluating reinforcement learning (RL) models.
 The dataset is available for download from
 [Tensorflow Datasets](https://www.tensorflow.org/datasets/catalog/smart_buildings).
 
-Alternatively, the dataset can be downloaded as a
+Alternatively, a smaller version of the dataset can be downloaded as a
 [zip file](https://storage.googleapis.com/gresearch/smart_buildings_dataset/tabular_data/sb1.zip)
 from cloud storage.
 

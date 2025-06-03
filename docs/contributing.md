@@ -209,7 +209,7 @@ If you would like to run the markdown formatter manually:
 
 ```sh
 # format specific file(s):
-mdformat README.md docs/
+mdformat README.md docs/*.md
 
 # check if a file would be changed:
 mdformat README.md --check
