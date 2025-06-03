@@ -79,6 +79,6 @@ plugins:
             show_symbol_type_heading: true # "Class", "Function", etc
             show_symbol_type_toc: true # "mod", "class", "meth", etc.
             merge_init_into_class: true
-            show_if_no_docstring: true
+            show_if_no_docstring: false
             separate_signature: true
             annotations_path: "brief" # "brief", "source", or "full"

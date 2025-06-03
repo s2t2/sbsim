@@ -39,6 +39,9 @@ Specifically we use the
 [Google Docstring Guidelines](https://google.github.io/styleguide/pyguide.html#381-docstrings)
 outlined in the Google Python Style Guide.
 
+Here are some additional
+[examples of Google-formatted docstrings](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html).
+
 The content of the [documentation site](./docs-site.md) is automatically
 generated based on these docstrings.
 
