@@ -1,36 +1,38 @@
 #
 # MKDOCS CONFIGURATION FILE
-# see: https://www.mkdocs.org/user-guide/configuration/
+# https://www.mkdocs.org/user-guide/configuration/
 #
 
 site_name: Smart Control Project Documentation
-site_description: "Smart Buildings"
+site_description: "Google Open Source Smart Buildings Control"
 site_dir: docs_site # NOTE: should not be within the docs dir
 site_url: https://google.github.io/sbsim/
 repo_url: https://github.com/google/sbsim
 repo_name: google/sbsim
-#repo_icon: fontawesome/brands/github
+edit_uri: edit/copybara_push/docs/
 
 #
-# THEME
-# default: (readthedocs / mkdocs), third-party: material
+# THEME / STYLE
 #
 
 theme:
-  name: material
+  name: material # default: (readthedocs / mkdocs), third-party: material
 
   features:
     #- navigation.tabs # puts tabs under top navbar
     - navigation.sections # splits left sidebar into sections
-    - navigation.path # breadcrumbs
+    - navigation.path # breadcrumbs ?
     - navigation.top # back to top button
     - navigation.footer # next and back buttons
-    #-navigation.indexes # allows a directory to have an index.md
-
+    #- navigation.indexes # allows a directory to have an index.md
+    - content.action.edit  # Enables the "Edit this page" button
+    - content.action.view  # Enables the "View source of this page" button
 
   # https://squidfunk.github.io/mkdocs-material/reference/icons-emojis/
   icon:
     logo: fontawesome/brands/google # material/glasses
+
+  #logo: assets/images/google-open-source-logo-large.png
 
   # https://squidfunk.github.io/mkdocs-material/setup/changing-the-colors/
   palette:
@@ -38,8 +40,8 @@ theme:
     # Light Mode
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      #primary: teal        # Primary color for headers, links, etc.
-      #accent: deep purple  # Accent color for highlights, hover states
+      primary: light blue
+      accent: light blue
       toggle:
         icon: material/weather-sunny # material/brightness-7
         name: Switch to dark mode
@@ -47,21 +49,25 @@ theme:
     # Dark Mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      #primary: black
-      #accent: lime
+      primary: light blue
+      accent: light blue
       toggle:
         icon: material/weather-night # material/brightness-2
         name: Switch to light mode
 
+#extra_css:
+#  - assets/stylesheets/google-style.css
+
 #
-# NAVIGATION
+# NAVIGATION / TOC
 #
 
 nav:
   - 'Home': index.md
-  - 'Setup': setup.md
-  - 'Contributing': contributing.md
-  - 'Documentation Site': docs-site.md
+  - 'Local Development':
+    - 'Setup': setup.md
+    - 'Contributing': contributing.md
+    - 'Documentation Site': docs-site.md
   - 'API Reference':
     - api/config.md
     - api/dataset.md
@@ -83,27 +89,21 @@ nav:
       - api/simulator/weather.md
       - api/simulator/utils.md
 
-
 #
-# API DOCS
+# PLUGINS / EXTENSIONS
 #
 
 markdown_extensions:
   - toc:
-      # adds clickable link anchors for all headings:
-      permalink: "#" # true, "#", "¶", "⚓︎", etc
-
-  #- pymdownx.emoji:
-  #    emoji_index: !!python/name:materialx.emoji.twemoji # Recommended emoji index
-  #    emoji_generator: !!python/name:materialx.emoji.to_svg # Renders emojis/icons as SVG
-  #- attr_list # Often useful for styling icons (e.g., adding color or animation)
-
-
+      permalink: "#" # adds clickable link anchors for all headings
 
 plugins:
   - search
 
+  #
+  # API DOCS
   # https://mkdocstrings.github.io/python/usage/
+  #
   - mkdocstrings:
       default_handler: python
       handlers:
