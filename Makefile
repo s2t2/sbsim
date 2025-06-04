@@ -1,7 +1,7 @@
 # NOTE: you have to use tabs (not spaces) to define commands in the Makefile
 
 # these are commands to be run, not files to be created:
-.PHONY: activate docs docs-build mdformat pyink isort pylint lint test
+.PHONY: activate docs docs-build docs-quiet mdformat pyink isort pylint lint test
 
 # variable pointing to the virtual environment executable files:
 VENV_BIN := .venv/bin
@@ -48,6 +48,9 @@ test:
 
 docs:
 	$(VENV_BIN)/mkdocs serve
+
+docs-quiet:
+	${VENV_BIN}/mkdocs serve --quiet
 
 docs-build:
 	$(VENV_BIN)/mkdocs build

@@ -1,6 +1,4 @@
-# Reward
-
-::: smart_control.reward
+# Reward Functions
 
 ::: smart_control.reward.base_setpoint_energy_carbon_reward
 

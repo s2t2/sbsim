@@ -29,6 +29,9 @@ Start a local server that auto-reloads when changes are detected:
 
 ```bash
 poetry run mkdocs serve
+
+# or, suppress warnings:
+poetry run mkdocs serve --quiet
 ```
 
 While the server is running you can view the site at

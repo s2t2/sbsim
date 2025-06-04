@@ -18,6 +18,7 @@ repo_name: google/sbsim
 
 theme:
   name: material
+
   features:
     #- navigation.tabs # puts tabs under top navbar
     - navigation.sections # splits left sidebar into sections
@@ -26,6 +27,31 @@ theme:
     - navigation.footer # next and back buttons
     #-navigation.indexes # allows a directory to have an index.md
 
+
+  # https://squidfunk.github.io/mkdocs-material/reference/icons-emojis/
+  icon:
+    logo: fontawesome/brands/google # material/glasses
+
+  # https://squidfunk.github.io/mkdocs-material/setup/changing-the-colors/
+  palette:
+
+    # Light Mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      #primary: teal        # Primary color for headers, links, etc.
+      #accent: deep purple  # Accent color for highlights, hover states
+      toggle:
+        icon: material/weather-sunny # material/brightness-7
+        name: Switch to dark mode
+
+    # Dark Mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      #primary: black
+      #accent: lime
+      toggle:
+        icon: material/weather-night # material/brightness-2
+        name: Switch to light mode
 
 #
 # NAVIGATION
@@ -50,7 +76,7 @@ nav:
       - api/reinforcement_learning/utils.md
     - api/reward.md
     - 'Simulator':
-      - 'Overview': api/simulator.md
+      - 'Overview': api/simulator/simulator.md
       - api/simulator/building.md
       - api/simulator/devices.md
       - api/simulator/occupancy.md
@@ -66,6 +92,13 @@ markdown_extensions:
   - toc:
       # adds clickable link anchors for all headings:
       permalink: "#" # true, "#", "¶", "⚓︎", etc
+
+  #- pymdownx.emoji:
+  #    emoji_index: !!python/name:materialx.emoji.twemoji # Recommended emoji index
+  #    emoji_generator: !!python/name:materialx.emoji.to_svg # Renders emojis/icons as SVG
+  #- attr_list # Often useful for styling icons (e.g., adding color or animation)
+
+
 
 plugins:
   - search

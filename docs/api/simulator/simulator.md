@@ -1,8 +1,5 @@
 # Simulator
 
-::: smart_control.simulator
-
-
 ::: smart_control.simulator.simulator
 
 ::: smart_control.simulator.simulator_flexible_floor_plan
