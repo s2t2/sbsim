@@ -897,6 +897,7 @@ class BuildingTest(parameterized.TestCase):
     expected_array = np.array(
         [
             [w, w, w, w, w, w, w, w, w, w, w, w],
+            [w, w, w, w, w, w, w, w, w, w, w, w],
             [w, w, 0, 0, i, 0, 0, i, 0, 0, w, w],
             [w, w, 0, 0, i, 0, 0, i, 0, 0, w, w],
             [w, w, 0, 0, i, 0, 0, i, 0, 0, w, w],
