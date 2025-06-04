@@ -11,6 +11,10 @@
 __pycache__/
 .pytest_cache
 
+# data downloads:
+sb1.zip
+sb1/
+
 # results files:
 */**/output_data/
 */**/metrics/
@@ -24,3 +28,6 @@ smart_control/refactor/experiment_results/
 
 # jupyter notebook checkpoints:
 smart_control/notebooks/.ipynb_checkpoints/
+
+# documentation site:
+docs_site

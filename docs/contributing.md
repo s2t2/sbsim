@@ -34,9 +34,16 @@ for this purpose.
 
 ## Documentation
 
-We encourage you to document your code using docstrings. Specifically we use the
+We encourage you to document your code using docstrings and type hints.
+Specifically we use the
 [Google Docstring Guidelines](https://google.github.io/styleguide/pyguide.html#381-docstrings)
 outlined in the Google Python Style Guide.
+
+Here are some additional
+[examples of Google-formatted docstrings](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html).
+
+The content of the [documentation site](./docs-site.md) is automatically
+generated based on these docstrings.
 
 ## Testing
 
@@ -58,6 +65,7 @@ See existing test files for example structure. Here is a simplified example:
 from absl.testing import absltest
 
 class TestCalculate(absltest.TestCase):
+
   def test_addition(self):
     self.assertEqual(2+2, 4)
 
@@ -209,11 +217,16 @@ If you would like to run the markdown formatter manually:
 
 ```sh
 # format specific file(s):
-mdformat README.md docs/
+mdformat README.md docs/*.md
 
 # check if a file would be changed:
 mdformat README.md --check
 ```
+
+> NOTE: we are ignoring markdown files in the "docs/api" directory because they
+> contain [auto-documentation](./docs-site.md) formatting directives like `:::`
+> that get improperly formatted if those directives contain additional
+> configuration options.
 
 > NOTE: it would be nice to check all markdown files, however this currently
 > includes all files in the ".venv" folder (not desired), and the functionality

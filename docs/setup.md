@@ -115,7 +115,7 @@ You may need to specify a Python version that is compatible with this project
 poetry env use 3.11
 ```
 
-Use poetry to install dependencies:
+Use poetry to install dependencies, including development dependencies:
 
 ```sh
 poetry install --with dev
@@ -179,11 +179,11 @@ Create a kernel (required for VS Code, optional for Jupyter):
 poetry run python -m ipykernel install --user --name=sbsim-kernel
 ```
 
-Finally you can run the notebook using Jupyter or VS Code.
+Finally you can run the notebook using Jupyter or VS Code:
 
-A. Run the notebooks using Jupyter (then visit the resulting localhost:8000 URL
-in the browser, and optionally choose the "sbsim-kernel" from the kernel
-drop-down menu):
+A. Run the notebooks using Jupyter (then visit the resulting
+[localhost:8000](localhost:8000) URL in the browser, and optionally choose the
+"sbsim-kernel" from the kernel drop-down menu):
 
 ```sh
 poetry run jupyter notebook
@@ -215,7 +215,8 @@ docker run -it -p 8888:8888 -v $(pwd):/workspace sbsim-env
 > NOTE: the container will copy the repository into "/workspace/sbsim" on the
 > first run. Use -v to persist changes.
 
-To access Jupyter notebooks, visit http://localhost:8888 in the browser.
+To access Jupyter notebooks, visit
+[http://localhost:8888](http://localhost:8888) in the browser.
 
 To run scripts or tests inside the actively running docker container:
 
