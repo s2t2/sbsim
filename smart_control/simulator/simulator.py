@@ -590,5 +590,3 @@ class Simulator:
     """
     self.setup_step_sim()
     self.execute_step_sim()
-
-[end of ./smart_control/simulator/simulator.py]
