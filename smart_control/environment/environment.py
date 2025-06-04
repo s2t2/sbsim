@@ -1387,5 +1387,3 @@ def _apply_single_action_response(
       response_type=action_response_type,
       additional_info=additional_info,
   )
-
-[end of ./smart_control/environment/environment.py]
