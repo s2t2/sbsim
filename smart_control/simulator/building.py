@@ -894,5 +894,3 @@ class FloorPlanBasedBuilding(BaseSimulatorBuilding):
   def apply_convection(self) -> None:
     if self._convection_simulator is not None:
       self._convection_simulator.apply_convection(self._room_dict, self.temp)
-
-[end of ./smart_control/simulator/building.py]
