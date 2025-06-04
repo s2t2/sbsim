@@ -30,7 +30,7 @@ Start a local server that auto-reloads when changes are detected:
 ```bash
 poetry run mkdocs serve
 
-# or, suppress warnings:
+# suppress warnings:
 poetry run mkdocs serve --quiet
 ```
 
@@ -49,7 +49,7 @@ Build the static site including HTML files (for deployment purposes):
 poetry run mkdocs build
 ```
 
-The output will be placed in the "site/" directory by default.
+The output will be placed in the "docs_site/" directory.
 
 ## GitHub Actions Deployment
 
