@@ -2,6 +2,11 @@
 # MKDOCS CONFIGURATION FILE
 # https://www.mkdocs.org/user-guide/configuration/
 #
+# https://github.com/google/bayesnf/blob/main/mkdocs.yml
+# https://github.com/google/ml-metadata/blob/master/mkdocs.yml
+# https://github.com/google/temporian/blob/main/docs/mkdocs.yml
+# https://github.com/mesop-dev/mesop/blob/main/mkdocs.yml
+#
 
 site_name: Smart Control Project Documentation
 site_description: "Google Open Source Smart Buildings Control"
