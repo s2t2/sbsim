@@ -186,7 +186,7 @@ class ZoneOccupant:
 
     # Handle lunch break
     if self._occupancy_state == OccupancyStateEnum.WORK:
-      lunch_start_time = datetime.time(hour=self._lunch_start_hour, minute=0)
+      lunch_start_time = datetime.time(hour=self._lunch_start_time, minute=0)
       lunch_end_time = (
           datetime.datetime.combine(datetime.date.today(), lunch_start_time)
           + pd.Timedelta(minutes=self._lunch_duration)
