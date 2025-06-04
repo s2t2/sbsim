@@ -1103,5 +1103,3 @@ class SimulatorTest(parameterized.TestCase):
 
 if __name__ == '__main__':
   absltest.main()
-
-[end of ./smart_control/simulator/simulator_test.py]
