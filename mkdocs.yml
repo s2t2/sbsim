@@ -21,6 +21,10 @@ theme:
   features:
     #- navigation.tabs # puts tabs under top navbar
     - navigation.sections # splits left sidebar into sections
+    - navigation.path # breadcrumbs
+    - navigation.top # back to top button
+    - navigation.footer # next and back buttons
+    #-navigation.indexes # allows a directory to have an index.md
 
 
 #

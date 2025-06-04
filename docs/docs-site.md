@@ -31,7 +31,8 @@ Start a local server that auto-reloads when changes are detected:
 poetry run mkdocs serve
 ```
 
-While the server is running you can view the site at `http://localhost:8000`.
+While the server is running you can view the site at
+[http://localhost:8000](http://localhost:8000).
 
 > NOTE: the server hot reloads after configuration changes, however if you
 > change a docstring in one of the documented Python files, you may need to
