@@ -620,5 +620,3 @@ class ControllerReadWriteTest(absltest.TestCase):
 
 if __name__ == '__main__':
   absltest.main()
-
-[end of ./smart_control/utils/controller_read_write_test.py]
