@@ -223,6 +223,11 @@ mdformat README.md docs/*.md
 mdformat README.md --check
 ```
 
+> NOTE: we are ignoring markdown files in the "docs/api" directory because they
+> contain [auto-documentation](./docs-site.md) formatting directives like `:::`
+> that get improperly formatted if those directives contain additional
+> configuration options.
+
 > NOTE: it would be nice to check all markdown files, however this currently
 > includes all files in the ".venv" folder (not desired), and the functionality
 > for ignoring certain directories is only supported in Python 3.13+. When we
