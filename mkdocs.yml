@@ -72,7 +72,11 @@ theme:
 nav:
   - 'Home': index.md
   - 'Local Development':
-    - 'Setup': setup.md
+    - 'Setup':
+      - 'Overview': setup.md
+      - 'Linux': setup/linux.md
+      - 'Mac': setup/mac.md
+      - 'Docker': setup/docker.md
     - 'Contributing': contributing.md
     - 'Documentation Site': docs-site.md
   - 'API Reference':
