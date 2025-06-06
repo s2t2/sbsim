@@ -1,4 +1,3 @@
-
 # Linux OS Setup Guide
 
 This guide helps you get the project setup on Linux OS.
@@ -119,7 +118,8 @@ protoc --python_out=. smart_control_reward.proto
 cd ../..
 ```
 
-> NOTE: the generated "*pb2.py" files have been checked in to the repository to facilitate publishing this package on PyPI.
+> NOTE: the generated "\*pb2.py" files have been checked in to the repository to
+> facilitate publishing this package on PyPI.
 
 ## Environment Variable Setup
 

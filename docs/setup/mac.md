@@ -1,4 +1,3 @@
-
 # Mac OS Setup Guide
 
 This guide helps you get the project setup on Mac OS.
@@ -33,7 +32,11 @@ ffmpeg -version
 #> 7.1.1
 ```
 
-NOTE: by installing a pinned version of Protobuf, it may not be symlinked, so normal `protoc` commands may not work without using a prefix of `$(brew --prefix protobuf@21)/bin/protoc`. To avoid needing the prefix, as a one time setup step, update the ".zshrc" file to add the installed location to the path:
+NOTE: by installing a pinned version of Protobuf, it may not be symlinked, so
+normal `protoc` commands may not work without using a prefix of
+`$(brew --prefix protobuf@21)/bin/protoc`. To avoid needing the prefix, as a one
+time setup step, update the ".zshrc" file to add the installed location to the
+path:
 
 ```sh
 # this is the "~/.zshrc" file:
@@ -55,9 +58,12 @@ protoc --version
 
 ## Anaconda Installation
 
-Install [Anaconda](https://www.anaconda.com/download), which we will use to install Python and manage a virtual environment.
+Install [Anaconda](https://www.anaconda.com/download), which we will use to
+install Python and manage a virtual environment.
 
-The installation results in automatically adding some content to your "~/.zshrc" file. You may need to run a `conda init bash` or `conda init zsh` command, if prompted to do so.
+The installation results in automatically adding some content to your "~/.zshrc"
+file. You may need to run a `conda init bash` or `conda init zsh` command, if
+prompted to do so.
 
 Remember to restart your shell afterwards.
 
@@ -74,8 +80,6 @@ Activate the virtual environment:
 ```sh
 conda activate sbsim-env
 ```
-
-
 
 ## Python Package Installation
 
@@ -109,7 +113,8 @@ protoc --python_out=. smart_control_reward.proto
 cd ../..
 ```
 
-> NOTE: the generated "*pb2.py" files have been checked in to the repository to facilitate publishing this package on PyPI.
+> NOTE: the generated "\*pb2.py" files have been checked in to the repository to
+> facilitate publishing this package on PyPI.
 
 ## Environment Variable Setup
 

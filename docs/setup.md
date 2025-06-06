@@ -7,18 +7,25 @@ development.
 
 This project requires the following dependencies:
 
-- [Protocol Buffer Compiler](https://grpc.io/docs/protoc-installation/) (v 3.21.12)
+- [Protocol Buffer Compiler](https://grpc.io/docs/protoc-installation/) (v
+  3.21.12)
 - [FFmpeg](https://ffmpeg.org/) (v 7.1.1)
 - Python (>=3.10.12 and \<3.12) and a Python Virtual Environment
 
 ## System-specific Setup
 
-By default, we use Linux OS for development. However it is also possible to develop on Mac OS. We are also providing a "Dockerfile" to facilitate development on non-Linux systems (Mac or Windows). Windows users can alternatively use [Windows Subsystem for Linux](https://learn.microsoft.com/en-us/windows/wsl/install).
+By default, we use Linux OS for development. However it is also possible to
+develop on Mac OS. We are also providing a "Dockerfile" to facilitate
+development on non-Linux systems (Mac or Windows). Windows users can
+alternatively use
+[Windows Subsystem for Linux](https://learn.microsoft.com/en-us/windows/wsl/install).
 
-Consult one of the following system-specific setup guides, based on your operating system and preferred tools:
+Consult one of the following system-specific setup guides, based on your
+operating system and preferred tools:
 
-  + [Linux OS Setup](./setup/linux.md)
-  + [Mac OS Setup](./setup/mac.md)
-  + [Docker Setup](./setup/docker.md)
+- [Linux OS Setup](./setup/linux.md)
+- [Mac OS Setup](./setup/mac.md)
+- [Docker Setup](./setup/docker.md)
 
-After completing the setup, you should be able to run notebooks or scripts as desired.
+After completing the setup, you should be able to run notebooks or scripts as
+desired.

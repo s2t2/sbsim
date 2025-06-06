@@ -1,10 +1,10 @@
 # Docker Setup Guide
 
-To get the repository set up on non-Linux
-environments, you can use the pre-configured Docker environment ("Linux/amd64")
-specified by the "Dockerfile".
+To get the repository set up on non-Linux environments, you can use the
+pre-configured Docker environment ("Linux/amd64") specified by the "Dockerfile".
 
-First, install [Docker Desktop](https://www.docker.com/products/docker-desktop/).
+First, install
+[Docker Desktop](https://www.docker.com/products/docker-desktop/).
 
 Build the image:
 
