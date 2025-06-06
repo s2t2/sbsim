@@ -2,15 +2,6 @@
 
 This guide helps you get the project setup on Mac OS.
 
-## Repository Setup
-
-Clone the repository, for example using an SSH approach:
-
-```sh
-git clone git@github.com:google/sbsim.git
-cd sbsim/
-```
-
 ## System Package Installation
 
 First install [Homebrew](https://brew.sh/) (i.e. `brew`).

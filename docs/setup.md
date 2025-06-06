@@ -7,10 +7,20 @@ development.
 
 This project requires the following dependencies:
 
+- Git
 - [Protocol Buffer Compiler](https://grpc.io/docs/protoc-installation/) (v
   3.21.12)
 - [FFmpeg](https://ffmpeg.org/) (v 7.1.1)
 - Python (>=3.10.12 and \<3.12) and a Python Virtual Environment
+
+## Repository Setup
+
+Clone the repository, for example using an SSH approach:
+
+```sh
+git clone git@github.com:google/sbsim.git
+cd sbsim/
+```
 
 ## System-specific Setup
 
