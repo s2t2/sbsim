@@ -49,7 +49,7 @@ docker --version
 docker run hello-world
 ```
 
-## Building the Image
+## Image Operations
 
 Ensure you have navigated to the root directory of the repository, where the
 "Dockerfile" is located, before proceeding.
@@ -60,9 +60,22 @@ Build the image:
 docker build -t sbsim-docker-env .
 ```
 
+Listing images:
+
+```sh
+docker images
+```
+
+Removing the image, as necessary:
+
+```sh
+docker rmi sbsim-docker-env
+```
+
 ## Container Operations
 
-Run the container, in interactive mode, with open ports:
+After the image is built, run the container (in interactive mode, with open
+ports):
 
 ```bash
 docker run -it -p 8888:8888 -v $(pwd):/workspace sbsim-docker-env
@@ -94,6 +107,18 @@ To stop the container:
 
 ```sh
 docker stop sbsim-docker-env
+```
+
+Listing containers (to get their identifiers):
+
+```sh
+docker ps -a
+```
+
+Removing a container:
+
+```sh
+docker rm <container-id>
 ```
 
 > NOTE: in the future we would like to further update these instructions and
