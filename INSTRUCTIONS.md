@@ -22,7 +22,7 @@ This document provides instructions on how to build the Docker image for this pr
 
 ## Running the Docker Container
 
-Once the image is built, you can run a container based on it.
+Once the image is built, you can run a container based on it. The `ENTRYPOINT` for this image is set to `poetry run`, which means any command you provide will be executed within the project's Poetry-managed virtual environment.
 
 ### General Usage
 
@@ -32,7 +32,7 @@ The general command to run a container is:
 docker run -it --rm \
     -p 8888:8888 \
     -v $(pwd):/workspace \
-    your-image-name <command>
+    your-image-name <command_and_args>
 ```
 
 *   `-it`: Runs the container in interactive mode with a TTY.
@@ -40,27 +40,29 @@ docker run -it --rm \
 *   `-p 8888:8888`: Maps port 8888 on your host to port 8888 in the container (useful for Jupyter). You can change this if needed.
 *   `-v $(pwd):/workspace`: Mounts the current directory on your host to `/workspace` in the container. This allows you to edit files locally and see changes reflected in the container immediately.
 *   `your-image-name`: The name you gave your image during the build step.
-*   `<command>`: The command you want to run inside the container. See examples below.
+*   `<command_and_args>`: The command and its arguments you want to run inside the container (e.g., `python script.py`, `pytest`, `jupyter notebook ...`). These will be automatically prefixed by `poetry run`.
 
 ### 1. Running Jupyter Notebooks
 
-To start a Jupyter Notebook server that you can access from your host machine:
+To start a Jupyter Notebook server that you can access from your host machine (this is the default command if none is provided):
 
 ```bash
 docker run -it --rm \
     -p 8888:8888 \
     -v $(pwd):/workspace \
-    your-image-name jupyter notebook --ip=0.0.0.0 --port=8888 --allow-root --NotebookApp.token='' --no-browser --notebook-dir=/workspace/smart_control/notebooks
+    your-image-name
 ```
+This uses the default `CMD` specified in the `Dockerfile-2`: `jupyter notebook --ip=0.0.0.0 --port=8888 --allow-root --NotebookApp.token='' --no-browser --notebook-dir=/workspace/smart_control/notebooks`.
 
-*   If you used the default CMD in `Dockerfile-2`, you can omit the command part:
-    ```bash
-    docker run -it --rm \
-        -p 8888:8888 \
-        -v $(pwd):/workspace \
-        your-image-name
-    ```
-    Then, open your browser and navigate to `http://localhost:8888`. The notebooks are located in the `smart_control/notebooks` directory.
+Then, open your browser and navigate to `http://localhost:8888`. The notebooks are located in the `smart_control/notebooks` directory.
+
+If you need to override the default command for Jupyter (e.g., to change the notebook directory):
+```bash
+docker run -it --rm \
+    -p 8888:8888 \
+    -v $(pwd):/workspace \
+    your-image-name jupyter notebook --ip=0.0.0.0 --port=8888 --allow-root --NotebookApp.token='' --no-browser --notebook-dir=/workspace/some_other_notebook_dir
+```
 
 ### 2. Executing Python Scripts
 
@@ -71,7 +73,7 @@ docker run -it --rm \
     -v $(pwd):/workspace \
     your-image-name python smart_control/reinforcement_learning/scripts/train.py --your --script --arguments
 ```
-Replace `smart_control/reinforcement_learning/scripts/train.py` with the path to your script and add any necessary arguments.
+Replace `smart_control/reinforcement_learning/scripts/train.py` with the path to your script and add any necessary arguments. The command `python ...` will be executed as `poetry run python ...`.
 
 ### 3. Running Tests (pytest)
 
@@ -82,25 +84,14 @@ docker run -it --rm \
     -v $(pwd):/workspace \
     your-image-name pytest smart_control
 ```
+The command `pytest smart_control` will be executed as `poetry run pytest smart_control`.
+
 *   If you want to run specific tests, you can modify the `pytest` command:
     ```bash
     docker run -it --rm \
         -v $(pwd):/workspace \
         your-image-name pytest smart_control/environment/environment_test.py
     ```
-*   The default action of the entrypoint script (if no command is provided, or if an unknown command is provided) is to run `pytest smart_control/tests`. You might need to adjust the default test path in `docker-entrypoint.sh` if your tests are not located in `smart_control/tests` or if you prefer a different default. For example, if tests are all under `smart_control` and end with `_test.py`:
-    ```bash
-    docker run -it --rm \
-        -v $(pwd):/workspace \
-        your-image-name # This will default to pytest smart_control/tests
-    ```
-    To run all tests in the `smart_control` directory:
-    ```bash
-    docker run -it --rm \
-        -v $(pwd):/workspace \
-        your-image-name pytest smart_control
-    ```
-
 
 ### 4. Accessing a Shell (Bash) in the Container
 
@@ -111,7 +102,7 @@ docker run -it --rm \
     -v $(pwd):/workspace \
     your-image-name bash
 ```
-This will drop you into a shell in the `/workspace` directory, with the Poetry environment activated.
+This will drop you into a shell (executed as `poetry run bash`) in the `/workspace` directory, with the Poetry environment effectively active for subsequent commands run within that shell.
 
 ## Notes
 

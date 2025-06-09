@@ -31,14 +31,12 @@ COPY . .
 # Ensure the output directory exists and __init__.py is created if necessary
 RUN mkdir -p /workspace/smart_control/proto &&     touch /workspace/smart_control/proto/__init__.py &&     protoc --python_out=/workspace/smart_control/proto --proto_path=/workspace/smart_control/proto /workspace/smart_control/proto/smart_control_building.proto /workspace/smart_control/proto/smart_control_normalization.proto /workspace/smart_control/proto/smart_control_reward.proto
 
-# Expose Jupyter port if needed, though it's better to do this in docker run
-# EXPOSE 8888
+# Expose Jupyter port
+EXPOSE 8888
 
-# Entrypoint script for flexibility
-COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+# Set the entrypoint to use poetry run. This ensures that commands are run within the project's virtual environment.
+ENTRYPOINT ["poetry", "run"]
 
-ENTRYPOINT ["docker-entrypoint.sh"]
-
-# Default command (can be overridden)
+# Default command when the container starts.
+# This will start a Jupyter notebook server.
 CMD ["jupyter", "notebook", "--ip=0.0.0.0", "--port=8888", "--allow-root", "--NotebookApp.token=''", "--no-browser", "--notebook-dir=/workspace/smart_control/notebooks"]
