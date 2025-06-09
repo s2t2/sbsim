@@ -82,6 +82,9 @@ pytest
 # disable warnings:
 pytest --disable-pytest-warnings
 
+# show print statements:
+pytest --disable-pytest-warnings -s
+
 # run specific test files:
 pytest --disable-pytest-warnings path/to/your/test.py
 
