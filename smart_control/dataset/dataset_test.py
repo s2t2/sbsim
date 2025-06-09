@@ -1,4 +1,17 @@
-"""Tests for SmartBuildingsDataset"""
+"""Tests for the Smart Buildings Dataset.
+
+Includes some high fidelity tests to download the actual dataset.
+
+It takes around two minutes to download the data, so we are skipping certain
+tests by default, to keep the build fast. But you can run them manually by
+setting the `TEST_DATASET_DOWNLOAD` environment variable to 'true'.
+
+Downloaded data will not get cleared by default, but you can force a clean up
+and fresh download by setting the `CLEAR_DATASET_DOWNLOAD` environment
+variable to 'true'.
+
+These real tests are meant to be run periodically, for example once per day.
+"""
 
 import os
 import shutil
@@ -9,8 +22,9 @@ from dotenv import load_dotenv
 import numpy as np
 import pandas as pd
 
+from smart_control.dataset.dataset import BuildingDataset
+from smart_control.dataset.dataset import BuildingDatasetPartition
 from smart_control.dataset.dataset import DATA_DIR
-from smart_control.dataset.dataset import SmartBuildingsDataset
 
 load_dotenv()
 
@@ -23,95 +37,67 @@ ZIP_FILEPATH = os.path.join(DATA_DIR, 'sb1.zip')
 SKIP_REASON = 'Skip large download by default.'
 
 
-class TestDataset(absltest.TestCase):
-  """Tests for the Smart Buildings Dataset.
+def cleanup_files():
+  print('Deleting dataset files...')
 
-  Includes some high fidelity tests to download the actual dataset.
+  if os.path.exists(ZIP_FILEPATH):
+    os.remove(ZIP_FILEPATH)
 
-  It takes around two minutes to download the data, so we are skipping certain
-  tests by default, to keep the build fast. But you can run them manually by
-  setting the `TEST_DATASET_DOWNLOAD` environment variable to 'true'.
+  if os.path.exists(DATASET_DIRPATH):
+    shutil.rmtree(DATASET_DIRPATH)
 
-  Downloaded data will not get cleared by default, but you can force a clean up
-  and fresh download by setting the `CLEAR_DATASET_DOWNLOAD` environment
-  variable to 'true'.
 
-  These tests are meant to be run periodically, for example once per day.
-  """
-
-  ds = None
-
-  @staticmethod
-  def _cleanup_files():
-    print('Deleting dataset files...')
-
-    if os.path.exists(ZIP_FILEPATH):
-      os.remove(ZIP_FILEPATH)
-
-    if os.path.exists(DATASET_DIRPATH):
-      shutil.rmtree(DATASET_DIRPATH)
-
-  def _assert_timestamps(self, timestamps, earliest, latest, length):
-    """
-    Custom assertion for standardized timestamp format.
-
-    Args:
-      timestamps (list): the timestamps to test
-      earliest and latest (str): expected earliest and latest values,
-        as strings, like '2022-06-30 00:55:00+00:00'
-      length (int) : expected length of the list
-    """
-    self.assertIsInstance(timestamps, list)
-    self.assertEqual(len(timestamps), length)
-
-    first_timestamp = timestamps[0]
-    last_timestamp = timestamps[-1]
-    self.assertIsInstance(first_timestamp, pd._libs.tslibs.timestamps.Timestamp)
-    self.assertIsInstance(last_timestamp, pd._libs.tslibs.timestamps.Timestamp)
-    self.assertEqual(str(first_timestamp), earliest)
-    self.assertEqual(str(last_timestamp), latest)
-
-  @classmethod
-  def setUpClass(cls):
-    if TEST_DATASET_DOWNLOAD:
-      if CLEAR_DATASET_DOWNLOAD:
-        cls._cleanup_files()
-      cls.ds = SmartBuildingsDataset(download=True)
-    else:
-      cls.ds = SmartBuildingsDataset(download=False)
-
-  @classmethod
-  def tearDownClass(cls):
-    if TEST_DATASET_DOWNLOAD and CLEAR_DATASET_DOWNLOAD:
-      cls._cleanup_files()
+class TestDataDirectory(absltest.TestCase):
+  'Tests for the data directory.'
 
   def test_data_dir(self):
     self.assertTrue(os.path.isdir(DATA_DIR))
 
-  def test_partitions(self):
-    partitions = {'sb1': ['2022_a', '2022_b', '2023_a', '2023_b', '2024_a']}
-    self.assertEqual(self.ds.partitions, partitions)
+
+class TestBuildingDataset(absltest.TestCase):
+  """Tests for the BuildingDataset class."""
+
+  ds = None
+
+  @classmethod
+  def setUpClass(cls):
+    if TEST_DATASET_DOWNLOAD and CLEAR_DATASET_DOWNLOAD:
+      cleanup_files()
+
+    cls.ds = BuildingDataset(building_id='sb1', download=TEST_DATASET_DOWNLOAD)
+
+  @classmethod
+  def tearDownClass(cls):
+    if TEST_DATASET_DOWNLOAD and CLEAR_DATASET_DOWNLOAD:
+      cleanup_files()
+
+  def test_building_id(self):
+    self.assertEqual(self.ds.building_id, 'sb1')
+
+  def test_partition_ids(self):
+    partition_ids = ['2022_a', '2022_b', '2023_a', '2023_b', '2024_a']
+    self.assertEqual(self.ds.partition_ids, partition_ids)
 
   @unittest.skipUnless(TEST_DATASET_DOWNLOAD, SKIP_REASON)
   def test_download(self):
+    self.assertIn('download', dir(self.ds))
     self.assertTrue(os.path.isdir(DATASET_DIRPATH))
     self.assertTrue(os.path.exists(ZIP_FILEPATH))
 
   @unittest.skipUnless(TEST_DATASET_DOWNLOAD, SKIP_REASON)
-  def test_get_floorplan(self):
-    ds = self.ds
-
-    floorplan, device_layout_map = ds.get_floorplan('sb1')
-
-    # FLOORPLAN
+  def test_floorplan(self):
+    floorplan = self.ds.floorplan
 
     self.assertIsInstance(floorplan, np.ndarray)
     self.assertEqual(floorplan.shape, (744, 1004))
+
     values, counts = np.unique(floorplan, return_counts=True)
     value_counts = dict(zip(values, counts))
     self.assertEqual(value_counts, {0.0: 436332, 1.0: 60204, 2.0: 250440})
 
-    # DEVICE LAYOUT MAP
+  @unittest.skipUnless(TEST_DATASET_DOWNLOAD, SKIP_REASON)
+  def test_device_layout_map(self):
+    device_layout_map = self.ds.device_layout_map
 
     self.assertIsInstance(device_layout_map, dict)
     device_keys = sorted(list(device_layout_map.keys()))
@@ -172,6 +158,7 @@ class TestDataset(absltest.TestCase):
         'VAV RH 1-1-55',
     ]
     self.assertEqual(device_keys, expected_device_keys)
+
     # each device layout map is a list of two integer values:
     first_layout_map = device_layout_map['VAV CO 1-1-06']
     self.assertIsInstance(first_layout_map, list)
@@ -179,15 +166,49 @@ class TestDataset(absltest.TestCase):
     self.assertEqual(first_layout_map[0], [79, 35])
     self.assertEqual(first_layout_map[-1], [80, 64])
 
+
+class TestBuildingDatasetPartition(absltest.TestCase):
+  """Tests for the BuildingDatasetPartition class."""
+
+  partition = None
+
+  @classmethod
+  def setUpClass(cls):
+    if TEST_DATASET_DOWNLOAD and CLEAR_DATASET_DOWNLOAD:
+      cleanup_files()
+
+    cls.partition = BuildingDatasetPartition(
+        building_id='sb1', partition_id='2022_a', download=TEST_DATASET_DOWNLOAD
+    )
+
+  @classmethod
+  def tearDownClass(cls):
+    if TEST_DATASET_DOWNLOAD and CLEAR_DATASET_DOWNLOAD:
+      cleanup_files()
+
+  def _assert_timestamps(self, timestamps, earliest, latest, length):
+    """
+    Custom assertion for standardized timestamp format.
+
+    Args:
+      timestamps (list): the timestamps to test
+      earliest and latest (str): expected earliest and latest values,
+        as strings, like '2022-06-30 00:55:00+00:00'
+      length (int) : expected length of the list
+    """
+    self.assertIsInstance(timestamps, list)
+    self.assertEqual(len(timestamps), length)
+
+    first_timestamp = timestamps[0]
+    last_timestamp = timestamps[-1]
+    self.assertIsInstance(first_timestamp, pd._libs.tslibs.timestamps.Timestamp)
+    self.assertIsInstance(last_timestamp, pd._libs.tslibs.timestamps.Timestamp)
+    self.assertEqual(str(first_timestamp), earliest)
+    self.assertEqual(str(last_timestamp), latest)
+
   @unittest.skipUnless(TEST_DATASET_DOWNLOAD, SKIP_REASON)
-  def test_get_building_data(self):
-    ds = self.ds
-
-    data, metadata = ds.get_building_data('sb1', '2022_a')
-
-    #
-    # DATA
-    #
+  def test_partition_data(self):
+    data = self.partition.data
 
     self.assertIsInstance(data, np.lib.npyio.NpzFile)
     self.assertEqual(data['observation_value_matrix'].shape, (51852, 1198))
@@ -195,9 +216,9 @@ class TestDataset(absltest.TestCase):
     self.assertEqual(data['reward_value_matrix'].shape, (51852, 17))
     self.assertEqual(data['reward_info_value_matrix'].shape, (51852, 3252))
 
-    #
-    # METADATA
-    #
+  @unittest.skipUnless(TEST_DATASET_DOWNLOAD, SKIP_REASON)
+  def test_partition_metadata(self):
+    metadata = self.partition.metadata
 
     self.assertIsInstance(metadata, dict)
     metadata_keys = [

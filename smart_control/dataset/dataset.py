@@ -1,5 +1,6 @@
 """Smart Buildings Dataset implementation, including loading and downloading."""
 
+from functools import cached_property
 import json
 import os
 import pickle
@@ -12,22 +13,48 @@ from smart_control.utils.constants import ROOT_DIR
 
 DATA_DIR = os.path.join(ROOT_DIR, "data")
 
+VALID_BUILDING_PARTITIONS = {
+    "sb1": ["2022_a", "2022_b", "2023_a", "2023_b", "2024_a"]
+}
 
-class SmartBuildingsDataset:
-  """Smart Buildings Dataset."""
 
-  def __init__(self, download=True):
-    self.partitions = {
-        "sb1": [
-            "2022_a",
-            "2022_b",
-            "2023_a",
-            "2023_b",
-            "2024_a",
-        ],
-    }
-    if download:
+class BuildingDataset:
+  """A helper class for handling the dataset for a specific building.
+
+  Args:
+    building_id (str): The identifier of the building (e.g. "sb1").
+    download (bool): Whether or not to download the dataset.
+  """
+
+  def __init__(self, building_id="sb1", download=True):
+    self.building_id = building_id
+
+    if self.building_id not in VALID_BUILDING_PARTITIONS:
+      raise ValueError("Invalid building: '{self.building_id}'.")
+
+    self.partition_ids = VALID_BUILDING_PARTITIONS[self.building_id]
+
+    if bool(download):
       self.download()
+
+  @property
+  def zip_filename(self):
+    return f"{self.building_id}.zip"
+
+  @property
+  def zip_url(self):
+    return (
+        "https://storage.googleapis.com/gresearch/smart_buildings_dataset/"
+        f"tabular_data/{self.zip_filename}"
+    )
+
+  @property
+  def zip_filepath(self):
+    return os.path.join(DATA_DIR, self.zip_filename)
+
+  @property
+  def building_dirpath(self):
+    return os.path.join(DATA_DIR, self.building_id)
 
   @staticmethod
   def _download_file_if_not_exists(url, timeout=60):
@@ -49,67 +76,90 @@ class SmartBuildingsDataset:
     return local_filepath
 
   def download(self):
-    """Downloads the Smart Buildings Dataset from Google Cloud Storage."""
-    url = "https://storage.googleapis.com/gresearch/smart_buildings_dataset/tabular_data/sb1.zip"  # pylint: disable=line-too-long
-    self._download_file_if_not_exists(url)
+    """Downloads the building's dataset from Google Cloud Storage."""
+    self._download_file_if_not_exists(self.zip_url)
+    shutil.unpack_archive(self.zip_filepath, self.building_dirpath)
 
-    zip_filepath = os.path.join(DATA_DIR, "sb1.zip")
-    dataset_dir = os.path.join(DATA_DIR, "sb1/")
-    shutil.unpack_archive(zip_filepath, dataset_dir)
+  @property
+  def tabular_dirpath(self):
+    return os.path.join(self.building_dirpath, "tabular")
 
-  def get_floorplan(self, building):
-    """Gets the floorplan and device layout map for a specific building.
+  @property
+  def floorplan_filepath(self):
+    return os.path.join(self.tabular_dirpath, "floorplan.npy")
 
-    Args:
-      building: The name of the building.
+  @cached_property
+  def floorplan(self):
+    """The building's floorplan."""
+    return np.load(self.floorplan_filepath)
 
-    Returns:
-      A tuple containing the floorplan and device layout map.
-    """
-    if building not in self.partitions:
-      raise ValueError("Invalid building")
+  @property
+  def device_layout_map_filepath(self):
+    return os.path.join(self.tabular_dirpath, "device_layout_map.json")
 
-    tabular_dirpath = os.path.join(DATA_DIR, building, "tabular")
+  @cached_property
+  def device_layout_map(self):
+    """The building's device layout map."""
+    with open(self.device_layout_map_filepath, encoding="utf-8") as json_file:
+      return json.load(json_file)
 
-    floorplan_filepath = os.path.join(tabular_dirpath, "floorplan.npy")
-    floorplan = np.load(floorplan_filepath)
+  @property
+  def device_infos_filepath(self):
+    return os.path.join(self.tabular_dirpath, "device_info_dicts.pickle")
 
-    device_layout_map_filepath = os.path.join(tabular_dirpath, "device_layout_map.json")  # pylint:disable=line-too-long
-    with open(device_layout_map_filepath, encoding="utf-8") as json_file:
-      device_layout_map = json.load(json_file)
+  @cached_property
+  def device_infos(self):
+    return pickle.load(open(self.device_infos_filepath, "rb"))
 
-    return floorplan, device_layout_map
+  @property
+  def zone_infos_filepath(self):
+    return os.path.join(self.tabular_dirpath, "zone_info_dicts.pickle")
 
-  def get_building_data(self, building, partition):
-    """Gets the data for a specific building and partition.
+  @cached_property
+  def zone_infos(self):
+    return pickle.load(open(self.zone_infos_filepath, "rb"))
 
-    Args:
-      building: The name of the building.
-      partition: The name of the partition.
 
-    Returns:
-      A tuple containing the data and metadata.
-    """
-    if building not in self.partitions:
-      raise ValueError(f"Invalid building: {building}")
+class BuildingDatasetPartition(BuildingDataset):
+  """A helper class for handling a specific dataset partition.
 
-    if partition not in self.partitions[building]:
-      raise ValueError(f"Invalid partition: {partition}.")
+  Args:
+    building_id (str): The identifier of the building (e.g. "sb1").
+    partition_id (str): The identifier of a dataset partition (e.g. "2022_a").
+    download (bool): Whether or not to download the dataset.
+  """
 
-    partition_dirpath = os.path.join(DATA_DIR, building, "tabular", building, partition)  # pylint:disable=line-too-long
+  def __init__(self, partition_id, building_id="sb1", download=True):
+    super().__init__(building_id=building_id, download=download)
+    self.partition_id = partition_id
 
-    data_filepath = os.path.join(partition_dirpath, "data.npy.npz")
-    data = np.load(data_filepath)
+    if self.partition_id not in self.partition_ids:
+      raise ValueError(f"Invalid partition: {self.partition_id}.")
 
-    metadata_filepath = os.path.join(partition_dirpath, "metadata.pickle")
-    metadata = pickle.load(open(metadata_filepath, "rb"))
+  @property
+  def partition_dirpath(self):
+    return os.path.join(self.tabular_dirpath, self.building_id, self.partition_id)  # pylint:disable=line-too-long
+
+  @property
+  def data_filepath(self):
+    return os.path.join(self.partition_dirpath, "data.npy.npz")
+
+  @cached_property
+  def data(self):
+    return np.load(self.data_filepath)
+
+  @property
+  def metadata_filepath(self):
+    return os.path.join(self.partition_dirpath, "metadata.pickle")
+
+  @cached_property
+  def metadata(self):
+    metadata = pickle.load(open(self.metadata_filepath, "rb"))
 
     if "device_infos" not in metadata.keys():
-      device_info_filepath = os.path.join(DATA_DIR, building, "tabular", "device_info_dicts.pickle")  # pylint:disable=line-too-long
-      metadata["device_infos"] = pickle.load(open(device_info_filepath, "rb"))
+      metadata["device_infos"] = self.device_infos
 
     if "zone_infos" not in metadata.keys():
-      zone_info_filepath = os.path.join(DATA_DIR, building, "tabular", "zone_info_dicts.pickle")  # pylint:disable=line-too-long
-      metadata["zone_infos"] = pickle.load(open(zone_info_filepath, "rb"))
+      metadata["zone_infos"] = self.zone_infos
 
-    return data, metadata
+    return metadata
