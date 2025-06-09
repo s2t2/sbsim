@@ -6,6 +6,7 @@ import os
 import pickle
 import shutil
 
+from matplotlib import pyplot as plt
 import numpy as np
 import requests
 
@@ -63,7 +64,7 @@ class BuildingDataset:
 
     if os.path.isfile(local_filepath):
       print("Using previously-downloaded data...")
-      print(local_filepath)
+      print(os.path.abspath(local_filepath))
     else:
       print("Downloading data...")
       print(url)
@@ -92,6 +93,31 @@ class BuildingDataset:
   def floorplan(self):
     """The building's floorplan."""
     return np.load(self.floorplan_filepath)
+
+  @property
+  def floorplan_image_filepath(self):
+    floorplan_image_filename = f"{self.building_id}_floorplan.png"
+    return os.path.join(self.building_dirpath, floorplan_image_filename)
+
+  def display_floorplan(
+      self, cmap="binary", show=True, save=True, image_filepath=None
+  ):
+    """Show an image of floorplan.
+
+    Args:
+        cmap (str): name of the color map to use when rendering the image.
+          See: https://matplotlib.org/stable/users/explain/colors/colormaps.html
+        show (bool): whether or not to show the image.
+        save (bool): whether or not to save the image (as a .png file).
+        image_filepath (str): a custom filepath to use when saving the image.
+          only applies if `save=True`.
+    """
+    plt.imshow(self.floorplan, interpolation="nearest", cmap=cmap)
+    if show:
+      plt.show()
+    if save:
+      image_filepath = image_filepath or self.floorplan_image_filepath
+      plt.savefig(image_filepath)
 
   @property
   def device_layout_map_filepath(self):
@@ -163,3 +189,9 @@ class BuildingDatasetPartition(BuildingDataset):
       metadata["zone_infos"] = self.zone_infos
 
     return metadata
+
+
+if __name__ == "__main__":
+
+  ds = BuildingDataset()
+  ds.display_floorplan(show=False, save=True)
