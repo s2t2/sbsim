@@ -253,7 +253,7 @@ max-line-length=80
 # see: https://github.com/google/sbsim/issues/43
 ignore-long-lines=(?x)(
   ^\s*(\#\ )?<?https?://\S+>?$|  # Ignore long URLs
-  ^.*\[[^\]]+\]\(\s*(?:https?://|\/|(?:\.{1,2}\/|\S+\/)*)\S*\s*\).*$| # Ignore long URLs/relative links in docstrings
+  ^.*\[[^\]]+\]\(\s*(?:https?://|\/|(?:\.{1,2}\/|\S+\/)*)\S*\s*\).*$| # Ignore long markdown links in docstrings (including relative links)
   ^\s*(from\s+\S+\s+)?import\s+.+$|  # Ignore import statements
   .*(pytype:|pylint:|fmt:|TODO:).* # Ignore lines containing pragma comments
   )
