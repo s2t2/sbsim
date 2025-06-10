@@ -7,7 +7,7 @@ tests by default, to keep the build fast. But you can run them manually by
 setting the `TEST_DATASET_DOWNLOAD` environment variable to 'true'.
 
 Downloaded data will not get cleared by default, but you can force a clean up
-and fresh download by setting the `CLEAR_DATASET_DOWNLOAD` environment
+and fresh download by setting the `CLEAR_TEST_DATASET_DOWNLOAD` environment
 variable to 'true'.
 
 These real tests are meant to be run periodically, for example once per day.
@@ -29,7 +29,7 @@ from smart_control.dataset.dataset import DATA_DIR
 load_dotenv()
 
 TEST_DATASET_DOWNLOAD = bool(os.getenv('TEST_DATASET_DOWNLOAD', default='false').lower() == 'true')  # pylint: disable=line-too-long
-CLEAR_DATASET_DOWNLOAD = bool(os.getenv('CLEAR_DATASET_DOWNLOAD', default='false').lower() == 'true')  # pylint: disable=line-too-long
+CLEAR_TEST_DATASET_DOWNLOAD = bool(os.getenv('CLEAR_TEST_DATASET_DOWNLOAD', default='false').lower() == 'true')  # pylint: disable=line-too-long
 
 DATASET_DIRPATH = os.path.join(DATA_DIR, 'sb1')
 ZIP_FILEPATH = os.path.join(DATA_DIR, 'sb1.zip')
@@ -61,14 +61,14 @@ class TestBuildingDataset(absltest.TestCase):
 
   @classmethod
   def setUpClass(cls):
-    if TEST_DATASET_DOWNLOAD and CLEAR_DATASET_DOWNLOAD:
+    if TEST_DATASET_DOWNLOAD and CLEAR_TEST_DATASET_DOWNLOAD:
       cleanup_files()
 
     cls.ds = BuildingDataset(building_id='sb1', download=TEST_DATASET_DOWNLOAD)
 
   @classmethod
   def tearDownClass(cls):
-    if TEST_DATASET_DOWNLOAD and CLEAR_DATASET_DOWNLOAD:
+    if TEST_DATASET_DOWNLOAD and CLEAR_TEST_DATASET_DOWNLOAD:
       cleanup_files()
 
   def test_building_id(self):
@@ -160,30 +160,99 @@ class TestBuildingDataset(absltest.TestCase):
     self.assertEqual(device_keys, expected_device_keys)
 
     # each device layout map is a list of two integer values:
+    # the layout shapes are not the same across all devices
     first_layout_map = device_layout_map['VAV CO 1-1-06']
     self.assertIsInstance(first_layout_map, list)
     self.assertEqual(np.array(first_layout_map).shape, (1021, 2))
     self.assertEqual(first_layout_map[0], [79, 35])
     self.assertEqual(first_layout_map[-1], [80, 64])
 
+  @unittest.skipUnless(TEST_DATASET_DOWNLOAD, SKIP_REASON)
+  def test_device_infos(self):
+    device_infos = self.ds.device_infos
+    self.assertIsInstance(device_infos, list)
+    self.assertEqual(len(device_infos), 173)
+
+    # first item / example structure:
+    first_device_info = {
+        'device_id': '202194278473007104',
+        'namespace': 'PHRED',
+        'code': 'SB1:AHU:AC-2',
+        'zone_id': '',
+        'device_type': 6,
+        'observable_fields': {
+            'building_air_static_pressure_sensor': 1,
+            'outside_air_flowrate_sensor': 1,
+            'supply_fan_speed_percentage_command': 1,
+            'supply_air_temperature_sensor': 1,
+            'supply_fan_speed_frequency_sensor': 1,
+            'supply_air_static_pressure_setpoint': 1,
+            'return_air_temperature_sensor': 1,
+            'mixed_air_temperature_setpoint': 1,
+            'exhaust_fan_speed_percentage_command': 1,
+            'exhaust_fan_speed_frequency_sensor': 1,
+            'outside_air_damper_percentage_command': 1,
+            'mixed_air_temperature_sensor': 1,
+            'exhaust_air_damper_percentage_command': 1,
+            'cooling_percentage_command': 1,
+            'outside_air_flowrate_setpoint': 1,
+            'supply_air_temperature_setpoint': 1,
+            'building_air_static_pressure_setpoint': 1,
+            'supply_air_static_pressure_sensor': 1,
+        },
+        'action_fields': {
+            'exhaust_air_damper_percentage_command': 1,
+            'supply_air_temperature_setpoint': 1,
+            'supply_fan_speed_percentage_command': 1,
+            'outside_air_flowrate_setpoint': 1,
+            'cooling_percentage_command': 1,
+            'mixed_air_temperature_setpoint': 1,
+            'exhaust_fan_speed_percentage_command': 1,
+            'outside_air_damper_percentage_command': 1,
+            'supply_air_static_pressure_setpoint': 1,
+            'building_air_static_pressure_setpoint': 1,
+        },
+    }
+    self.assertEqual(device_infos[0], first_device_info)
+
+  @unittest.skipUnless(TEST_DATASET_DOWNLOAD, SKIP_REASON)
+  def test_zone_infos(self):
+    zone_infos = self.ds.zone_infos
+
+    self.assertIsInstance(zone_infos, list)
+    self.assertEqual(len(zone_infos), 563)
+
+    first_zone_info = {
+        'zone_id': 'rooms/1002000133978',
+        'building_id': 'buildings/3616672508',
+        'zone_description': 'SB1-2-C2054',
+        'area': 0.0,
+        'zone_type': 1,
+        'floor': 2,
+        'devices': ['2618581107144046', '2696593986887004'],
+    }
+    self.assertEqual(zone_infos[0], first_zone_info)
+
 
 class TestBuildingDatasetPartition(absltest.TestCase):
   """Tests for the BuildingDatasetPartition class."""
 
+  ds = None
   partition = None
 
   @classmethod
   def setUpClass(cls):
-    if TEST_DATASET_DOWNLOAD and CLEAR_DATASET_DOWNLOAD:
+    if TEST_DATASET_DOWNLOAD and CLEAR_TEST_DATASET_DOWNLOAD:
       cleanup_files()
 
+    cls.ds = BuildingDataset(building_id='sb1', download=TEST_DATASET_DOWNLOAD)
     cls.partition = BuildingDatasetPartition(
-        building_id='sb1', partition_id='2022_a', download=TEST_DATASET_DOWNLOAD
+        building_dataset=cls.ds, partition_id='2022_a'
     )
 
   @classmethod
   def tearDownClass(cls):
-    if TEST_DATASET_DOWNLOAD and CLEAR_DATASET_DOWNLOAD:
+    if TEST_DATASET_DOWNLOAD and CLEAR_TEST_DATASET_DOWNLOAD:
       cleanup_files()
 
   def _assert_timestamps(self, timestamps, earliest, latest, length):

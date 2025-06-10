@@ -107,6 +107,8 @@ markdown_extensions:
 plugins:
   - search
 
+  - autorefs # enables linking to other methods
+
   #
   # API DOCS
   # https://mkdocstrings.github.io/python/usage/
