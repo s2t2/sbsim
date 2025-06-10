@@ -54,22 +54,34 @@ class TestDataDirectory(absltest.TestCase):
     self.assertTrue(os.path.isdir(DATA_DIR))
 
 
-class TestBuildingDataset(absltest.TestCase):
-  """Tests for the BuildingDataset class."""
+class BaseDatasetTest(absltest.TestCase):
+  """Inherit related test classes from this one to use a shared dataset fixture
+  and avoid re-initializing the dataset across multiple child classes.
+  """
 
   ds = None
 
   @classmethod
   def setUpClass(cls):
-    if TEST_DATASET_DOWNLOAD and CLEAR_TEST_DATASET_DOWNLOAD:
-      cleanup_files()
+    super().setUpClass()
+    if cls.ds is None:
+      if TEST_DATASET_DOWNLOAD and CLEAR_TEST_DATASET_DOWNLOAD:
+        cleanup_files()
 
-    cls.ds = BuildingDataset(building_id='sb1', download=TEST_DATASET_DOWNLOAD)
+      print('Initializing BuildingDataset (this should happen once)...')
+      cls.ds = BuildingDataset(
+          building_id='sb1', download=TEST_DATASET_DOWNLOAD
+      )
 
   @classmethod
   def tearDownClass(cls):
+    super().tearDownClass()
     if TEST_DATASET_DOWNLOAD and CLEAR_TEST_DATASET_DOWNLOAD:
       cleanup_files()
+
+
+class TestBuildingDataset(BaseDatasetTest):
+  """Tests for the BuildingDataset class."""
 
   def test_building_id(self):
     self.assertEqual(self.ds.building_id, 'sb1')
@@ -326,18 +338,14 @@ class TestBuildingDataset(absltest.TestCase):
     self.assertEqual(zones_df.iloc[0].to_dict(), first_row)
 
 
-class TestBuildingDatasetPartition(absltest.TestCase):
+class TestBuildingDatasetPartition(BaseDatasetTest):
   """Tests for the BuildingDatasetPartition class."""
 
-  ds = None
   partition = None
 
   @classmethod
   def setUpClass(cls):
-    if TEST_DATASET_DOWNLOAD and CLEAR_TEST_DATASET_DOWNLOAD:
-      cleanup_files()
-
-    cls.ds = BuildingDataset(building_id='sb1', download=TEST_DATASET_DOWNLOAD)
+    super().setUpClass()
     cls.partition = BuildingDatasetPartition(
         building_dataset=cls.ds, partition_id='2022_a'
     )
