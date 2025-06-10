@@ -216,6 +216,65 @@ class TestBuildingDataset(absltest.TestCase):
     self.assertEqual(device_infos[0], first_device_info)
 
   @unittest.skipUnless(TEST_DATASET_DOWNLOAD, SKIP_REASON)
+  def test_devices_df(self):
+    devices_df = self.ds.devices_df
+    self.assertIsInstance(devices_df, pd.DataFrame)
+    self.assertEqual(len(devices_df), 173)
+
+    # each row uniquely identified by the device identifier:
+    self.assertEqual(devices_df['device_id'].nunique(), len(devices_df))
+
+    expected_column_names = [
+        'device_id',
+        'namespace',
+        'code',
+        'device_type',
+        'observable_fields',
+        'action_fields',
+    ]
+    self.assertEqual(devices_df.columns.tolist(), expected_column_names)
+
+    first_row = {
+        'device_id': '202194278473007104',
+        'namespace': 'PHRED',
+        'code': 'SB1:AHU:AC-2',
+        'device_type': 6,
+        'observable_fields': {
+            'building_air_static_pressure_sensor': 1,
+            'outside_air_flowrate_sensor': 1,
+            'supply_fan_speed_percentage_command': 1,
+            'supply_air_temperature_sensor': 1,
+            'supply_fan_speed_frequency_sensor': 1,
+            'supply_air_static_pressure_setpoint': 1,
+            'return_air_temperature_sensor': 1,
+            'mixed_air_temperature_setpoint': 1,
+            'exhaust_fan_speed_percentage_command': 1,
+            'exhaust_fan_speed_frequency_sensor': 1,
+            'outside_air_damper_percentage_command': 1,
+            'mixed_air_temperature_sensor': 1,
+            'exhaust_air_damper_percentage_command': 1,
+            'cooling_percentage_command': 1,
+            'outside_air_flowrate_setpoint': 1,
+            'supply_air_temperature_setpoint': 1,
+            'building_air_static_pressure_setpoint': 1,
+            'supply_air_static_pressure_sensor': 1,
+        },
+        'action_fields': {
+            'exhaust_air_damper_percentage_command': 1,
+            'supply_air_temperature_setpoint': 1,
+            'supply_fan_speed_percentage_command': 1,
+            'outside_air_flowrate_setpoint': 1,
+            'cooling_percentage_command': 1,
+            'mixed_air_temperature_setpoint': 1,
+            'exhaust_fan_speed_percentage_command': 1,
+            'outside_air_damper_percentage_command': 1,
+            'supply_air_static_pressure_setpoint': 1,
+            'building_air_static_pressure_setpoint': 1,
+        },
+    }
+    self.assertEqual(devices_df.iloc[0].to_dict(), first_row)
+
+  @unittest.skipUnless(TEST_DATASET_DOWNLOAD, SKIP_REASON)
   def test_zone_infos(self):
     zone_infos = self.ds.zone_infos
 
@@ -232,6 +291,39 @@ class TestBuildingDataset(absltest.TestCase):
         'devices': ['2618581107144046', '2696593986887004'],
     }
     self.assertEqual(zone_infos[0], first_zone_info)
+
+  @unittest.skipUnless(TEST_DATASET_DOWNLOAD, SKIP_REASON)
+  def test_zones_df(self):
+    zones_df = self.ds.zones_df
+    self.assertIsInstance(zones_df, pd.DataFrame)
+    self.assertEqual(len(zones_df), 563)
+
+    # each row uniquely identified by the zone identifier:
+    self.assertEqual(zones_df['zone_id'].nunique(), len(zones_df))
+
+    expected_column_names = [
+        'zone_id',
+        'building_id',
+        'zone_description',
+        'area',
+        'zone_type',
+        'floor',
+        'devices',
+        'n_devices',
+    ]
+    self.assertEqual(zones_df.columns.tolist(), expected_column_names)
+
+    first_row = {
+        'zone_id': 'rooms/1002000133978',
+        'building_id': 'buildings/3616672508',
+        'zone_description': 'SB1-2-C2054',
+        'area': 0.0,
+        'zone_type': 1,
+        'floor': 2,
+        'devices': ['2618581107144046', '2696593986887004'],
+        'n_devices': 2,
+    }
+    self.assertEqual(zones_df.iloc[0].to_dict(), first_row)
 
 
 class TestBuildingDatasetPartition(absltest.TestCase):

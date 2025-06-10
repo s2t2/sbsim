@@ -251,8 +251,6 @@ max-line-length=80
 
 # Regexp for a line that is allowed to be longer than the limit.
 # see: https://github.com/google/sbsim/issues/43
-# working:  ^.*\[[^\]]+\]\(\s*https?://\S+\s*\).*$| # NEW: Ignore long URLs in docstrings
-
 ignore-long-lines=(?x)(
   ^\s*(\#\ )?<?https?://\S+>?$|  # Ignore long URLs
   ^.*\[[^\]]+\]\(\s*(?:https?://|\/|(?:\.{1,2}\/|\S+\/)*)\S*\s*\).*$| # Ignore long URLs/relative links in docstrings

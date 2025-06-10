@@ -8,6 +8,7 @@ import shutil
 
 from matplotlib import pyplot as plt
 import numpy as np
+import pandas as pd
 import requests
 
 from smart_control.utils.constants import ROOT_DIR
@@ -30,7 +31,9 @@ class BuildingDataset:
     download (bool): Whether or not to download the dataset.
 
   Examples:
-    >>> ds = BuildingDataset(building_id="sb1", download=True)
+    ```python
+    ds = BuildingDataset(building_id="sb1", download=True)
+    ```
   """
 
   def __init__(self, building_id="sb1", download=True):
@@ -222,6 +225,29 @@ class BuildingDataset:
     """
     return pickle.load(open(self.device_infos_filepath, "rb"))
 
+  @cached_property
+  def devices_df(self) -> pd.DataFrame:
+    # pylint: disable=line-too-long
+    """A dataframe containing information about the building's devices.
+
+    Each row is uniquely identified by the "device_id".
+
+    Returns:
+      A `pandas.DataFrame`. Here is an example of the structure:
+
+        |    |          device_id | namespace   | code              |   device_type | observable_fields                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | action_fields                                                                                                                                                                                                                                                                                                                                                                                                       |
+        |---:|-------------------:|:------------|:------------------|--------------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+        |  0 | 202194278473007104 | PHRED       | SB1:AHU:AC-2      |             6 | {'building_air_static_pressure_sensor': 1, 'outside_air_flowrate_sensor': 1, 'supply_fan_speed_percentage_command': 1, 'supply_air_temperature_sensor': 1, 'supply_fan_speed_frequency_sensor': 1, 'supply_air_static_pressure_setpoint': 1, 'return_air_temperature_sensor': 1, 'mixed_air_temperature_setpoint': 1, 'exhaust_fan_speed_percentage_command': 1, 'exhaust_fan_speed_frequency_sensor': 1, 'outside_air_damper_percentage_command': 1, 'mixed_air_temperature_sensor': 1, 'exhaust_air_damper_percentage_command': 1, 'cooling_percentage_command': 1, 'outside_air_flowrate_setpoint': 1, 'supply_air_temperature_setpoint': 1, 'building_air_static_pressure_setpoint': 1, 'supply_air_static_pressure_sensor': 1} | {'exhaust_air_damper_percentage_command': 1, 'supply_air_temperature_setpoint': 1, 'supply_fan_speed_percentage_command': 1, 'outside_air_flowrate_setpoint': 1, 'cooling_percentage_command': 1, 'mixed_air_temperature_setpoint': 1, 'exhaust_fan_speed_percentage_command': 1, 'outside_air_damper_percentage_command': 1, 'supply_air_static_pressure_setpoint': 1, 'building_air_static_pressure_setpoint': 1} |
+        |  1 |   2760348383893915 | CDM         | VAV CO 1-1-10 CO2 |             4 | {'zone_air_heating_temperature_setpoint': 1, 'zone_air_temperature_sensor': 1, 'zone_air_co2_concentration_sensor': 1, 'supply_air_flowrate_setpoint': 1, 'zone_air_co2_concentration_setpoint': 1, 'zone_air_cooling_temperature_setpoint': 1, 'supply_air_flowrate_sensor': 1, 'supply_air_damper_percentage_command': 1}                                                                                                                                                                                                                                                                                                                                                                                                         | {'supply_air_damper_percentage_command': 1, 'supply_air_flowrate_setpoint': 1, 'zone_air_heating_temperature_setpoint': 1, 'zone_air_cooling_temperature_setpoint': 1, 'zone_air_co2_concentration_setpoint': 1}                                                                                                                                                                                                    |
+        |  2 |   2562701969438717 | CDM         | VAV CO 2-2-36     |             4 | {'zone_air_heating_temperature_setpoint': 1, 'supply_air_flowrate_sensor': 1, 'supply_air_flowrate_setpoint': 1, 'supply_air_damper_percentage_command': 1, 'zone_air_temperature_sensor': 1, 'zone_air_cooling_temperature_setpoint': 1}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | {'supply_air_flowrate_setpoint': 1, 'supply_air_damper_percentage_command': 1, 'zone_air_cooling_temperature_setpoint': 1, 'zone_air_heating_temperature_setpoint': 1}                                                                                                                                                                                                                                              |
+        |  3 |   2806035809406684 | CDM         |                   |             4 | {'discharge_air_temperature_setpoint': 1, 'supply_air_flowrate_sensor': 1, 'zone_air_heating_temperature_setpoint': 1, 'heating_water_valve_percentage_command': 1, 'supply_air_damper_percentage_command': 1, 'supply_air_flowrate_setpoint': 1, 'discharge_air_temperature_sensor': 1, 'zone_air_cooling_temperature_setpoint': 1, 'zone_air_temperature_sensor': 1}                                                                                                                                                                                                                                                                                                                                                              | {'discharge_air_temperature_setpoint': 1, 'heating_water_valve_percentage_command': 1, 'zone_air_cooling_temperature_setpoint': 1, 'supply_air_damper_percentage_command': 1, 'zone_air_heating_temperature_setpoint': 1, 'supply_air_flowrate_setpoint': 1}                                                                                                                                                        |
+        |  4 |   2790439929052995 | CDM         | VAV CO 1-1-43     |             4 | {'zone_air_heating_temperature_setpoint': 1, 'supply_air_flowrate_setpoint': 1, 'zone_air_temperature_sensor': 1, 'zone_air_cooling_temperature_setpoint': 1, 'supply_air_flowrate_sensor': 1, 'supply_air_damper_percentage_command': 1}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | {'supply_air_damper_percentage_command': 1, 'zone_air_heating_temperature_setpoint': 1, 'supply_air_flowrate_setpoint': 1, 'zone_air_cooling_temperature_setpoint': 1}                                                                                                                                                                                                                                              |
+    """
+    # pylint: enable=line-too-long
+    df = pd.DataFrame(self.device_infos)
+    df = df.drop(columns=["zone_id"])  # many to many relationship
+    return df
+
   @property
   def zone_infos_filepath(self):
     return os.path.join(self.tabular_dirpath, "zone_info_dicts.pickle")
@@ -247,11 +273,28 @@ class BuildingDataset:
     """
     return pickle.load(open(self.zone_infos_filepath, "rb"))
 
-  # @cached_property
-  # def zones_df(self) -> pd.DataFrame
-  #  df = pd.DataFrame(ds.zone_infos)
-  #  df["n_devices"] = df["devices"].apply(lambda x: len(x))
-  #  return df
+  @cached_property
+  def zones_df(self) -> pd.DataFrame:
+    # pylint: disable=line-too-long
+    """A dataframe containing information about the building's zones.
+
+    Each row is uniquely identified by the "zone_id".
+
+    Returns:
+      A `pandas.DataFrame`. Here is an example of the structure:
+
+        |    | zone_id             | building_id          | zone_description   |   area |   zone_type |   floor | devices                                  |   n_devices |
+        |---:|:--------------------|:---------------------|:-------------------|-------:|------------:|--------:|:-----------------------------------------|------------:|
+        |  0 | rooms/1002000133978 | buildings/3616672508 | SB1-2-C2054        |      0 |           1 |       2 | ['2618581107144046', '2696593986887004'] |           2 |
+        |  1 | rooms/9028471695    | buildings/3616672508 | SB1-2-2D4A         |      0 |           1 |       2 | ['2696593986887004']                     |           1 |
+        |  2 | rooms/9028472496    | buildings/3616672508 | SB1-2-2D4H         |      0 |           1 |       2 | ['2696593986887004']                     |           1 |
+        |  3 | rooms/9028558963    | buildings/3616672508 | SB1-2-2D4B         |      0 |           1 |       2 | ['2696593986887004']                     |           1 |
+        |  4 | rooms/9028483453    | buildings/3616672508 | SB1-2-2D4G         |      0 |           1 |       2 | ['2696593986887004']                     |           1 |
+    """
+    # pylint: enable=line-too-long
+    df = pd.DataFrame(self.zone_infos)
+    df["n_devices"] = df["devices"].apply(len)
+    return df
 
 
 class BuildingDatasetPartition:
@@ -263,10 +306,12 @@ class BuildingDatasetPartition:
       (e.g. "2022_a").
 
   Example:
-    >>> ds = BuildingDataset(building_id='sb1', download=True)
-    >>> partition = BuildingDatasetPartition(
-    >>>    building_dataset=ds, partition_id='2022_a'
-    >>> )
+    ```python
+    ds = BuildingDataset(building_id='sb1', download=True)
+    partition = BuildingDatasetPartition(
+       building_dataset=ds, partition_id='2022_a'
+    )
+    ```
   """
 
   def __init__(self, building_dataset: BuildingDataset, partition_id: str):

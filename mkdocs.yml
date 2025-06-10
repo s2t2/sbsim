@@ -107,7 +107,7 @@ markdown_extensions:
 plugins:
   - search
 
-  - autorefs # enables linking to other methods
+  - autorefs # enables linking to other methods (kind of buggy?)
 
   #
   # API DOCS
