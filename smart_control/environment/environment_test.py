@@ -734,7 +734,6 @@ class EnvironmentTest(parameterized.TestCase, tf.test.TestCase):
           obs_normalizer,
           action_config,
           discount_factor: float = 1,
-          step_interval: pd.Timedelta = pd.Timedelta(1, unit="minute"),
       ):
         super().__init__(
             building,
@@ -742,7 +741,6 @@ class EnvironmentTest(parameterized.TestCase, tf.test.TestCase):
             obs_normalizer,
             action_config,
             discount_factor,
-            step_interval=step_interval,
         )
         self.counter = 0
 
@@ -762,7 +760,6 @@ class EnvironmentTest(parameterized.TestCase, tf.test.TestCase):
         reward_function,
         obs_normalizer,
         action_config,
-        step_interval=step_interval,
     )
 
     utils.validate_py_environment(env, episodes=5)
