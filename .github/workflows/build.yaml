@@ -28,7 +28,6 @@ jobs:
           - os: macos-latest # arm-based
             python-version: '3.11'
 
-
     runs-on: ${{ matrix.os }}
 
     steps:
