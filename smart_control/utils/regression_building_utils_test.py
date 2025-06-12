@@ -123,23 +123,17 @@ class RegressionBuildingUtilsTest(absltest.TestCase):
     self.assertListEqual(expected_output_indices, output_indices)
 
   def test_get_feature_map(self):
-    req_ts = pd.Timestamp('2021-01-12 00:00+0')
-    res_ts = pd.Timestamp('2021-01-12 00:10+0')
-    device_id = 'd0'
-    measurement_name = 's0'
-    measurement_value = 294.5
-    observation_response = self._get_test_observation_response(
-        request_timestamp=req_ts,
-        device_id=device_id,
-        response_timestamp=res_ts,
-        measurement_name=measurement_name,
-        value=measurement_value,
+    obs_response = self._get_test_observation_response(
+        request_timestamp=pd.Timestamp('2021-01-12 00:00+0'),
+        device_id='d0',
+        response_timestamp=pd.Timestamp('2021-01-12 00:10+0'),
+        measurement_name='s0',
+        value=294.5,
         observation_valid=True,
     )
-    feature_map = regression_building_utils.get_feature_map(
-        observation_response
-    )
-    expected_feature_map = {
+    feature_map = regression_building_utils.get_feature_map(obs_response)
+
+    expected_map = {
         'timestamp': pd.Timestamp('2021-01-12 00:10:00+0'),
         ('hod', 'cos_000'): 0.9990482215818578,
         ('hod', 'sin_000'): 0.043619387365336,
@@ -147,7 +141,21 @@ class RegressionBuildingUtilsTest(absltest.TestCase):
         ('dow', 'sin_000'): 0.7818314824680298,
         ('d0', 's0'): 294.5,
     }
-    self.assertDictEqual(expected_feature_map, feature_map)
+    # passes on Linux, but fails on Mac, due to floating point math differences:
+    # self.assertDictEqual(expected_map, feature_map)
+
+    # ... so we are using some equal assertions when applicable:
+    for key in ['timestamp', ('d0', 's0')]:
+      self.assertEqual(feature_map[key], expected_map[key])
+
+    # ... and some almost-equal assertions for the sin and cos values:
+    for key in [
+        ('hod', 'cos_000'),
+        ('hod', 'sin_000'),
+        ('dow', 'cos_000'),
+        ('dow', 'sin_000'),
+    ]:
+      self.assertAlmostEqual(feature_map[key], expected_map[key], places=7)
 
   def test_get_observation_sequence(self):
     req_ts = pd.Timestamp('2021-01-12 00:00')
