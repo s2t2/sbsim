@@ -14,11 +14,12 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest  # Use an Ubuntu runner for the job
-
     strategy:
       matrix:
-        python-version: [3.10.12, 3.10.15, 3.11]  # Python versions to test
+        os: [ubuntu-latest, macos-latest]
+        python-version: [3.10, 3.11, 3.12]  # Python versions to test
+
+    runs-on: ${{ matrix.os }}
 
     steps:
     - name: Checkout code
