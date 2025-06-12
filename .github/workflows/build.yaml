@@ -18,12 +18,10 @@ jobs:
       matrix:
         # there is no 3.10.15 on mac
         # see: https://raw.githubusercontent.com/actions/python-versions/main/versions-manifest.json
-        #os: [ubuntu-latest, macos-latest]
-        #python-version: ['3.10.15', '3.11']
-        include:
-          - os: [ubuntu-latest]
-            python-version: ['3.10.15', '3.11']
+        os: [ubuntu-latest]
+        python-version: ['3.10.15', '3.11']
 
+        include:
           - os: macos-13 # intel-based
             python-version: '3.11'
 
