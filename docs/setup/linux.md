@@ -78,7 +78,7 @@ configure Python package dependencies.
 Install poetry:
 
 ```sh
-pip install poetry
+pip install poetry==2.1.2
 ```
 
 You may need to specify a Python version that is compatible with this project

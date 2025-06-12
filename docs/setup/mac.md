@@ -80,7 +80,7 @@ configure Python package dependencies.
 Install poetry:
 
 ```sh
-pip install poetry
+pip install poetry==2.1.2
 ```
 
 Use poetry to install dependencies, including development dependencies:
