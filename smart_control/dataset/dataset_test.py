@@ -2,13 +2,15 @@
 
 Includes some high fidelity tests to download the actual dataset.
 
-It takes around two minutes to download the data, so we are skipping certain
-tests by default, to keep the build fast. But you can run them manually by
-setting the `TEST_DATASET_DOWNLOAD` environment variable to 'true'.
+It takes around two minutes to download and unzip the data, so we are skipping
+certain tests by default, to keep the build fast. But you can run them manually
+by setting the `TEST_DATASET_DOWNLOAD` environment variable to 'true'.
 
 Downloaded data will not get cleared by default, but you can force a clean up
 and fresh download by setting the `CLEAR_TEST_DATASET_DOWNLOAD` environment
 variable to 'true'.
+
+When the dataset has already exists locally, the tests take around 6 seconds.
 
 These real tests are meant to be run periodically, for example once per day.
 """
@@ -40,10 +42,10 @@ SKIP_REASON = 'Skip large download by default.'
 def cleanup_files():
   print('Deleting dataset files...')
 
-  if os.path.exists(ZIP_FILEPATH):
+  if os.path.isfile(ZIP_FILEPATH):
     os.remove(ZIP_FILEPATH)
 
-  if os.path.exists(DATASET_DIRPATH):
+  if os.path.isdir(DATASET_DIRPATH):
     shutil.rmtree(DATASET_DIRPATH)
 
 
@@ -349,11 +351,6 @@ class TestBuildingDatasetPartition(BaseDatasetTest):
     cls.partition = BuildingDatasetPartition(
         building_dataset=cls.ds, partition_id='2022_a'
     )
-
-  @classmethod
-  def tearDownClass(cls):
-    if TEST_DATASET_DOWNLOAD and CLEAR_TEST_DATASET_DOWNLOAD:
-      cleanup_files()
 
   def _assert_timestamps(self, timestamps, earliest, latest, length):
     """

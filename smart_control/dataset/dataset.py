@@ -78,6 +78,8 @@ class BuildingDataset:
     Only downloads and unzips the dataset if it doesn't already exist at the
       expected [`building_dirpath`](./#smart_control.dataset.dataset.BuildingDataset.building_dirpath)
       location.
+
+    Download speed is fairly quick, but unzipping takes a few moments.
     """
     if os.path.isdir(self.building_dirpath):
       print("Using previously-downloaded data...")
@@ -87,7 +89,7 @@ class BuildingDataset:
       print(self.zip_url)
       with requests.get(self.zip_url, stream=True, timeout=timeout) as r:
         r.raise_for_status()
-        with open(self.building_dirpath, "wb") as f:
+        with open(self.zip_filepath, "wb") as f:
           for chunk in r.iter_content(chunk_size=8192):
             f.write(chunk)
 
