@@ -48,8 +48,65 @@ ZIP_FILEPATH = os.path.join(DATA_DIR, 'sb1.zip')
 TEST_DATASET = bool(TEST_DATASET_DOWNLOAD or os.path.isdir(DATASET_DIRPATH))
 SKIP_REASON = 'Skip large download by default.'
 
+#
+# SHARED FIXTURES & DATA STRUCTURES
+#
 
 _dataset_fixture = None  # module-level dataset fixture
+
+_FIRST_ZONE_INFO = {
+    'zone_id': 'rooms/1002000133978',
+    'building_id': 'buildings/3616672508',
+    'zone_description': 'SB1-2-C2054',
+    'area': 0.0,
+    'zone_type': 1,
+    'floor': 2,
+    'devices': ['2618581107144046', '2696593986887004'],
+}
+
+_FIRST_DEVICE_INFO = {
+    'device_id': '202194278473007104',
+    'namespace': 'PHRED',
+    'code': 'SB1:AHU:AC-2',
+    'zone_id': '',
+    'device_type': 6,
+    'observable_fields': {
+        'building_air_static_pressure_sensor': 1,
+        'outside_air_flowrate_sensor': 1,
+        'supply_fan_speed_percentage_command': 1,
+        'supply_air_temperature_sensor': 1,
+        'supply_fan_speed_frequency_sensor': 1,
+        'supply_air_static_pressure_setpoint': 1,
+        'return_air_temperature_sensor': 1,
+        'mixed_air_temperature_setpoint': 1,
+        'exhaust_fan_speed_percentage_command': 1,
+        'exhaust_fan_speed_frequency_sensor': 1,
+        'outside_air_damper_percentage_command': 1,
+        'mixed_air_temperature_sensor': 1,
+        'exhaust_air_damper_percentage_command': 1,
+        'cooling_percentage_command': 1,
+        'outside_air_flowrate_setpoint': 1,
+        'supply_air_temperature_setpoint': 1,
+        'building_air_static_pressure_setpoint': 1,
+        'supply_air_static_pressure_sensor': 1,
+    },
+    'action_fields': {
+        'exhaust_air_damper_percentage_command': 1,
+        'supply_air_temperature_setpoint': 1,
+        'supply_fan_speed_percentage_command': 1,
+        'outside_air_flowrate_setpoint': 1,
+        'cooling_percentage_command': 1,
+        'mixed_air_temperature_setpoint': 1,
+        'exhaust_fan_speed_percentage_command': 1,
+        'outside_air_damper_percentage_command': 1,
+        'supply_air_static_pressure_setpoint': 1,
+        'building_air_static_pressure_setpoint': 1,
+    },
+}
+
+#
+# SET UP METHODS
+#
 
 
 def cleanup_files():
@@ -82,6 +139,10 @@ def setUpModule():
 #  """Module-level teardown. Cleans up files as desired."""
 #  if TEST_DATASET_DOWNLOAD and CLEAR_TEST_DATASET_DOWNLOAD:
 #    cleanup_files()
+
+#
+# TESTS
+#
 
 
 class TestDataDirectory(absltest.TestCase):
@@ -209,48 +270,7 @@ class TestBuildingDataset(absltest.TestCase):
     device_infos = self.ds.device_infos
     self.assertIsInstance(device_infos, list)
     self.assertEqual(len(device_infos), 173)
-
-    # first item / example structure:
-    first_device_info = {
-        'device_id': '202194278473007104',
-        'namespace': 'PHRED',
-        'code': 'SB1:AHU:AC-2',
-        'zone_id': '',
-        'device_type': 6,
-        'observable_fields': {
-            'building_air_static_pressure_sensor': 1,
-            'outside_air_flowrate_sensor': 1,
-            'supply_fan_speed_percentage_command': 1,
-            'supply_air_temperature_sensor': 1,
-            'supply_fan_speed_frequency_sensor': 1,
-            'supply_air_static_pressure_setpoint': 1,
-            'return_air_temperature_sensor': 1,
-            'mixed_air_temperature_setpoint': 1,
-            'exhaust_fan_speed_percentage_command': 1,
-            'exhaust_fan_speed_frequency_sensor': 1,
-            'outside_air_damper_percentage_command': 1,
-            'mixed_air_temperature_sensor': 1,
-            'exhaust_air_damper_percentage_command': 1,
-            'cooling_percentage_command': 1,
-            'outside_air_flowrate_setpoint': 1,
-            'supply_air_temperature_setpoint': 1,
-            'building_air_static_pressure_setpoint': 1,
-            'supply_air_static_pressure_sensor': 1,
-        },
-        'action_fields': {
-            'exhaust_air_damper_percentage_command': 1,
-            'supply_air_temperature_setpoint': 1,
-            'supply_fan_speed_percentage_command': 1,
-            'outside_air_flowrate_setpoint': 1,
-            'cooling_percentage_command': 1,
-            'mixed_air_temperature_setpoint': 1,
-            'exhaust_fan_speed_percentage_command': 1,
-            'outside_air_damper_percentage_command': 1,
-            'supply_air_static_pressure_setpoint': 1,
-            'building_air_static_pressure_setpoint': 1,
-        },
-    }
-    self.assertEqual(device_infos[0], first_device_info)
+    self.assertEqual(device_infos[0], _FIRST_DEVICE_INFO)
 
   @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
   def test_devices_df(self):
@@ -271,44 +291,8 @@ class TestBuildingDataset(absltest.TestCase):
     ]
     self.assertEqual(devices_df.columns.tolist(), expected_column_names)
 
-    first_row = {
-        'device_id': '202194278473007104',
-        'namespace': 'PHRED',
-        'code': 'SB1:AHU:AC-2',
-        'device_type': 6,
-        'observable_fields': {
-            'building_air_static_pressure_sensor': 1,
-            'outside_air_flowrate_sensor': 1,
-            'supply_fan_speed_percentage_command': 1,
-            'supply_air_temperature_sensor': 1,
-            'supply_fan_speed_frequency_sensor': 1,
-            'supply_air_static_pressure_setpoint': 1,
-            'return_air_temperature_sensor': 1,
-            'mixed_air_temperature_setpoint': 1,
-            'exhaust_fan_speed_percentage_command': 1,
-            'exhaust_fan_speed_frequency_sensor': 1,
-            'outside_air_damper_percentage_command': 1,
-            'mixed_air_temperature_sensor': 1,
-            'exhaust_air_damper_percentage_command': 1,
-            'cooling_percentage_command': 1,
-            'outside_air_flowrate_setpoint': 1,
-            'supply_air_temperature_setpoint': 1,
-            'building_air_static_pressure_setpoint': 1,
-            'supply_air_static_pressure_sensor': 1,
-        },
-        'action_fields': {
-            'exhaust_air_damper_percentage_command': 1,
-            'supply_air_temperature_setpoint': 1,
-            'supply_fan_speed_percentage_command': 1,
-            'outside_air_flowrate_setpoint': 1,
-            'cooling_percentage_command': 1,
-            'mixed_air_temperature_setpoint': 1,
-            'exhaust_fan_speed_percentage_command': 1,
-            'outside_air_damper_percentage_command': 1,
-            'supply_air_static_pressure_setpoint': 1,
-            'building_air_static_pressure_setpoint': 1,
-        },
-    }
+    first_row = _FIRST_DEVICE_INFO.copy()
+    del first_row['zone_id']  # we removed "zone_id" from the df
     self.assertEqual(devices_df.iloc[0].to_dict(), first_row)
 
   @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
@@ -318,16 +302,7 @@ class TestBuildingDataset(absltest.TestCase):
     self.assertIsInstance(zone_infos, list)
     self.assertEqual(len(zone_infos), 563)
 
-    first_zone_info = {
-        'zone_id': 'rooms/1002000133978',
-        'building_id': 'buildings/3616672508',
-        'zone_description': 'SB1-2-C2054',
-        'area': 0.0,
-        'zone_type': 1,
-        'floor': 2,
-        'devices': ['2618581107144046', '2696593986887004'],
-    }
-    self.assertEqual(zone_infos[0], first_zone_info)
+    self.assertEqual(zone_infos[0], _FIRST_ZONE_INFO)
 
   @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
   def test_zones_df(self):
@@ -350,16 +325,8 @@ class TestBuildingDataset(absltest.TestCase):
     ]
     self.assertEqual(zones_df.columns.tolist(), expected_column_names)
 
-    first_row = {
-        'zone_id': 'rooms/1002000133978',
-        'building_id': 'buildings/3616672508',
-        'zone_description': 'SB1-2-C2054',
-        'area': 0.0,
-        'zone_type': 1,
-        'floor': 2,
-        'devices': ['2618581107144046', '2696593986887004'],
-        'n_devices': 2,
-    }
+    first_row = _FIRST_ZONE_INFO.copy()
+    first_row['n_devices'] = 2  # we added this column to the df
     self.assertEqual(zones_df.iloc[0].to_dict(), first_row)
 
 
@@ -468,78 +435,34 @@ class TestBuildingDatasetPartition(absltest.TestCase):
     # device_infos:
     self.assertIsInstance(metadata['device_infos'], list)
     self.assertEqual(len(metadata['device_infos']), 173)
-    first_device_info = {
-        'device_id': '202194278473007104',
-        'namespace': 'PHRED',
-        'code': 'SB1:AHU:AC-2',
-        'zone_id': '',
-        'device_type': 6,
-        'observable_fields': {
-            'building_air_static_pressure_sensor': 1,
-            'outside_air_flowrate_sensor': 1,
-            'supply_fan_speed_percentage_command': 1,
-            'supply_air_temperature_sensor': 1,
-            'supply_fan_speed_frequency_sensor': 1,
-            'supply_air_static_pressure_setpoint': 1,
-            'return_air_temperature_sensor': 1,
-            'mixed_air_temperature_setpoint': 1,
-            'exhaust_fan_speed_percentage_command': 1,
-            'exhaust_fan_speed_frequency_sensor': 1,
-            'outside_air_damper_percentage_command': 1,
-            'mixed_air_temperature_sensor': 1,
-            'exhaust_air_damper_percentage_command': 1,
-            'cooling_percentage_command': 1,
-            'outside_air_flowrate_setpoint': 1,
-            'supply_air_temperature_setpoint': 1,
-            'building_air_static_pressure_setpoint': 1,
-            'supply_air_static_pressure_sensor': 1,
-        },
-        'action_fields': {
-            'exhaust_air_damper_percentage_command': 1,
-            'supply_air_temperature_setpoint': 1,
-            'supply_fan_speed_percentage_command': 1,
-            'outside_air_flowrate_setpoint': 1,
-            'cooling_percentage_command': 1,
-            'mixed_air_temperature_setpoint': 1,
-            'exhaust_fan_speed_percentage_command': 1,
-            'outside_air_damper_percentage_command': 1,
-            'supply_air_static_pressure_setpoint': 1,
-            'building_air_static_pressure_setpoint': 1,
-        },
-    }
-    self.assertEqual(metadata['device_infos'][0], first_device_info)
+    # ... example:
+    self.assertEqual(metadata['device_infos'][0], _FIRST_DEVICE_INFO)
 
     # observation_ids:
     self.assertIsInstance(metadata['observation_ids'], dict)
     self.assertEqual(len(metadata['observation_ids']), 1198)
-    # an example key / value pair that exists:
+    # ... example:
+    example_observation_item = list(metadata['observation_ids'].items())[0]
     self.assertEqual(
-        metadata['observation_ids']['202194278473007104@building_air_static_pressure_setpoint'],  # pylint:disable=line-too-long
-        0,
+        example_observation_item,
+        ('202194278473007104@building_air_static_pressure_setpoint', 0),
     )
 
     # reward_ids:
     self.assertIsInstance(metadata['reward_ids'], dict)
     self.assertEqual(len(metadata['reward_ids']), 3252)
-    # an example key / value pair that exists:
+    # ... example:
+    example_reward_item = list(metadata['reward_ids'].items())[0]
     self.assertEqual(
-        metadata['reward_ids']['rooms/9028552126@heating_setpoint_temperature'],
-        0,
+        example_reward_item,
+        ('rooms/9028552126@heating_setpoint_temperature', 0),
     )
 
     # 'zone_infos':
     self.assertIsInstance(metadata['zone_infos'], list)
     self.assertEqual(len(metadata['zone_infos']), 563)
-    first_zone_info = {
-        'zone_id': 'rooms/1002000133978',
-        'building_id': 'buildings/3616672508',
-        'zone_description': 'SB1-2-C2054',
-        'area': 0.0,
-        'zone_type': 1,
-        'floor': 2,
-        'devices': ['2618581107144046', '2696593986887004'],
-    }
-    self.assertEqual(metadata['zone_infos'][0], first_zone_info)
+    # ... example:
+    self.assertEqual(metadata['zone_infos'][0], _FIRST_ZONE_INFO)
 
 
 if __name__ == '__main__':
