@@ -49,10 +49,12 @@ class BuildingDataset:
 
   @property
   def zip_filename(self):
+    """The name of the local zip file after it is has been downloaded."""
     return f"{self.building_id}.zip"
 
   @property
   def zip_url(self):
+    """The URL of the zip file located on Google Cloud Storage."""
     return (
         "https://storage.googleapis.com/gresearch/smart_buildings_dataset/"
         f"tabular_data/{self.zip_filename}"
@@ -60,35 +62,38 @@ class BuildingDataset:
 
   @property
   def zip_filepath(self):
+    """The filepath of the local zip file after it has been downloaded."""
     return os.path.join(DATA_DIR, self.zip_filename)
 
   @property
   def building_dirpath(self):
+    """The local directory containing the building's dataset, after it has been
+    extracted from the local zip file.
+    """
     return os.path.join(DATA_DIR, self.building_id)
 
-  @staticmethod
-  def _download_file_if_not_exists(url, timeout=60):
-    local_filename = url.split("/")[-1]
-    local_filepath = os.path.join(DATA_DIR, local_filename)
+  def download(self, timeout=60):
+    """Downloads the building's dataset from Google Cloud Storage.
 
-    if os.path.isfile(local_filepath):
+    Only downloads and unzips the dataset if it doesn't already exist at the
+      expected [`building_dirpath`](./#smart_control.dataset.dataset.BuildingDataset.building_dirpath)
+      location.
+    """
+    if os.path.isdir(self.building_dirpath):
       print("Using previously-downloaded data...")
-      print(os.path.abspath(local_filepath))
+      print(os.path.abspath(self.building_dirpath))
     else:
-      print("Downloading data...")
-      print(url)
-      with requests.get(url, stream=True, timeout=timeout) as r:
+      print("Downloading zip file...")
+      print(self.zip_url)
+      with requests.get(self.zip_url, stream=True, timeout=timeout) as r:
         r.raise_for_status()
-        with open(local_filepath, "wb") as f:
+        with open(self.building_dirpath, "wb") as f:
           for chunk in r.iter_content(chunk_size=8192):
             f.write(chunk)
 
-    return local_filepath
-
-  def download(self):
-    """Downloads the building's dataset from Google Cloud Storage."""
-    self._download_file_if_not_exists(self.zip_url)
-    shutil.unpack_archive(self.zip_filepath, self.building_dirpath)
+      print("Unpacking zip file...")
+      print(os.path.abspath(self.zip_filepath))
+      shutil.unpack_archive(self.zip_filepath, self.building_dirpath)
 
   @property
   def tabular_dirpath(self):
