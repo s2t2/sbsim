@@ -71,11 +71,10 @@ def setUpModule():
   if TEST_DATASET_DOWNLOAD and CLEAR_TEST_DATASET_DOWNLOAD:
     cleanup_files()
 
-  if TEST_DATASET:
-    print('Initializing BuildingDataset (this should happen only once)...')
-    _dataset_fixture = BuildingDataset(
-        building_id='sb1', download=TEST_DATASET_DOWNLOAD
-    )
+  print('Initializing BuildingDataset (this should happen only once)...')
+  _dataset_fixture = BuildingDataset(
+      building_id='sb1', download=TEST_DATASET_DOWNLOAD
+  )
 
 
 # DON'T CLEAR AFTERWARDS. SO WE CAN USE THE DOWNLOADED DATA FOR SUBSEQUENT RUNS.
