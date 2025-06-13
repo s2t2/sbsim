@@ -150,6 +150,10 @@ and set your desired value(s) there:
 
 # customizing the directory where simulation videos are stored:
 SIM_VIDEOS_DIRPATH="/cns/oz-d/home/smart-buildings-control-team/smart-buildings/geometric_sim_videos/"
+
+# configuring dataset tests to be run locally, as desired:
+TEST_DATASET_DOWNLOAD=true
+CLEAR_TEST_DATASET_DOWNLOAD=false
 ```
 
 ## Notebook Setup

@@ -1,16 +1,22 @@
 """Tests for the Smart Buildings Dataset.
 
-Includes some high fidelity tests to download the actual dataset.
+Includes high fidelity tests to download the dataset and verify its structure.
 
 It takes around two minutes to download and unzip the data, so we are skipping
-certain tests by default, to keep the build fast. But you can run them manually
+dataset tests by default, to keep the build fast. But you can trigger a download
 by setting the `TEST_DATASET_DOWNLOAD` environment variable to 'true'.
 
-Downloaded data will not get cleared by default, but you can force a clean up
-and fresh download by setting the `CLEAR_TEST_DATASET_DOWNLOAD` environment
-variable to 'true'.
+Downloaded data will not get cleared after tests run, so we can use it in
+subsequent test runs without needing to re-download. This allows developers to
+run dataset tests fairly quickly on their local machines. When the dataset
+already exists locally, the tests take around five seconds.
 
-When the dataset has already exists locally, the tests take around 6 seconds.
+The dataset tests will be run if the data is being downloaded, or if there is
+existing local data.
+
+Downloaded data will not get cleared by default before tests run, but you can
+force a clean up and fresh download by setting the `CLEAR_TEST_DATASET_DOWNLOAD`
+environment variable to 'true'.
 
 These real tests are meant to be run periodically, for example once per day.
 """
@@ -30,13 +36,20 @@ from smart_control.dataset.dataset import DATA_DIR
 
 load_dotenv()
 
+# whether or not to download the dataset:
 TEST_DATASET_DOWNLOAD = bool(os.getenv('TEST_DATASET_DOWNLOAD', default='false').lower() == 'true')  # pylint: disable=line-too-long
+# whether or not to delete existing local data before downloading:
 CLEAR_TEST_DATASET_DOWNLOAD = bool(os.getenv('CLEAR_TEST_DATASET_DOWNLOAD', default='false').lower() == 'true')  # pylint: disable=line-too-long
 
 DATASET_DIRPATH = os.path.join(DATA_DIR, 'sb1')
 ZIP_FILEPATH = os.path.join(DATA_DIR, 'sb1.zip')
 
+# whether or not to run dataset tests:
+TEST_DATASET = bool(TEST_DATASET_DOWNLOAD or os.path.isdir(DATASET_DIRPATH))
 SKIP_REASON = 'Skip large download by default.'
+
+
+_dataset_fixture = None  # module-level dataset fixture
 
 
 def cleanup_files():
@@ -49,6 +62,29 @@ def cleanup_files():
     shutil.rmtree(DATASET_DIRPATH)
 
 
+def setUpModule():
+  """Module-level setup. Cleans up files as desired. Downloads data as desired.
+  Initializes the dataset as a module level fixture as desired.
+  """
+  global _dataset_fixture
+
+  if TEST_DATASET_DOWNLOAD and CLEAR_TEST_DATASET_DOWNLOAD:
+    cleanup_files()
+
+  if TEST_DATASET:
+    print('Initializing BuildingDataset (this should happen only once)...')
+    _dataset_fixture = BuildingDataset(
+        building_id='sb1', download=TEST_DATASET_DOWNLOAD
+    )
+
+
+# DON'T CLEAR AFTERWARDS. SO WE CAN USE THE DOWNLOADED DATA FOR SUBSEQUENT RUNS.
+# def tearDownModule():
+#  """Module-level teardown. Cleans up files as desired."""
+#  if TEST_DATASET_DOWNLOAD and CLEAR_TEST_DATASET_DOWNLOAD:
+#    cleanup_files()
+
+
 class TestDataDirectory(absltest.TestCase):
   'Tests for the data directory.'
 
@@ -56,34 +92,15 @@ class TestDataDirectory(absltest.TestCase):
     self.assertTrue(os.path.isdir(DATA_DIR))
 
 
-class BaseDatasetTest(absltest.TestCase):
-  """Inherit related test classes from this one to use a shared dataset fixture
-  and avoid re-initializing the dataset across multiple child classes.
-  """
+class TestBuildingDataset(absltest.TestCase):
+  """Tests for the BuildingDataset class."""
 
   ds = None
 
   @classmethod
   def setUpClass(cls):
     super().setUpClass()
-    if cls.ds is None:
-      if TEST_DATASET_DOWNLOAD and CLEAR_TEST_DATASET_DOWNLOAD:
-        cleanup_files()
-
-      print('Initializing BuildingDataset (this should happen once)...')
-      cls.ds = BuildingDataset(
-          building_id='sb1', download=TEST_DATASET_DOWNLOAD
-      )
-
-  @classmethod
-  def tearDownClass(cls):
-    super().tearDownClass()
-    if TEST_DATASET_DOWNLOAD and CLEAR_TEST_DATASET_DOWNLOAD:
-      cleanup_files()
-
-
-class TestBuildingDataset(BaseDatasetTest):
-  """Tests for the BuildingDataset class."""
+    cls.ds = _dataset_fixture
 
   def test_building_id(self):
     self.assertEqual(self.ds.building_id, 'sb1')
@@ -92,13 +109,13 @@ class TestBuildingDataset(BaseDatasetTest):
     partition_ids = ['2022_a', '2022_b', '2023_a', '2023_b', '2024_a']
     self.assertEqual(self.ds.partition_ids, partition_ids)
 
-  @unittest.skipUnless(TEST_DATASET_DOWNLOAD, SKIP_REASON)
+  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
   def test_download(self):
     self.assertIn('download', dir(self.ds))
     self.assertTrue(os.path.isdir(DATASET_DIRPATH))
     self.assertTrue(os.path.exists(ZIP_FILEPATH))
 
-  @unittest.skipUnless(TEST_DATASET_DOWNLOAD, SKIP_REASON)
+  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
   def test_floorplan(self):
     floorplan = self.ds.floorplan
 
@@ -109,7 +126,7 @@ class TestBuildingDataset(BaseDatasetTest):
     value_counts = dict(zip(values, counts))
     self.assertEqual(value_counts, {0.0: 436332, 1.0: 60204, 2.0: 250440})
 
-  @unittest.skipUnless(TEST_DATASET_DOWNLOAD, SKIP_REASON)
+  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
   def test_device_layout_map(self):
     device_layout_map = self.ds.device_layout_map
 
@@ -181,7 +198,7 @@ class TestBuildingDataset(BaseDatasetTest):
     self.assertEqual(first_layout_map[0], [79, 35])
     self.assertEqual(first_layout_map[-1], [80, 64])
 
-  @unittest.skipUnless(TEST_DATASET_DOWNLOAD, SKIP_REASON)
+  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
   def test_device_infos(self):
     device_infos = self.ds.device_infos
     self.assertIsInstance(device_infos, list)
@@ -229,7 +246,7 @@ class TestBuildingDataset(BaseDatasetTest):
     }
     self.assertEqual(device_infos[0], first_device_info)
 
-  @unittest.skipUnless(TEST_DATASET_DOWNLOAD, SKIP_REASON)
+  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
   def test_devices_df(self):
     devices_df = self.ds.devices_df
     self.assertIsInstance(devices_df, pd.DataFrame)
@@ -288,7 +305,7 @@ class TestBuildingDataset(BaseDatasetTest):
     }
     self.assertEqual(devices_df.iloc[0].to_dict(), first_row)
 
-  @unittest.skipUnless(TEST_DATASET_DOWNLOAD, SKIP_REASON)
+  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
   def test_zone_infos(self):
     zone_infos = self.ds.zone_infos
 
@@ -306,7 +323,7 @@ class TestBuildingDataset(BaseDatasetTest):
     }
     self.assertEqual(zone_infos[0], first_zone_info)
 
-  @unittest.skipUnless(TEST_DATASET_DOWNLOAD, SKIP_REASON)
+  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
   def test_zones_df(self):
     zones_df = self.ds.zones_df
     self.assertIsInstance(zones_df, pd.DataFrame)
@@ -340,14 +357,16 @@ class TestBuildingDataset(BaseDatasetTest):
     self.assertEqual(zones_df.iloc[0].to_dict(), first_row)
 
 
-class TestBuildingDatasetPartition(BaseDatasetTest):
+class TestBuildingDatasetPartition(absltest.TestCase):
   """Tests for the BuildingDatasetPartition class."""
 
+  ds = None
   partition = None
 
   @classmethod
   def setUpClass(cls):
     super().setUpClass()
+    cls.ds = _dataset_fixture
     cls.partition = BuildingDatasetPartition(
         building_dataset=cls.ds, partition_id='2022_a'
     )
@@ -372,7 +391,7 @@ class TestBuildingDatasetPartition(BaseDatasetTest):
     self.assertEqual(str(first_timestamp), earliest)
     self.assertEqual(str(last_timestamp), latest)
 
-  @unittest.skipUnless(TEST_DATASET_DOWNLOAD, SKIP_REASON)
+  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
   def test_partition_data(self):
     data = self.partition.data
 
@@ -382,7 +401,7 @@ class TestBuildingDatasetPartition(BaseDatasetTest):
     self.assertEqual(data['reward_value_matrix'].shape, (51852, 17))
     self.assertEqual(data['reward_info_value_matrix'].shape, (51852, 3252))
 
-  @unittest.skipUnless(TEST_DATASET_DOWNLOAD, SKIP_REASON)
+  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
   def test_partition_metadata(self):
     metadata = self.partition.metadata
 

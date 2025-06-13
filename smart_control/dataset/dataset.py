@@ -126,7 +126,11 @@ class BuildingDataset:
     return os.path.join(self.building_dirpath, floorplan_image_filename)
 
   def display_floorplan(
-      self, cmap="binary", show=True, save=True, image_filepath=None
+      self,
+      cmap="binary",
+      show=True,
+      save=True,
+      image_filepath: str | None = None,
   ):
     """Renders an image of the building's floorplan.
 
