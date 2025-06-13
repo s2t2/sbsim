@@ -385,13 +385,13 @@ class TestBuildingDatasetPartition(absltest.TestCase):
     metadata_keys = [
         'action_ids',
         'action_timestamps',
-        'device_infos',
+        #'device_infos',
         'observation_ids',
         'observation_timestamps',
         'reward_ids',
         'reward_info_timestamps',
         'reward_timestamps',
-        'zone_infos',
+        #'zone_infos',
     ]
     self.assertEqual(sorted(metadata.keys()), metadata_keys)
 
@@ -435,11 +435,11 @@ class TestBuildingDatasetPartition(absltest.TestCase):
     }
     self.assertEqual(metadata['action_ids'], action_ids)
 
-    # device_infos:
-    self.assertIsInstance(metadata['device_infos'], list)
-    self.assertEqual(len(metadata['device_infos']), 173)
-    # ... example:
-    self.assertEqual(metadata['device_infos'][0], _FIRST_DEVICE_INFO)
+    ## device_infos:
+    # self.assertIsInstance(metadata['device_infos'], list)
+    # self.assertEqual(len(metadata['device_infos']), 173)
+    ## ... example:
+    # self.assertEqual(metadata['device_infos'][0], _FIRST_DEVICE_INFO)
 
     # observation_ids:
     self.assertIsInstance(metadata['observation_ids'], dict)
@@ -461,11 +461,116 @@ class TestBuildingDatasetPartition(absltest.TestCase):
         ('rooms/9028552126@heating_setpoint_temperature', 0),
     )
 
-    # 'zone_infos':
-    self.assertIsInstance(metadata['zone_infos'], list)
-    self.assertEqual(len(metadata['zone_infos']), 563)
-    # ... example:
-    self.assertEqual(metadata['zone_infos'][0], _FIRST_ZONE_INFO)
+    ## 'zone_infos':
+    # self.assertIsInstance(metadata['zone_infos'], list)
+    # self.assertEqual(len(metadata['zone_infos']), 563)
+    ## ... example:
+    # self.assertEqual(metadata['zone_infos'][0], _FIRST_ZONE_INFO)
+
+  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
+  def test_observations_df(self):
+    df = self.partition.observations_df
+
+    self.assertIsInstance(df, pd.DataFrame)
+    self.assertEqual(df.shape, (51852, 1198))
+
+    # columns corresponding to the observation ids:
+    # ... there are 1198, but here are some examples:
+    self.assertIn(
+        '202194278473007104@building_air_static_pressure_setpoint', df.columns
+    )
+    self.assertIn('2640423556868160@zone_air_temperature_sensor', df.columns)
+
+    # index corresponding to the observation timestamps:
+    self.assertEqual(str(df.index[0]), '2022-01-01 00:00:00+00:00')
+    self.assertEqual(str(df.index[-1]), '2022-06-30 00:55:00+00:00')
+
+    # values are numeric (float) and non-null:
+    self.assertEqual(df.isna().sum().sum(), 0)
+    self.assertEqual(df.dtypes.unique().tolist(), [np.dtype('float64')])
+
+  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
+  def test_actions_df(self):
+    df = self.partition.actions_df
+
+    self.assertIsInstance(df, pd.DataFrame)
+    self.assertEqual(df.shape, (51852, 3))
+
+    # columns corresponding to the action ids:
+    expected_columns = [
+        '12945159110931775488@supply_air_temperature_setpoint',
+        '13761436543392677888@supply_water_temperature_setpoint',
+        '14409954889734029312@supply_air_temperature_setpoint',
+    ]
+    self.assertEqual(df.columns.tolist(), expected_columns)
+
+    # index corresponding to the action timestamps:
+    self.assertEqual(str(df.index[0]), '2022-01-01 00:00:00+00:00')
+    self.assertEqual(str(df.index[-1]), '2022-06-30 00:55:00+00:00')
+
+    # values are numeric (float) and non-null:
+    self.assertEqual(df.isna().sum().sum(), 0)
+    self.assertEqual(df.dtypes.unique().tolist(), [np.dtype('float64')])
+
+  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
+  def test_rewards_df(self):
+    df = self.partition.rewards_df
+
+    self.assertIsInstance(df, pd.DataFrame)
+    self.assertEqual(df.shape, (51852, 17))
+
+    # columns corresponding to the reward ids:
+    expected_columns = [
+        'rooms/9028552126@heating_setpoint_temperature',
+        'rooms/9028552126@cooling_setpoint_temperature',
+        'rooms/9028552126@zone_air_temperature',
+        'rooms/9028552126@air_flow_rate_setpoint',
+        'rooms/9028552126@air_flow_rate',
+        'rooms/9028552126@average_occupancy',
+        'rooms/9028472496@heating_setpoint_temperature',
+        'rooms/9028472496@cooling_setpoint_temperature',
+        'rooms/9028472496@zone_air_temperature',
+        'rooms/9028472496@air_flow_rate_setpoint',
+        'rooms/9028472496@air_flow_rate',
+        'rooms/9028472496@average_occupancy',
+        'rooms/9028552250@heating_setpoint_temperature',
+        'rooms/9028552250@cooling_setpoint_temperature',
+        'rooms/9028552250@zone_air_temperature',
+        'rooms/9028552250@air_flow_rate_setpoint',
+        'rooms/9028552250@air_flow_rate',
+    ]
+    self.assertEqual(df.columns.tolist(), expected_columns)
+
+    # index corresponding to the reward timestamps:
+    self.assertEqual(str(df.index[0]), '2021-12-31 23:55:00+00:00')
+    self.assertEqual(str(df.index[-1]), '2022-06-30 00:50:00+00:00')
+
+    # values are numeric (float) and non-null:
+    self.assertEqual(df.isna().sum().sum(), 0)
+    self.assertEqual(df.dtypes.unique().tolist(), [np.dtype('float64')])
+
+  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
+  def test_reward_infos_df(self):
+    df = self.partition.reward_infos_df
+
+    self.assertIsInstance(df, pd.DataFrame)
+    self.assertEqual(df.shape, (51852, 3252))
+
+    # columns corresponding to the reward ids:
+    # ... there are 3252 but here are some examples:
+    self.assertIn('rooms/9028552126@heating_setpoint_temperature', df.columns)
+    self.assertIn(
+        '14409954889734029312@air_conditioning_electrical_energy_rate',
+        df.columns,
+    )
+
+    # index corresponding to the reward info timestamps:
+    self.assertEqual(str(df.index[0]), '2021-12-31 23:55:00+00:00')
+    self.assertEqual(str(df.index[-1]), '2022-06-30 00:50:00+00:00')
+
+    # values are numeric (float) and non-null:
+    self.assertEqual(df.isna().sum().sum(), 0)
+    self.assertEqual(df.dtypes.unique().tolist(), [np.dtype('float64')])
 
 
 if __name__ == '__main__':

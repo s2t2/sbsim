@@ -377,8 +377,6 @@ class BuildingDatasetPartition:
         - `'action_timestamps'`: list of sequential timestamps, representing the
           time of each action
 
-        - `'device_infos'`: list of device info objects (from the dataset)
-
         - `'observation_ids'`: dictionary mapping observation string identifiers
           to integer indices, for example: `{'obs_id@sensor': 0}`
 
@@ -388,27 +386,81 @@ class BuildingDatasetPartition:
         - `'reward_ids'`: dictionary mapping reward string identifiers to
           integer indices, for example: `{'reward_id@type': 0}`
 
-        - `'reward_info_timestamps'`: list of sequential timestamps, related to
-          reward information
-
         - `'reward_timestamps'`: list of sequential timestamps, representing the
           time of each reward
 
-        - `'zone_infos'`: list of zone info objects (from the dataset)
+        - `'reward_info_timestamps'`: list of sequential timestamps, related to
+          reward information
+
     """
     metadata = pickle.load(open(self.metadata_filepath, "rb"))
 
-    # here we are redundantly adding information from the dataset. however we
-    # should consider whether this is desired, or if we would prefer to reach
-    # into the dataset instead as necessary...
-
-    if "device_infos" not in metadata.keys():
-      metadata["device_infos"] = self.ds.device_infos
-
-    if "zone_infos" not in metadata.keys():
-      metadata["zone_infos"] = self.ds.zone_infos
+    # here we were redundantly adding information from the dataset.
+    # however we should consider whether this is desired, or if we would prefer
+    # to reach into the dataset instead as necessary...
+    #
+    # if "device_infos" not in metadata.keys():
+    #  metadata["device_infos"] = self.ds.device_infos
+    #
+    # if "zone_infos" not in metadata.keys():
+    #  metadata["zone_infos"] = self.ds.zone_infos
 
     return metadata
+
+  def _construct_time_series_df(self, matrix_name, ids_name, timestamps_name):
+    """Constructs a dataframe, using matrix values from the partition data,
+    as well as column names and index values from the partition metadata.
+    """
+    df = pd.DataFrame(self.data[matrix_name])
+    columns_map = {v: k for k, v in self.metadata[ids_name].items()}
+    df = df.rename(columns=columns_map)
+    df.index = self.metadata[timestamps_name]
+    df.index.name = "timestamp"
+    return df
+
+  @cached_property
+  def observations_df(self) -> pd.DataFrame:
+    """A time-series dataframe of numeric observation values.
+    Columns represent unique observations. Rows represent time steps.
+    """
+    return self._construct_time_series_df(
+        matrix_name="observation_value_matrix",
+        ids_name="observation_ids",
+        timestamps_name="observation_timestamps",
+    )
+
+  @cached_property
+  def actions_df(self) -> pd.DataFrame:
+    """A time-series dataframe of numeric action values.
+    Columns represent unique actions. Rows represent time steps.
+    """
+    return self._construct_time_series_df(
+        matrix_name="action_value_matrix",
+        ids_name="action_ids",
+        timestamps_name="action_timestamps",
+    )
+
+  @cached_property
+  def rewards_df(self) -> pd.DataFrame:
+    """A time-series dataframe of numeric reward values.
+    Columns represent unique rewards. Rows represent time steps.
+    """
+    return self._construct_time_series_df(
+        matrix_name="reward_value_matrix",
+        ids_name="reward_ids",
+        timestamps_name="reward_timestamps",
+    )
+
+  @cached_property
+  def reward_infos_df(self) -> pd.DataFrame:
+    """A time-series dataframe of numeric reward info values.
+    Columns represent unique rewards. Rows represent time steps.
+    """
+    return self._construct_time_series_df(
+        matrix_name="reward_info_value_matrix",
+        ids_name="reward_ids",
+        timestamps_name="reward_info_timestamps",
+    )
 
 
 if __name__ == "__main__":
