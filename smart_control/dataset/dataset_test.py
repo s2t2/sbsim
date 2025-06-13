@@ -48,6 +48,7 @@ ZIP_FILEPATH = os.path.join(DATA_DIR, 'sb1.zip')
 TEST_DATASET = bool(TEST_DATASET_DOWNLOAD or os.path.isdir(DATASET_DIRPATH))
 SKIP_REASON = 'Skip large download by default.'
 
+
 #
 # SHARED FIXTURES & DATA STRUCTURES
 #
@@ -104,6 +105,7 @@ _FIRST_DEVICE_INFO = {
     },
 }
 
+
 #
 # SET UP METHODS
 #
@@ -139,6 +141,7 @@ def setUpModule():
 #  """Module-level teardown. Cleans up files as desired."""
 #  if TEST_DATASET_DOWNLOAD and CLEAR_TEST_DATASET_DOWNLOAD:
 #    cleanup_files()
+
 
 #
 # TESTS

@@ -341,7 +341,23 @@ class BuildingDatasetPartition:
     return os.path.join(self.partition_dirpath, "data.npy.npz")
 
   @cached_property
-  def data(self):
+  def data(self) -> np.lib.npyio.NpzFile:
+    """Time-series data for the dataset partition.
+
+    This property returns an `np.lib.npyio.NpzFile` object, which allows
+      dictionary-like access to NumPy arrays stored within a compressed
+      `.npz` archive. The arrays contain time-series data, where the first
+      dimension typically represents the time steps.
+
+    Returns:
+      A dictionary-like numpy object with the following keys:
+
+        - `'observation_value_matrix'`
+        - `'action_value_matrix'`
+        - `'reward_value_matrix'`
+        - `'reward_info_value_matrix'`
+
+    """
     return np.load(self.data_filepath)
 
   @property
@@ -349,8 +365,42 @@ class BuildingDatasetPartition:
     return os.path.join(self.partition_dirpath, "metadata.pickle")
 
   @cached_property
-  def metadata(self):
+  def metadata(self) -> dict:
+    """Metadata describing the partition [data](./#smart_control.dataset.dataset.BuildingDatasetPartition.data).
+
+    Returns:
+      A dictionary containing the following keys:
+
+        - `'action_ids'`: dictionary mapping action string identifiers to
+          integer indices, for example: `{'action_id@setpoint': 0}`
+
+        - `'action_timestamps'`: list of sequential timestamps, representing the
+          time of each action
+
+        - `'device_infos'`: list of device info objects (from the dataset)
+
+        - `'observation_ids'`: dictionary mapping observation string identifiers
+          to integer indices, for example: `{'obs_id@sensor': 0}`
+
+        - `'observation_timestamps'`: list of sequential of timestamps,
+          representing the time of each observation
+
+        - `'reward_ids'`: dictionary mapping reward string identifiers to
+          integer indices, for example: `{'reward_id@type': 0}`
+
+        - `'reward_info_timestamps'`: list of sequential timestamps, related to
+          reward information
+
+        - `'reward_timestamps'`: list of sequential timestamps, representing the
+          time of each reward
+
+        - `'zone_infos'`: list of zone info objects (from the dataset)
+    """
     metadata = pickle.load(open(self.metadata_filepath, "rb"))
+
+    # here we are redundantly adding information from the dataset. however we
+    # should consider whether this is desired, or if we would prefer to reach
+    # into the dataset instead as necessary...
 
     if "device_infos" not in metadata.keys():
       metadata["device_infos"] = self.ds.device_infos
