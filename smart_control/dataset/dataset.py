@@ -122,6 +122,7 @@ class BuildingDataset:
 
   @property
   def floorplan_image_filepath(self):
+    """Filepath for saving an image of the floorplan."""
     floorplan_image_filename = f"{self.building_id}_floorplan.png"
     return os.path.join(self.building_dirpath, floorplan_image_filename)
 
@@ -143,8 +144,8 @@ class BuildingDataset:
         to use when rendering the image.
       show (bool): Whether or not to show the image.
       save (bool): Whether or not to save the image (as a .png file).
-      image_filepath (str): A custom filepath to use when saving the image.
-        Only applies if `save=True`.
+      image_filepath (str): An optional custom filepath to use when saving the
+        image. Only applies if `save=True`. By default, saves to the [`floorplan_image_filepath`](./#smart_control.dataset.dataset.BuildingDataset.floorplan_image_filepath)
     """
     plt.imshow(self.floorplan, interpolation="nearest", cmap=cmap)
     if show:

@@ -85,7 +85,7 @@ def setUpModule():
 
 
 class TestDataDirectory(absltest.TestCase):
-  'Tests for the data directory.'
+  """Tests for the data directory."""
 
   def test_data_dir(self):
     self.assertTrue(os.path.isdir(DATA_DIR))
@@ -189,13 +189,20 @@ class TestBuildingDataset(absltest.TestCase):
     ]
     self.assertEqual(device_keys, expected_device_keys)
 
-    # each device layout map is a list of two integer values:
-    # the layout shapes are not the same across all devices
-    first_layout_map = device_layout_map['VAV CO 1-1-06']
-    self.assertIsInstance(first_layout_map, list)
-    self.assertEqual(np.array(first_layout_map).shape, (1021, 2))
-    self.assertEqual(first_layout_map[0], [79, 35])
-    self.assertEqual(first_layout_map[-1], [80, 64])
+    # each device layout is a list of lists containing two integer coordinates.
+    # the layout lengths are not the same across all devices:
+
+    example_layout_map = device_layout_map['VAV CO 1-1-06']
+    self.assertIsInstance(example_layout_map, list)
+    self.assertEqual(np.array(example_layout_map).shape, (1021, 2))
+    self.assertEqual(example_layout_map[0], [79, 35])
+    self.assertEqual(example_layout_map[-1], [80, 64])
+
+    another_layout_map = device_layout_map['VAV RH 1-1-55']
+    self.assertIsInstance(another_layout_map, list)
+    self.assertEqual(np.array(another_layout_map).shape, (935, 2))
+    self.assertEqual(another_layout_map[0], [145, 126])
+    self.assertEqual(another_layout_map[-1], [149, 160])
 
   @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
   def test_device_infos(self):
