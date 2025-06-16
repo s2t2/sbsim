@@ -357,6 +357,8 @@ class BuildingDatasetPartition:
         - `'reward_value_matrix'`
         - `'reward_info_value_matrix'`
 
+      Each of these keys has a corresponding public method for convenience.
+      See corresponding documentation for more information about each.
     """
     return np.load(self.data_filepath)
 
@@ -366,34 +368,34 @@ class BuildingDatasetPartition:
 
   @cached_property
   def metadata(self) -> dict:
-    """Metadata describing the partition [data](./#smart_control.dataset.dataset.BuildingDatasetPartition.data).
+    """Metadata describing the partition [`data`](./#smart_control.dataset.dataset.BuildingDatasetPartition.data).
 
     Returns:
       A dictionary containing the following keys:
 
-        - `'action_ids'`: dictionary mapping action string identifiers to
-          integer indices, for example: `{'action_id@setpoint': 0}`
+        - `'action_ids_map'`
+        - `'action_timestamps'`
+        - `'observation_ids'`
+        - `'observation_timestamps'`
+        - `'reward_ids'`
+        - `'reward_timestamps'`
+        - `'reward_info_timestamps'`
 
-        - `'action_timestamps'`: list of sequential timestamps, representing the
-          time of each action
-
-        - `'observation_ids'`: dictionary mapping observation string identifiers
-          to integer indices, for example: `{'obs_id@sensor': 0}`
-
-        - `'observation_timestamps'`: list of sequential of timestamps,
-          representing the time of each observation
-
-        - `'reward_ids'`: dictionary mapping reward string identifiers to
-          integer indices, for example: `{'reward_id@type': 0}`
-
-        - `'reward_timestamps'`: list of sequential timestamps, representing the
-          time of each reward
-
-        - `'reward_info_timestamps'`: list of sequential timestamps, related to
-          reward information
-
+      Each of these keys has a corresponding public method for convenience.
+      See corresponding documentation for more information about each.
     """
     metadata = pickle.load(open(self.metadata_filepath, "rb"))
+
+    # renaming keys (this is new):
+    metadata = {
+        "action_ids_map": metadata["action_ids"],  # renamed
+        "action_timestamps": metadata["action_timestamps"],
+        "observation_ids_map": metadata["observation_ids"],  # renamed
+        "observation_timestamps": metadata["observation_timestamps"],
+        "reward_ids_map": metadata["reward_ids"],  # renamed
+        "reward_timestamps": metadata["reward_timestamps"],
+        "reward_info_timestamps": metadata["reward_info_timestamps"],
+    }
 
     # here we were redundantly adding information from the dataset.
     # however we should consider whether this is desired, or if we would prefer
@@ -407,27 +409,150 @@ class BuildingDatasetPartition:
 
     return metadata
 
+  #
+  # DATA PROPERTIES
+  #
+
+  @cached_property
+  def action_value_matrix(self) -> np.ndarray:
+    """Time-series action data."""
+    return self.data["action_value_matrix"]
+
+  @cached_property
+  def observation_value_matrix(self) -> np.ndarray:
+    """Time-series observation data."""
+    return self.data["observation_value_matrix"]
+
+  @cached_property
+  def reward_value_matrix(self) -> np.ndarray:
+    """Time-series reward value data."""
+    return self.data["reward_value_matrix"]
+
+  @cached_property
+  def reward_info_value_matrix(self) -> np.ndarray:
+    """Time series reward information data."""
+    return self.data["reward_info_value_matrix"]
+
+  #
+  # METADATA PROPERTIES
+  #
+
+  @cached_property
+  def action_ids_map(self) -> dict:
+    """A mapping of unique action identifiers.
+
+    Returns:
+      A dictionary where the keys are in the format of `device_id@setting_name`
+      and the values are unique integers referencing column indices in the
+      actions matrix.
+
+      For example:
+
+      ```py
+        {
+          '12945159110931775488@supply_air_temperature_setpoint': 0,
+          '13761436543392677888@supply_water_temperature_setpoint': 1,
+          '14409954889734029312@supply_air_temperature_setpoint': 2
+        }
+      ```
+    """
+    return self.metadata["action_ids_map"]
+
+  @cached_property
+  def observation_ids_map(self) -> dict:
+    """A mapping of unique observation identifiers.
+
+    Returns:
+      A dictionary where the keys are in the format of `device_id@setting_name`
+      and the values are unique integers referencing column indices in the
+      observations matrix.
+
+      For example:
+
+      ```py
+        {
+          '202194278473007104@building_air_static_pressure_setpoint', 0,
+          ...
+          '2640423556868160@zone_air_temperature_sensor': 1197
+        }
+      ```
+    """
+    return self.metadata["observation_ids_map"]
+
+  @cached_property
+  def reward_ids_map(self) -> dict:
+    """A mapping of unique reward identifiers.
+
+    Returns:
+      A dictionary where the keys are in the format of (`device_id@setting_name`
+      or `zone_id@setting_name`?),
+      and the values are unique integers referencing column indices in the
+      reward matrix.
+
+      For example:
+
+      ```py
+        {
+          'rooms/9028552126@heating_setpoint_temperature': 0
+          ...
+          '14409954889734029312@air_conditioning_electrical_energy_rate': 3251
+        }
+      ```
+    """
+    return self.metadata["reward_ids_map"]
+
+  @cached_property
+  def action_ids(self) -> list[str]:
+    """A list of unique action identifiers."""
+    return self.action_ids_map.keys()
+
+  @cached_property
+  def observation_ids(self) -> list[str]:
+    """A list of unique observation identifiers."""
+    return self.observation_ids_map.keys()
+
+  @cached_property
+  def reward_ids(self) -> list[str]:
+    """A list of unique reward identifiers."""
+    return self.reward_ids_map.keys()
+
+  @cached_property
+  def action_timestamps(self) -> list[pd.Timestamp]:
+    """A list of sequential timestamps, representing the time of each action."""
+    return self.metadata["action_timestamps"]
+
+  @cached_property
+  def observation_timestamps(self) -> list[pd.Timestamp]:
+    """A list of sequential timestamps representing the time of each
+    observation.
+    """
+    return self.metadata["observation_timestamps"]
+
+  @cached_property
+  def reward_timestamps(self) -> list[pd.Timestamp]:
+    """A list of sequential timestamps, representing the time of each reward."""
+    return self.metadata["reward_timestamps"]
+
+  @cached_property
+  def reward_info_timestamps(self) -> list[pd.Timestamp]:
+    """A list of sequential timestamps, related to reward information."""
+    return self.metadata["reward_info_timestamps"]
+
+  #
+  # DATAFRAME PROPERTIES
+  #
+
   def _construct_time_series_df(self, matrix_name, ids_name, timestamps_name):
     """Constructs a dataframe, using matrix values from the partition data,
     as well as column names and index values from the partition metadata.
     """
-    df = pd.DataFrame(self.data[matrix_name])
-    columns_map = {v: k for k, v in self.metadata[ids_name].items()}
+    # using getattr() to leverage cached properties...
+    df = pd.DataFrame(getattr(self, matrix_name))
+    columns_map = {v: k for k, v in getattr(self, ids_name).items()}
     df = df.rename(columns=columns_map)
-    df.index = self.metadata[timestamps_name]
+    df.index = getattr(self, timestamps_name)
     df.index.name = "timestamp"
     return df
-
-  @cached_property
-  def observations_df(self) -> pd.DataFrame:
-    """A time-series dataframe of numeric observation values.
-    Columns represent unique observations. Rows represent time steps.
-    """
-    return self._construct_time_series_df(
-        matrix_name="observation_value_matrix",
-        ids_name="observation_ids",
-        timestamps_name="observation_timestamps",
-    )
 
   @cached_property
   def actions_df(self) -> pd.DataFrame:
@@ -436,8 +561,19 @@ class BuildingDatasetPartition:
     """
     return self._construct_time_series_df(
         matrix_name="action_value_matrix",
-        ids_name="action_ids",
+        ids_name="action_ids_map",
         timestamps_name="action_timestamps",
+    )
+
+  @cached_property
+  def observations_df(self) -> pd.DataFrame:
+    """A time-series dataframe of numeric observation values.
+    Columns represent unique observations. Rows represent time steps.
+    """
+    return self._construct_time_series_df(
+        matrix_name="observation_value_matrix",
+        ids_name="observation_ids_map",
+        timestamps_name="observation_timestamps",
     )
 
   @cached_property
@@ -447,7 +583,7 @@ class BuildingDatasetPartition:
     """
     return self._construct_time_series_df(
         matrix_name="reward_value_matrix",
-        ids_name="reward_ids",
+        ids_name="reward_ids_map",
         timestamps_name="reward_timestamps",
     )
 
@@ -458,7 +594,7 @@ class BuildingDatasetPartition:
     """
     return self._construct_time_series_df(
         matrix_name="reward_info_value_matrix",
-        ids_name="reward_ids",
+        ids_name="reward_ids_map",
         timestamps_name="reward_info_timestamps",
     )
 

@@ -55,6 +55,12 @@ SKIP_REASON = 'Skip large download by default.'
 
 _dataset_fixture = None  # module-level dataset fixture
 
+_ACTION_IDS_MAP = {
+    '12945159110931775488@supply_air_temperature_setpoint': 0,
+    '13761436543392677888@supply_water_temperature_setpoint': 1,
+    '14409954889734029312@supply_air_temperature_setpoint': 2,
+}
+
 _FIRST_ZONE_INFO = {
     'zone_id': 'rooms/1002000133978',
     'building_id': 'buildings/3616672508',
@@ -362,8 +368,8 @@ class TestBuildingDatasetPartition(absltest.TestCase):
 
     first_timestamp = timestamps[0]
     last_timestamp = timestamps[-1]
-    self.assertIsInstance(first_timestamp, pd._libs.tslibs.timestamps.Timestamp)
-    self.assertIsInstance(last_timestamp, pd._libs.tslibs.timestamps.Timestamp)
+    self.assertIsInstance(first_timestamp, pd.Timestamp)
+    self.assertIsInstance(last_timestamp, pd.Timestamp)
     self.assertEqual(str(first_timestamp), earliest)
     self.assertEqual(str(last_timestamp), latest)
 
@@ -372,10 +378,28 @@ class TestBuildingDatasetPartition(absltest.TestCase):
     data = self.partition.data
 
     self.assertIsInstance(data, np.lib.npyio.NpzFile)
-    self.assertEqual(data['observation_value_matrix'].shape, (51852, 1198))
-    self.assertEqual(data['action_value_matrix'].shape, (51852, 3))
-    self.assertEqual(data['reward_value_matrix'].shape, (51852, 17))
-    self.assertEqual(data['reward_info_value_matrix'].shape, (51852, 3252))
+
+    # we are surfacing each key into its own high-level public property
+    # fmt: off
+    # pylint: disable=line-too-long
+    with self.subTest('action_value_matrix'):
+      np.testing.assert_array_equal(
+          data['action_value_matrix'], self.partition.action_value_matrix
+      )
+    with self.subTest('observation_value_matrix'):
+      np.testing.assert_array_equal(
+          data['observation_value_matrix'], self.partition.observation_value_matrix
+      )
+    with self.subTest('reward_value_matrix'):
+      np.testing.assert_array_equal(
+          data['reward_value_matrix'], self.partition.reward_value_matrix
+      )
+    with self.subTest('reward_info_value_matrix'):
+      np.testing.assert_array_equal(
+          data['reward_info_value_matrix'], self.partition.reward_info_value_matrix
+      )
+    # pylint: enable=line-too-long
+    # fmt: on
 
   @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
   def test_partition_metadata(self):
@@ -383,89 +407,150 @@ class TestBuildingDatasetPartition(absltest.TestCase):
 
     self.assertIsInstance(metadata, dict)
     metadata_keys = [
-        'action_ids',
+        'action_ids_map',
         'action_timestamps',
-        #'device_infos',
-        'observation_ids',
+        'observation_ids_map',
         'observation_timestamps',
-        'reward_ids',
+        'reward_ids_map',
         'reward_info_timestamps',
         'reward_timestamps',
-        #'zone_infos',
     ]
     self.assertEqual(sorted(metadata.keys()), metadata_keys)
 
-    # action_timestamps:
+    # we are surfacing each key into its own high-level public property
+    # fmt: off
+    # pylint: disable=line-too-long
+    self.assertEqual(metadata['action_ids_map'], self.partition.action_ids_map)
+    self.assertEqual(metadata['observation_ids_map'], self.partition.observation_ids_map)
+    self.assertEqual(metadata['reward_ids_map'], self.partition.reward_ids_map)
+
+    self.assertEqual(metadata['action_timestamps'], self.partition.action_timestamps)
+    self.assertEqual(metadata['observation_timestamps'], self.partition.observation_timestamps)
+    self.assertEqual(metadata['reward_timestamps'], self.partition.reward_timestamps)
+    self.assertEqual(metadata['reward_info_timestamps'], self.partition.reward_info_timestamps)
+    # pylint: enable=line-too-long
+    # fmt: on
+
+  #
+  # DATA PROPERTIES...
+  #
+
+  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
+  def test_action_value_matrix(self):
+    self.assertEqual(self.partition.action_value_matrix.shape, (51852, 3))
+
+  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
+  def test_observation_value_matrix(self):
+    self.assertEqual(self.partition.observation_value_matrix.shape, (51852, 1198))  # pylint: disable=line-too-long
+
+  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
+  def test_reward_value_matrix(self):
+    self.assertEqual(self.partition.reward_value_matrix.shape, (51852, 17))
+
+  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
+  def test_reward_info_value_matrix(self):
+    self.assertEqual(self.partition.reward_info_value_matrix.shape, (51852, 3252))  # pylint: disable=line-too-long
+
+  #
+  # METADATA PROPERTIES...
+  #
+
+  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
+  def test_action_ids_map(self):
+    self.assertEqual(self.partition.action_ids_map, _ACTION_IDS_MAP)
+
+  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
+  def test_observation_ids_map(self):
+    observation_ids_map = self.partition.observation_ids_map
+
+    self.assertIsInstance(observation_ids_map, dict)
+    self.assertEqual(len(observation_ids_map), 1198)
+
+    # keys are in the format of `device_id@setting_name`:
+    keys = list(observation_ids_map.keys())
+    self.assertEqual(keys[0], '202194278473007104@building_air_static_pressure_setpoint')  # pylint: disable=line-too-long
+    self.assertEqual(keys[-1], '2640423556868160@zone_air_temperature_sensor')
+
+    # values are unique integers:
+    values = list(observation_ids_map.values())
+    self.assertEqual(values[0], 0)
+    self.assertEqual(values[-1], 1197)
+    self.assertEqual(len(values), len(list(set(values))))
+
+  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
+  def test_reward_ids_map(self):
+    reward_ids_map = self.partition.reward_ids_map
+
+    self.assertIsInstance(reward_ids_map, dict)
+    self.assertEqual(len(reward_ids_map), 3252)
+
+    # keys are in the format of `zone_id@setting` or `device_id@setting`:
+    keys = list(reward_ids_map.keys())
+    self.assertEqual(keys[0], 'rooms/9028552126@heating_setpoint_temperature')
+    self.assertEqual(keys[-1], '14409954889734029312@air_conditioning_electrical_energy_rate')  # pylint: disable=line-too-long
+
+    # values are unique integers:
+    values = list(reward_ids_map.values())
+    self.assertEqual(values[0], 0)
+    self.assertEqual(values[-1], 3251)
+    self.assertEqual(len(values), len(list(set(values))))
+
+  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
+  def test_action_ids(self):
+    self.assertEqual(self.partition.action_ids, _ACTION_IDS_MAP.keys())
+
+  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
+  def test_observation_ids(self):
+    self.assertEqual(
+        self.partition.observation_ids,
+        self.partition.observation_ids_map.keys(),
+    )
+
+  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
+  def test_reward_ids(self):
+    self.assertEqual(
+        self.partition.reward_ids, self.partition.reward_ids_map.keys()
+    )
+
+  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
+  def test_action_timestamps(self):
     self._assert_timestamps(
-        metadata['action_timestamps'],
+        self.partition.action_timestamps,
         earliest='2022-01-01 00:00:00+00:00',
         latest='2022-06-30 00:55:00+00:00',
         length=51852,
     )
 
-    # observation_timestamps:
+  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
+  def test_observation_timestamps(self):
     self._assert_timestamps(
-        metadata['observation_timestamps'],
+        self.partition.observation_timestamps,
         earliest='2022-01-01 00:00:00+00:00',
         latest='2022-06-30 00:55:00+00:00',
         length=51852,
     )
 
-    # reward_info_timestamps:
+  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
+  def test_reward_timestamps(self):
     self._assert_timestamps(
-        metadata['reward_info_timestamps'],
+        self.partition.reward_timestamps,
         earliest='2021-12-31 23:55:00+00:00',
         latest='2022-06-30 00:50:00+00:00',
         length=51852,
     )
 
-    # reward_timestamps:
+  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
+  def test_reward_info_timestamps(self):
     self._assert_timestamps(
-        metadata['reward_timestamps'],
+        self.partition.reward_info_timestamps,
         earliest='2021-12-31 23:55:00+00:00',
         latest='2022-06-30 00:50:00+00:00',
         length=51852,
     )
 
-    # action_ids:
-    action_ids = {
-        '12945159110931775488@supply_air_temperature_setpoint': 0,
-        '13761436543392677888@supply_water_temperature_setpoint': 1,
-        '14409954889734029312@supply_air_temperature_setpoint': 2,
-    }
-    self.assertEqual(metadata['action_ids'], action_ids)
-
-    ## device_infos:
-    # self.assertIsInstance(metadata['device_infos'], list)
-    # self.assertEqual(len(metadata['device_infos']), 173)
-    ## ... example:
-    # self.assertEqual(metadata['device_infos'][0], _FIRST_DEVICE_INFO)
-
-    # observation_ids:
-    self.assertIsInstance(metadata['observation_ids'], dict)
-    self.assertEqual(len(metadata['observation_ids']), 1198)
-    # ... example:
-    example_observation_item = list(metadata['observation_ids'].items())[0]
-    self.assertEqual(
-        example_observation_item,
-        ('202194278473007104@building_air_static_pressure_setpoint', 0),
-    )
-
-    # reward_ids:
-    self.assertIsInstance(metadata['reward_ids'], dict)
-    self.assertEqual(len(metadata['reward_ids']), 3252)
-    # ... example:
-    example_reward_item = list(metadata['reward_ids'].items())[0]
-    self.assertEqual(
-        example_reward_item,
-        ('rooms/9028552126@heating_setpoint_temperature', 0),
-    )
-
-    ## 'zone_infos':
-    # self.assertIsInstance(metadata['zone_infos'], list)
-    # self.assertEqual(len(metadata['zone_infos']), 563)
-    ## ... example:
-    # self.assertEqual(metadata['zone_infos'][0], _FIRST_ZONE_INFO)
+  #
+  # DATAFRAME PROPERTIES...
+  #
 
   @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
   def test_observations_df(self):
@@ -497,11 +582,7 @@ class TestBuildingDatasetPartition(absltest.TestCase):
     self.assertEqual(df.shape, (51852, 3))
 
     # columns corresponding to the action ids:
-    expected_columns = [
-        '12945159110931775488@supply_air_temperature_setpoint',
-        '13761436543392677888@supply_water_temperature_setpoint',
-        '14409954889734029312@supply_air_temperature_setpoint',
-    ]
+    expected_columns = list(_ACTION_IDS_MAP.keys())
     self.assertEqual(df.columns.tolist(), expected_columns)
 
     # index corresponding to the action timestamps:
