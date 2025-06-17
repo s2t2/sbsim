@@ -13,9 +13,6 @@ import requests
 
 from smart_control.utils.constants import ROOT_DIR
 
-# import pandas as pd
-
-
 DATA_DIR = os.path.join(ROOT_DIR, "data")
 
 VALID_BUILDING_PARTITIONS = {
@@ -101,6 +98,8 @@ class BuildingDataset:
   def tabular_dirpath(self):
     return os.path.join(self.building_dirpath, "tabular")
 
+  # FLOORPLAN
+
   @property
   def floorplan_filepath(self):
     return os.path.join(self.tabular_dirpath, "floorplan.npy")
@@ -153,6 +152,8 @@ class BuildingDataset:
     if save:
       image_filepath = image_filepath or self.floorplan_image_filepath
       plt.savefig(image_filepath)
+
+  # DEVICES
 
   @property
   def device_layout_map_filepath(self):
@@ -257,7 +258,68 @@ class BuildingDataset:
     # pylint: enable=line-too-long
     df = pd.DataFrame(self.device_infos)
     df = df.drop(columns=["zone_id"])  # many to many relationship
+    # df = df.rename(columns={"zone_id", "zone_ids"}) # consider renaming
     return df
+
+  # DEVICE FIELDS
+
+  def _count_device_fields(self, field_type: str) -> pd.Series:
+    """
+    Param field_type (str) member of: ["action_fields", "observable_fields"]
+    """
+    field_counts = {}
+
+    for device_info in self.device_infos:
+      device_fields = list(device_info[field_type].keys())
+
+      for field in device_fields:
+        if field in field_counts:
+          field_counts[field] += 1
+        else:
+          field_counts[field] = 1
+
+    value_counts = pd.Series(field_counts).sort_values(ascending=False)
+    value_counts.index.name = "field_name"
+    return value_counts
+
+  @cached_property
+  def actionable_field_counts(self) -> pd.Series:
+    """Value counts of all actionable fields across all devices."""
+    return self._count_device_fields("action_fields")
+
+  @cached_property
+  def observable_field_counts(self) -> pd.Series:
+    """Value counts of all unique observable fields across all devices."""
+    return self._count_device_fields("observable_fields")
+
+  @cached_property
+  def actionable_fields(self) -> list:
+    """Names of all unique actionable fields across all devices."""
+    return sorted(self.actionable_field_counts.keys())
+
+  @cached_property
+  def observable_fields(self) -> list:
+    """Names of all unique observable fields across all devices."""
+    return sorted(self.observable_field_counts.keys())
+
+  @cached_property
+  def fields_df(self) -> pd.DataFrame:
+    actionable_fields = set(self.actionable_fields)
+    observable_fields = set(self.observable_fields)
+    all_fields = actionable_fields.union(observable_fields)
+
+    records = []
+    for field in all_fields:
+      records.append({
+          "field_name": field,
+          "is_actionable": field in actionable_fields,
+          "is_observable": field in observable_fields,
+          "devices_actionable": self.actionable_field_counts.get(field, 0),
+          "devices_observable": self.observable_field_counts.get(field, 0),
+      })
+    return pd.DataFrame(records).sort_values(by="field_name")
+
+  # ZONES
 
   @property
   def zone_infos_filepath(self):
@@ -504,17 +566,17 @@ class BuildingDatasetPartition:
   @cached_property
   def action_ids(self) -> list[str]:
     """A list of unique action identifiers."""
-    return self.action_ids_map.keys()
+    return list(self.action_ids_map.keys())
 
   @cached_property
   def observation_ids(self) -> list[str]:
     """A list of unique observation identifiers."""
-    return self.observation_ids_map.keys()
+    return list(self.observation_ids_map.keys())
 
   @cached_property
   def reward_ids(self) -> list[str]:
     """A list of unique reward identifiers."""
-    return self.reward_ids_map.keys()
+    return list(self.reward_ids_map.keys())
 
   @cached_property
   def action_timestamps(self) -> list[pd.Timestamp]:
