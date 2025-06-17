@@ -421,10 +421,6 @@ class BuildingDatasetPartition:
   def partition_dirpath(self):
     return os.path.join(self.ds.tabular_dirpath, self.ds.building_id, self.partition_id)  # pylint:disable=line-too-long
 
-  #
-  # DATA PROPERTIES
-  #
-
   @property
   def data_filepath(self):
     return os.path.join(self.partition_dirpath, "data.npy.npz")
@@ -447,33 +443,9 @@ class BuildingDatasetPartition:
         - `'reward_info_value_matrix'`
 
         Each of these keys has a corresponding public method for convenience.
-        See corresponding documentation for more information about each.
+        See corresponding documentation below for more information about each.
     """
     return np.load(self.data_filepath)
-
-  @cached_property
-  def action_value_matrix(self) -> np.ndarray:
-    """Time-series action data."""
-    return self.data["action_value_matrix"]
-
-  @cached_property
-  def observation_value_matrix(self) -> np.ndarray:
-    """Time-series observation data."""
-    return self.data["observation_value_matrix"]
-
-  @cached_property
-  def reward_value_matrix(self) -> np.ndarray:
-    """Time-series reward value data."""
-    return self.data["reward_value_matrix"]
-
-  @cached_property
-  def reward_info_value_matrix(self) -> np.ndarray:
-    """Time series reward information data."""
-    return self.data["reward_info_value_matrix"]
-
-  #
-  # METADATA PROPERTIES
-  #
 
   @property
   def metadata_filepath(self):
@@ -495,7 +467,7 @@ class BuildingDatasetPartition:
         - `'reward_info_timestamps'`
 
         Each of these keys has a corresponding public method for convenience.
-        See corresponding documentation for more information about each.
+        See corresponding documentation below for more information about each.
     """
     metadata = pickle.load(open(self.metadata_filepath, "rb"))
 
@@ -521,6 +493,34 @@ class BuildingDatasetPartition:
     #  metadata["zone_infos"] = self.ds.zone_infos
 
     return metadata
+
+  #
+  # DATA PROPERTIES
+  #
+
+  @cached_property
+  def action_value_matrix(self) -> np.ndarray:
+    """Time-series action data."""
+    return self.data["action_value_matrix"]
+
+  @cached_property
+  def observation_value_matrix(self) -> np.ndarray:
+    """Time-series observation data."""
+    return self.data["observation_value_matrix"]
+
+  @cached_property
+  def reward_value_matrix(self) -> np.ndarray:
+    """Time-series reward value data."""
+    return self.data["reward_value_matrix"]
+
+  @cached_property
+  def reward_info_value_matrix(self) -> np.ndarray:
+    """Time series reward information data."""
+    return self.data["reward_info_value_matrix"]
+
+  #
+  # METADATA PROPERTIES
+  #
 
   @cached_property
   def action_ids_map(self) -> dict:
@@ -655,9 +655,9 @@ class BuildingDatasetPartition:
     """A time-series dataframe of numeric action values, constructed from the
     following components:
 
-      + Columns are the [`action_ids`](./#smart_control.dataset.dataset.BuildingDatasetPartition.action_ids).
-      + Row indices are the [`action_timestamps`](./#smart_control.dataset.dataset.BuildingDatasetPartition.action_timestamps).
-      + Cell values are from the [`action_value_matrix`](./#smart_control.dataset.dataset.BuildingDatasetPartition.action_value_matrix).
+      + Columns are the [`action_ids`](./#smart_control.dataset.dataset.BuildingDatasetPartition.action_ids)
+      + Row indices are the [`action_timestamps`](./#smart_control.dataset.dataset.BuildingDatasetPartition.action_timestamps)
+      + Cell values are from the [`action_value_matrix`](./#smart_control.dataset.dataset.BuildingDatasetPartition.action_value_matrix)
 
     Returns:
       A `pandas.DataFrame`. Here is an example of the structure:
@@ -684,9 +684,9 @@ class BuildingDatasetPartition:
     """A time-series dataframe of numeric observation values, constructed from the
     following components:
 
-      + Columns are the [`observation_ids`](./#smart_control.dataset.dataset.BuildingDatasetPartition.observation_ids).
-      + Row indices are the [`observation_timestamps`](./#smart_control.dataset.dataset.BuildingDatasetPartition.observation_timestamps).
-      + Cell values are from the [`observation_value_matrix`](./#smart_control.dataset.dataset.BuildingDatasetPartition.observation_value_matrix).
+      + Columns are the [`observation_ids`](./#smart_control.dataset.dataset.BuildingDatasetPartition.observation_ids)
+      + Row indices are the [`observation_timestamps`](./#smart_control.dataset.dataset.BuildingDatasetPartition.observation_timestamps)
+      + Cell values are from the [`observation_value_matrix`](./#smart_control.dataset.dataset.BuildingDatasetPartition.observation_value_matrix)
 
     Returns:
       A `pandas.DataFrame`. Here is an example of the structure:
@@ -713,9 +713,9 @@ class BuildingDatasetPartition:
     """A time-series dataframe of numeric reward values, constructed from the
     following components:
 
-      + Columns are the [`reward_ids`](./#smart_control.dataset.dataset.BuildingDatasetPartition.reward_ids).
-      + Row indices are the [`reward_timestamps`](./#smart_control.dataset.dataset.BuildingDatasetPartition.reward_timestamps).
-      + Cell values are from the [`reward_value_matrix`](./#smart_control.dataset.dataset.BuildingDatasetPartition.reward_value_matrix).
+      + Columns are the [`reward_ids`](./#smart_control.dataset.dataset.BuildingDatasetPartition.reward_ids)
+      + Row indices are the [`reward_timestamps`](./#smart_control.dataset.dataset.BuildingDatasetPartition.reward_timestamps)
+      + Cell values are from the [`reward_value_matrix`](./#smart_control.dataset.dataset.BuildingDatasetPartition.reward_value_matrix)
 
     Returns:
       A `pandas.DataFrame`. Here is an example of the structure:
@@ -741,9 +741,9 @@ class BuildingDatasetPartition:
     """A time-series dataframe of numeric reward info values, constructed from
     the following components:
 
-      + Columns are the [`reward_ids`](./#smart_control.dataset.dataset.BuildingDatasetPartition.reward_ids).
-      + Row indices are the [`reward_info_timestamps`](./#smart_control.dataset.dataset.BuildingDatasetPartition.reward_info_timestamps).
-      + Cell values are from the [`reward_info_value_matrix`](./#smart_control.dataset.dataset.BuildingDatasetPartition.reward_info_value_matrix).
+      + Columns are the [`reward_ids`](./#smart_control.dataset.dataset.BuildingDatasetPartition.reward_ids)
+      + Row indices are the [`reward_info_timestamps`](./#smart_control.dataset.dataset.BuildingDatasetPartition.reward_info_timestamps)
+      + Cell values are from the [`reward_info_value_matrix`](./#smart_control.dataset.dataset.BuildingDatasetPartition.reward_info_value_matrix)
 
     Returns:
       A `pandas.DataFrame`. Here is an example of the structure:
