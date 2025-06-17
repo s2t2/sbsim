@@ -77,7 +77,10 @@ nav:
     - 'Documentation Site': docs-site.md
   - 'API Reference':
     - api/config.md
-    - api/dataset.md
+    #- api/dataset.md
+    - 'Dataset':
+      - api/dataset/building_dataset.md
+      - api/dataset/building_dataset_partition.md
     - api/environment.md
     - api/models.md
     - 'Reinforcement Learning':
@@ -107,7 +110,7 @@ markdown_extensions:
 plugins:
   - search
 
-  - autorefs # enables linking to other methods (kind of buggy?)
+  - autorefs # enables linking to other methods (maybe not working?)
 
   #
   # API DOCS
