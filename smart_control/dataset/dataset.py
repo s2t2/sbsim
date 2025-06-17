@@ -46,7 +46,7 @@ class BuildingDataset:
 
   @property
   def zip_filename(self):
-    """The name of the local zip file after it is has been downloaded."""
+    """The name of the zip file (e.g. "sb1.zip")."""
     return f"{self.building_id}.zip"
 
   @property
@@ -292,14 +292,14 @@ class BuildingDataset:
     return self._count_device_fields("actionable_fields")
 
   @cached_property
-  def observable_field_counts(self) -> pd.Series:
-    """Value counts of all unique observable fields across all devices."""
-    return self._count_device_fields("observable_fields")
-
-  @cached_property
   def actionable_fields(self) -> list:
     """Names of all unique actionable fields across all devices."""
     return sorted(self.actionable_field_counts.keys())
+
+  @cached_property
+  def observable_field_counts(self) -> pd.Series:
+    """Value counts of all unique observable fields across all devices."""
+    return self._count_device_fields("observable_fields")
 
   @cached_property
   def observable_fields(self) -> list:
@@ -395,6 +395,7 @@ class BuildingDataset:
 class BuildingDatasetPartition:
   # pylint:disable=line-too-long
   """A helper class for handling a specific dataset partition.
+  A partition is a subset of the building's data over a specific time period.
 
   Args:
     building_dataset (BuildingDataset): The building dataset.
@@ -526,7 +527,7 @@ class BuildingDatasetPartition:
     """A mapping of unique action identifiers.
 
     Returns:
-      A dictionary where the keys are in the format of `device_id@setting_name`
+      A dictionary where the keys are the [`action_ids`](./#smart_control.dataset.dataset.BuildingDatasetPartition.action_ids)
         and the values are unique integers referencing column indices in the
         [`action_value_matrix`](./#smart_control.dataset.dataset.BuildingDatasetPartition.action_value_matrix)
 
@@ -547,7 +548,7 @@ class BuildingDatasetPartition:
     """A mapping of unique observation identifiers.
 
     Returns:
-      A dictionary where the keys are in the format of `device_id@setting_name`
+      A dictionary where the keys are the [`observation_ids`](./#smart_control.dataset.dataset.BuildingDatasetPartition.observation_ids)
         and the values are unique integers referencing column indices in the
         [`observation_value_matrix`](./#smart_control.dataset.dataset.BuildingDatasetPartition.observation_value_matrix).
 
@@ -568,10 +569,8 @@ class BuildingDatasetPartition:
     """A mapping of unique reward identifiers.
 
     Returns:
-      A dictionary where the keys are in the format of (`device_id@setting_name`
-        or `zone_id@setting_name`),
-        and the values are unique integers referencing column indices in the
-        [`reward_value_matrix`](./#smart_control.dataset.dataset.BuildingDatasetPartition.reward_value_matrix)
+      A dictionary where the keys are the [`reward_ids`](./#smart_control.dataset.dataset.BuildingDatasetPartition.reward_ids)
+        and the values are unique integers referencing column indices in the [`reward_value_matrix`](./#smart_control.dataset.dataset.BuildingDatasetPartition.reward_value_matrix)
         as well as the [`reward_info_value_matrix`](./#smart_control.dataset.dataset.BuildingDatasetPartition.reward_info_value_matrix).
 
         For example:
@@ -588,17 +587,28 @@ class BuildingDatasetPartition:
 
   @cached_property
   def action_ids(self) -> list[str]:
-    """A list of unique action identifiers."""
+    """A list of unique action identifiers.
+    Action identifiers are in the format of `device_id@field_name`.
+    For example: `'12945159110931775488@supply_air_temperature_setpoint'`.
+    """
     return list(self.action_ids_map.keys())
 
   @cached_property
   def observation_ids(self) -> list[str]:
-    """A list of unique observation identifiers."""
+    """A list of unique observation identifiers.
+    Observation identifiers are in the format of `device_id@field_name`.
+    For example: `'2640423556868160@zone_air_temperature_sensor'`.
+    """
     return list(self.observation_ids_map.keys())
 
   @cached_property
   def reward_ids(self) -> list[str]:
-    """A list of unique reward identifiers."""
+    """A list of unique reward identifiers.
+    Action identifiers are in the format of `device_id@field_name` or
+    `zone_id@field_name`.
+    For example: `'rooms/9028552126@heating_setpoint_temperature'` or
+    `'14409954889734029312@air_conditioning_electrical_energy_rate'`.
+    """
     return list(self.reward_ids_map.keys())
 
   @cached_property
@@ -642,8 +652,12 @@ class BuildingDatasetPartition:
   @cached_property
   def actions_df(self) -> pd.DataFrame:
     # pylint: disable=line-too-long
-    """A time-series dataframe of numeric action values.
-    Columns represent unique actions. Row indices are sequential timestamps.
+    """A time-series dataframe of numeric action values, constructed from the
+    following components:
+
+      + Columns are the [`action_ids`](./#smart_control.dataset.dataset.BuildingDatasetPartition.action_ids).
+      + Row indices are the [`action_timestamps`](./#smart_control.dataset.dataset.BuildingDatasetPartition.action_timestamps).
+      + Cell values are from the [`action_value_matrix`](./#smart_control.dataset.dataset.BuildingDatasetPartition.action_value_matrix).
 
     Returns:
       A `pandas.DataFrame`. Here is an example of the structure:
@@ -667,8 +681,12 @@ class BuildingDatasetPartition:
   @cached_property
   def observations_df(self) -> pd.DataFrame:
     # pylint: disable=line-too-long
-    """A time-series dataframe of numeric observation values.
-    Columns represent unique observations. Row indices are sequential timestamps.
+    """A time-series dataframe of numeric observation values, constructed from the
+    following components:
+
+      + Columns are the [`observation_ids`](./#smart_control.dataset.dataset.BuildingDatasetPartition.observation_ids).
+      + Row indices are the [`observation_timestamps`](./#smart_control.dataset.dataset.BuildingDatasetPartition.observation_timestamps).
+      + Cell values are from the [`observation_value_matrix`](./#smart_control.dataset.dataset.BuildingDatasetPartition.observation_value_matrix).
 
     Returns:
       A `pandas.DataFrame`. Here is an example of the structure:
@@ -692,8 +710,12 @@ class BuildingDatasetPartition:
   @cached_property
   def rewards_df(self) -> pd.DataFrame:
     # pylint: disable=line-too-long
-    """A time-series dataframe of numeric reward values.
-    Columns represent unique rewards. Row indices are sequential timestamps.
+    """A time-series dataframe of numeric reward values, constructed from the
+    following components:
+
+      + Columns are the [`reward_ids`](./#smart_control.dataset.dataset.BuildingDatasetPartition.reward_ids).
+      + Row indices are the [`reward_timestamps`](./#smart_control.dataset.dataset.BuildingDatasetPartition.reward_timestamps).
+      + Cell values are from the [`reward_value_matrix`](./#smart_control.dataset.dataset.BuildingDatasetPartition.reward_value_matrix).
 
     Returns:
       A `pandas.DataFrame`. Here is an example of the structure:
@@ -716,8 +738,12 @@ class BuildingDatasetPartition:
   @cached_property
   def reward_infos_df(self) -> pd.DataFrame:
     # pylint: disable=line-too-long
-    """A time-series dataframe of numeric reward info values.
-    Columns represent unique rewards. Row indices are sequential timestamps.
+    """A time-series dataframe of numeric reward info values, constructed from
+    the following components:
+
+      + Columns are the [`reward_ids`](./#smart_control.dataset.dataset.BuildingDatasetPartition.reward_ids).
+      + Row indices are the [`reward_info_timestamps`](./#smart_control.dataset.dataset.BuildingDatasetPartition.reward_info_timestamps).
+      + Cell values are from the [`reward_info_value_matrix`](./#smart_control.dataset.dataset.BuildingDatasetPartition.reward_info_value_matrix).
 
     Returns:
       A `pandas.DataFrame`. Here is an example of the structure:
