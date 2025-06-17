@@ -168,7 +168,7 @@ _FIRST_DEVICE_INFO = {
         'building_air_static_pressure_setpoint': 1,
         'supply_air_static_pressure_sensor': 1,
     },
-    'action_fields': {
+    'actionable_fields': {
         'exhaust_air_damper_percentage_command': 1,
         'supply_air_temperature_setpoint': 1,
         'supply_fan_speed_percentage_command': 1,
@@ -199,7 +199,7 @@ _LAST_DEVICE_INFO = {
         'zone_air_cooling_temperature_setpoint': 1,
         'supply_air_damper_percentage_command': 1,
     },
-    'action_fields': {
+    'actionable_fields': {
         'zone_air_cooling_temperature_setpoint': 1,
         'discharge_air_temperature_setpoint': 1,
         'heating_water_valve_percentage_command': 1,
@@ -436,7 +436,7 @@ class TestBuildingDataset(absltest.TestCase):
             'code',
             'device_type',
             'observable_fields',
-            'action_fields',
+            'actionable_fields',
         ],
     )
 

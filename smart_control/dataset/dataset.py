@@ -74,7 +74,7 @@ class BuildingDataset:
 
     Only downloads and unzips the dataset if it doesn't already exist at the
       expected [`building_dirpath`](./#smart_control.dataset.dataset.BuildingDataset.building_dirpath)
-      location.
+      location. Otherwise it will load the existing local data.
 
     Download speed is fairly quick, but unzipping takes a few moments.
     """
@@ -164,7 +164,7 @@ class BuildingDataset:
     """A layout map of devices in the building.
 
     Returns:
-      A dictionary with keys corresponding to each of the devices
+      A dictionary with keys corresponding to each of the device layouts
         (e.g. 'VAV CO 1-1-06'). Each value is a list of integer coordinates.
         The length of the coordinates list is not the same across all devices.
         Here is an abbreviated version of the device layout map:
@@ -220,7 +220,7 @@ class BuildingDataset:
                 'building_air_static_pressure_setpoint': 1,
                 'supply_air_static_pressure_sensor': 1,
             },
-            'action_fields': {
+            'actionable_fields': {
                 'exhaust_air_damper_percentage_command': 1,
                 'supply_air_temperature_setpoint': 1,
                 'supply_fan_speed_percentage_command': 1,
@@ -235,7 +235,11 @@ class BuildingDataset:
         }
         ```
     """
-    return pickle.load(open(self.device_infos_filepath, "rb"))
+    infos = pickle.load(open(self.device_infos_filepath, "rb"))
+    for info in infos:
+      if "action_fields" in info:
+        info["actionable_fields"] = info.pop("action_fields")  # rename
+    return infos
 
   @cached_property
   def devices_df(self) -> pd.DataFrame:
@@ -247,25 +251,25 @@ class BuildingDataset:
     Returns:
       A `pandas.DataFrame`. Here is an example of the structure:
 
-        |    |          device_id | namespace   | code              |   device_type | observable_fields                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | action_fields                                                                                                                                                                                                                                                                                                                                                                                                       |
-        |---:|-------------------:|:------------|:------------------|--------------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-        |  0 | 202194278473007104 | PHRED       | SB1:AHU:AC-2      |             6 | {'building_air_static_pressure_sensor': 1, 'outside_air_flowrate_sensor': 1, 'supply_fan_speed_percentage_command': 1, 'supply_air_temperature_sensor': 1, 'supply_fan_speed_frequency_sensor': 1, 'supply_air_static_pressure_setpoint': 1, 'return_air_temperature_sensor': 1, 'mixed_air_temperature_setpoint': 1, 'exhaust_fan_speed_percentage_command': 1, 'exhaust_fan_speed_frequency_sensor': 1, 'outside_air_damper_percentage_command': 1, 'mixed_air_temperature_sensor': 1, 'exhaust_air_damper_percentage_command': 1, 'cooling_percentage_command': 1, 'outside_air_flowrate_setpoint': 1, 'supply_air_temperature_setpoint': 1, 'building_air_static_pressure_setpoint': 1, 'supply_air_static_pressure_sensor': 1} | {'exhaust_air_damper_percentage_command': 1, 'supply_air_temperature_setpoint': 1, 'supply_fan_speed_percentage_command': 1, 'outside_air_flowrate_setpoint': 1, 'cooling_percentage_command': 1, 'mixed_air_temperature_setpoint': 1, 'exhaust_fan_speed_percentage_command': 1, 'outside_air_damper_percentage_command': 1, 'supply_air_static_pressure_setpoint': 1, 'building_air_static_pressure_setpoint': 1} |
-        |  1 |   2760348383893915 | CDM         | VAV CO 1-1-10 CO2 |             4 | {'zone_air_heating_temperature_setpoint': 1, 'zone_air_temperature_sensor': 1, 'zone_air_co2_concentration_sensor': 1, 'supply_air_flowrate_setpoint': 1, 'zone_air_co2_concentration_setpoint': 1, 'zone_air_cooling_temperature_setpoint': 1, 'supply_air_flowrate_sensor': 1, 'supply_air_damper_percentage_command': 1}                                                                                                                                                                                                                                                                                                                                                                                                         | {'supply_air_damper_percentage_command': 1, 'supply_air_flowrate_setpoint': 1, 'zone_air_heating_temperature_setpoint': 1, 'zone_air_cooling_temperature_setpoint': 1, 'zone_air_co2_concentration_setpoint': 1}                                                                                                                                                                                                    |
-        |  2 |   2562701969438717 | CDM         | VAV CO 2-2-36     |             4 | {'zone_air_heating_temperature_setpoint': 1, 'supply_air_flowrate_sensor': 1, 'supply_air_flowrate_setpoint': 1, 'supply_air_damper_percentage_command': 1, 'zone_air_temperature_sensor': 1, 'zone_air_cooling_temperature_setpoint': 1}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | {'supply_air_flowrate_setpoint': 1, 'supply_air_damper_percentage_command': 1, 'zone_air_cooling_temperature_setpoint': 1, 'zone_air_heating_temperature_setpoint': 1}                                                                                                                                                                                                                                              |
-        |  3 |   2806035809406684 | CDM         |                   |             4 | {'discharge_air_temperature_setpoint': 1, 'supply_air_flowrate_sensor': 1, 'zone_air_heating_temperature_setpoint': 1, 'heating_water_valve_percentage_command': 1, 'supply_air_damper_percentage_command': 1, 'supply_air_flowrate_setpoint': 1, 'discharge_air_temperature_sensor': 1, 'zone_air_cooling_temperature_setpoint': 1, 'zone_air_temperature_sensor': 1}                                                                                                                                                                                                                                                                                                                                                              | {'discharge_air_temperature_setpoint': 1, 'heating_water_valve_percentage_command': 1, 'zone_air_cooling_temperature_setpoint': 1, 'supply_air_damper_percentage_command': 1, 'zone_air_heating_temperature_setpoint': 1, 'supply_air_flowrate_setpoint': 1}                                                                                                                                                        |
-        |  4 |   2790439929052995 | CDM         | VAV CO 1-1-43     |             4 | {'zone_air_heating_temperature_setpoint': 1, 'supply_air_flowrate_setpoint': 1, 'zone_air_temperature_sensor': 1, 'zone_air_cooling_temperature_setpoint': 1, 'supply_air_flowrate_sensor': 1, 'supply_air_damper_percentage_command': 1}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | {'supply_air_damper_percentage_command': 1, 'zone_air_heating_temperature_setpoint': 1, 'supply_air_flowrate_setpoint': 1, 'zone_air_cooling_temperature_setpoint': 1}                                                                                                                                                                                                                                              |
+        |    |          device_id | namespace   | code              |   device_type | observable_fields                                     | actionable_fields                                                                                                                                                                                                                                                                                                                                                                                                       |
+        |---:|-------------------:|:------------|:------------------|--------------:|:------------------------------------------------------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+        |  0 | 202194278473007104 | PHRED       | SB1:AHU:AC-2      |             6 | {'building_air_static_pressure_sensor': 1,  ... }     | {'exhaust_air_damper_percentage_command': 1, ... }
+        |  1 |   2760348383893915 | CDM         | VAV CO 1-1-10 CO2 |             4 | {'zone_air_heating_temperature_setpoint': 1, ... }    | {'supply_air_damper_percentage_command': 1, ... }                                                                                                                                                                                                    |
+        |  2 |   2562701969438717 | CDM         | VAV CO 2-2-36     |             4 | {'zone_air_heating_temperature_setpoint': 1, ... }    | {'supply_air_flowrate_setpoint': 1, ... }                                                                                                                                                                                                                                              |
+        |  3 |   2806035809406684 | CDM         |                   |             4 | {'discharge_air_temperature_setpoint': 1, ... }       | {'discharge_air_temperature_setpoint': 1, ... }                                                                                                                                                        |
+        |  4 |   2790439929052995 | CDM         | VAV CO 1-1-43     |             4 | {'zone_air_heating_temperature_setpoint': 1, ... }    | {'supply_air_damper_percentage_command': 1, ... }                                                                                                                                                                                                                                              |
     """
     # pylint: enable=line-too-long
     df = pd.DataFrame(self.device_infos)
     df = df.drop(columns=["zone_id"])  # many to many relationship
-    # df = df.rename(columns={"zone_id", "zone_ids"}) # consider renaming
+    # consider renaming zone_id to zone_ids instead of dropping
     return df
 
   # DEVICE FIELDS
 
   def _count_device_fields(self, field_type: str) -> pd.Series:
     """
-    Param field_type (str) member of: ["action_fields", "observable_fields"]
+    Param field_type (str) member of: ["actionable_fields", "observable_fields"]
     """
     field_counts = {}
 
@@ -285,7 +289,7 @@ class BuildingDataset:
   @cached_property
   def actionable_field_counts(self) -> pd.Series:
     """Value counts of all actionable fields across all devices."""
-    return self._count_device_fields("action_fields")
+    return self._count_device_fields("actionable_fields")
 
   @cached_property
   def observable_field_counts(self) -> pd.Series:
@@ -304,6 +308,24 @@ class BuildingDataset:
 
   @cached_property
   def fields_df(self) -> pd.DataFrame:
+    # pylint: disable=line-too-long
+    """A dataframe containing information about the building's fields.
+
+    Each row is uniquely identified by the "field_name".
+
+    Returns:
+      A `pandas.DataFrame`. Here is an example of the structure:
+
+        |    | field_name                            | is_actionable | is_observable | devices_actionable | devices_observable |
+        |---:|:--------------------------------------|:--------------|:--------------|:-------------------|:-------------------|
+        |  0 | building_air_static_pressure_sensor   | False         | True          | 0                  | 3                  |
+        |  1 | building_air_static_pressure_setpoint | True          | True          | 3                  | 3                  |
+        |  2 | cooling_percentage_command            | True          | True          | 3                  | 3                  |
+        |  3 | differential_pressure_sensor          | False         | True          | 0                  | 2                  |
+        |  4 | differential_pressure_setpoint        | True          | True          | 2                  | 2                  |
+
+    """
+    # pylint: enable=line-too-long
     actionable_fields = set(self.actionable_fields)
     observable_fields = set(self.observable_fields)
     all_fields = actionable_fields.union(observable_fields)
@@ -371,6 +393,7 @@ class BuildingDataset:
 
 
 class BuildingDatasetPartition:
+  # pylint:disable=line-too-long
   """A helper class for handling a specific dataset partition.
 
   Args:
@@ -381,11 +404,10 @@ class BuildingDatasetPartition:
   Example:
     ```python
     ds = BuildingDataset(building_id='sb1', download=True)
-    partition = BuildingDatasetPartition(
-       building_dataset=ds, partition_id='2022_a'
-    )
+    partition = BuildingDatasetPartition(building_dataset=ds, partition_id='2022_a')
     ```
   """
+  # pylint:enable=line-too-long
 
   def __init__(self, building_dataset: BuildingDataset, partition_id: str):
     self.ds = building_dataset
@@ -397,6 +419,10 @@ class BuildingDatasetPartition:
   @property
   def partition_dirpath(self):
     return os.path.join(self.ds.tabular_dirpath, self.ds.building_id, self.partition_id)  # pylint:disable=line-too-long
+
+  #
+  # DATA PROPERTIES
+  #
 
   @property
   def data_filepath(self):
@@ -419,61 +445,10 @@ class BuildingDatasetPartition:
         - `'reward_value_matrix'`
         - `'reward_info_value_matrix'`
 
-      Each of these keys has a corresponding public method for convenience.
-      See corresponding documentation for more information about each.
+        Each of these keys has a corresponding public method for convenience.
+        See corresponding documentation for more information about each.
     """
     return np.load(self.data_filepath)
-
-  @property
-  def metadata_filepath(self):
-    return os.path.join(self.partition_dirpath, "metadata.pickle")
-
-  @cached_property
-  def metadata(self) -> dict:
-    """Metadata describing the partition [`data`](./#smart_control.dataset.dataset.BuildingDatasetPartition.data).
-
-    Returns:
-      A dictionary containing the following keys:
-
-        - `'action_ids_map'`
-        - `'action_timestamps'`
-        - `'observation_ids'`
-        - `'observation_timestamps'`
-        - `'reward_ids'`
-        - `'reward_timestamps'`
-        - `'reward_info_timestamps'`
-
-      Each of these keys has a corresponding public method for convenience.
-      See corresponding documentation for more information about each.
-    """
-    metadata = pickle.load(open(self.metadata_filepath, "rb"))
-
-    # renaming keys (this is new):
-    metadata = {
-        "action_ids_map": metadata["action_ids"],  # renamed
-        "action_timestamps": metadata["action_timestamps"],
-        "observation_ids_map": metadata["observation_ids"],  # renamed
-        "observation_timestamps": metadata["observation_timestamps"],
-        "reward_ids_map": metadata["reward_ids"],  # renamed
-        "reward_timestamps": metadata["reward_timestamps"],
-        "reward_info_timestamps": metadata["reward_info_timestamps"],
-    }
-
-    # here we were redundantly adding information from the dataset.
-    # however we should consider whether this is desired, or if we would prefer
-    # to reach into the dataset instead as necessary...
-    #
-    # if "device_infos" not in metadata.keys():
-    #  metadata["device_infos"] = self.ds.device_infos
-    #
-    # if "zone_infos" not in metadata.keys():
-    #  metadata["zone_infos"] = self.ds.zone_infos
-
-    return metadata
-
-  #
-  # DATA PROPERTIES
-  #
 
   @cached_property
   def action_value_matrix(self) -> np.ndarray:
@@ -499,24 +474,71 @@ class BuildingDatasetPartition:
   # METADATA PROPERTIES
   #
 
+  @property
+  def metadata_filepath(self):
+    return os.path.join(self.partition_dirpath, "metadata.pickle")
+
+  @cached_property
+  def metadata(self) -> dict:
+    """Metadata describing the partition [`data`](./#smart_control.dataset.dataset.BuildingDatasetPartition.data).
+
+    Returns:
+      A dictionary containing the following keys:
+
+        - `'action_ids_map'`
+        - `'action_timestamps'`
+        - `'observation_ids'`
+        - `'observation_timestamps'`
+        - `'reward_ids'`
+        - `'reward_timestamps'`
+        - `'reward_info_timestamps'`
+
+        Each of these keys has a corresponding public method for convenience.
+        See corresponding documentation for more information about each.
+    """
+    metadata = pickle.load(open(self.metadata_filepath, "rb"))
+
+    # renaming keys:
+    metadata = {
+        "action_ids_map": metadata["action_ids"],  # renamed
+        "action_timestamps": metadata["action_timestamps"],
+        "observation_ids_map": metadata["observation_ids"],  # renamed
+        "observation_timestamps": metadata["observation_timestamps"],
+        "reward_ids_map": metadata["reward_ids"],  # renamed
+        "reward_timestamps": metadata["reward_timestamps"],
+        "reward_info_timestamps": metadata["reward_info_timestamps"],
+    }
+
+    # here we were redundantly adding information from the dataset.
+    # however we should consider whether this is desired, or if we would prefer
+    # to reach into the dataset instead as necessary...
+    #
+    # if "device_infos" not in metadata.keys():
+    #  metadata["device_infos"] = self.ds.device_infos
+    #
+    # if "zone_infos" not in metadata.keys():
+    #  metadata["zone_infos"] = self.ds.zone_infos
+
+    return metadata
+
   @cached_property
   def action_ids_map(self) -> dict:
     """A mapping of unique action identifiers.
 
     Returns:
       A dictionary where the keys are in the format of `device_id@setting_name`
-      and the values are unique integers referencing column indices in the
-      actions matrix.
+        and the values are unique integers referencing column indices in the
+        [`action_value_matrix`](./#smart_control.dataset.dataset.BuildingDatasetPartition.action_value_matrix)
 
-      For example:
+        For example:
 
-      ```py
-        {
-          '12945159110931775488@supply_air_temperature_setpoint': 0,
-          '13761436543392677888@supply_water_temperature_setpoint': 1,
-          '14409954889734029312@supply_air_temperature_setpoint': 2
-        }
-      ```
+        ```py
+          {
+            '12945159110931775488@supply_air_temperature_setpoint': 0,
+            '13761436543392677888@supply_water_temperature_setpoint': 1,
+            '14409954889734029312@supply_air_temperature_setpoint': 2
+          }
+        ```
     """
     return self.metadata["action_ids_map"]
 
@@ -526,18 +548,18 @@ class BuildingDatasetPartition:
 
     Returns:
       A dictionary where the keys are in the format of `device_id@setting_name`
-      and the values are unique integers referencing column indices in the
-      observations matrix.
+        and the values are unique integers referencing column indices in the
+        [`observation_value_matrix`](./#smart_control.dataset.dataset.BuildingDatasetPartition.observation_value_matrix).
 
-      For example:
+        For example:
 
-      ```py
-        {
-          '202194278473007104@building_air_static_pressure_setpoint', 0,
-          ...
-          '2640423556868160@zone_air_temperature_sensor': 1197
-        }
-      ```
+        ```py
+          {
+            '202194278473007104@building_air_static_pressure_setpoint', 0,
+            ...
+            '2640423556868160@zone_air_temperature_sensor': 1197
+          }
+        ```
     """
     return self.metadata["observation_ids_map"]
 
@@ -547,19 +569,20 @@ class BuildingDatasetPartition:
 
     Returns:
       A dictionary where the keys are in the format of (`device_id@setting_name`
-      or `zone_id@setting_name`?),
-      and the values are unique integers referencing column indices in the
-      reward matrix.
+        or `zone_id@setting_name`),
+        and the values are unique integers referencing column indices in the
+        [`reward_value_matrix`](./#smart_control.dataset.dataset.BuildingDatasetPartition.reward_value_matrix)
+        as well as the [`reward_info_value_matrix`](./#smart_control.dataset.dataset.BuildingDatasetPartition.reward_info_value_matrix).
 
-      For example:
+        For example:
 
-      ```py
-        {
-          'rooms/9028552126@heating_setpoint_temperature': 0
-          ...
-          '14409954889734029312@air_conditioning_electrical_energy_rate': 3251
-        }
-      ```
+        ```py
+          {
+            'rooms/9028552126@heating_setpoint_temperature': 0
+            ...
+            '14409954889734029312@air_conditioning_electrical_energy_rate': 3251
+          }
+        ```
     """
     return self.metadata["reward_ids_map"]
 
@@ -618,9 +641,23 @@ class BuildingDatasetPartition:
 
   @cached_property
   def actions_df(self) -> pd.DataFrame:
+    # pylint: disable=line-too-long
     """A time-series dataframe of numeric action values.
-    Columns represent unique actions. Rows represent time steps.
+    Columns represent unique actions. Row indices are sequential timestamps.
+
+    Returns:
+      A `pandas.DataFrame`. Here is an example of the structure:
+
+        | timestamp                 | 12945159110931775488@supply_air_temperature_setpoint  | ... | 14409954889734029312@supply_air_temperature_setpoint  |
+        |---------------------------|-------------------------------------------------------|-----|-------------------------------------------------------|
+        | 2022-01-01 00:00:00+00:00 | 288.703705                                            | ... | 291.481476                                            |
+        | 2022-01-01 00:05:00+00:00 | 288.703705                                            | ... | 291.481476                                            |
+        | 2022-01-01 00:10:00+00:00 | 288.703705                                            | ... | 291.481476                                            |
+        | 2022-01-01 00:15:00+00:00 | 288.703705                                            | ... | 291.481476                                            |
+        | 2022-01-01 00:20:00+00:00 | 288.703705                                            | ... | 291.481476                                            |
+
     """
+    # pylint: enable=line-too-long
     return self._construct_time_series_df(
         matrix_name="action_value_matrix",
         ids_name="action_ids_map",
@@ -629,9 +666,23 @@ class BuildingDatasetPartition:
 
   @cached_property
   def observations_df(self) -> pd.DataFrame:
+    # pylint: disable=line-too-long
     """A time-series dataframe of numeric observation values.
-    Columns represent unique observations. Rows represent time steps.
+    Columns represent unique observations. Row indices are sequential timestamps.
+
+    Returns:
+      A `pandas.DataFrame`. Here is an example of the structure:
+
+        | timestamp                 | 202194278473007104@building_air_static_pressure_setpoint | ... | 2640423556868160@zone_air_temperature_sensor |
+        |---------------------------|----------------------------------------------------------|-----|----------------------------------------------|
+        | 2022-01-01 00:00:00+00:00 | 7.472401                                                 | ... | 68.500000                                    |
+        | 2022-01-01 00:05:00+00:00 | 7.472401                                                 | ... | 68.300003                                    |
+        | 2022-01-01 00:10:00+00:00 | 7.472401                                                 | ... | 68.300003                                    |
+        | 2022-01-01 00:15:00+00:00 | 7.472401                                                 | ... | 68.000000                                    |
+        | 2022-01-01 00:20:00+00:00 | 7.472401                                                 | ... | 68.000000                                    |
+
     """
+    # pylint: enable=line-too-long
     return self._construct_time_series_df(
         matrix_name="observation_value_matrix",
         ids_name="observation_ids_map",
@@ -640,9 +691,22 @@ class BuildingDatasetPartition:
 
   @cached_property
   def rewards_df(self) -> pd.DataFrame:
+    # pylint: disable=line-too-long
     """A time-series dataframe of numeric reward values.
-    Columns represent unique rewards. Rows represent time steps.
+    Columns represent unique rewards. Row indices are sequential timestamps.
+
+    Returns:
+      A `pandas.DataFrame`. Here is an example of the structure:
+
+        | timestamp                 | rooms/9028552126@heating_setpoint_temperature | ... | rooms/9028552250@air_flow_rate |
+        |---------------------------|-----------------------------------------------|-----|--------------------------------|
+        | 2021-12-31 23:55:00+00:00 | -1.005403e-08                                 | ... | 1.797313e-08                   |
+        | 2022-01-01 00:00:00+00:00 | -1.002312e-08                                 | ... | 1.782538e-08                   |
+        | 2022-01-01 00:05:00+00:00 | -1.002312e-08                                 | ... | 1.782538e-08                   |
+        | 2022-01-01 00:10:00+00:00 | -1.002312e-08                                 | ... | 1.782538e-08                   |
+        | 2022-01-01 00:15:00+00:00 | -5.737567e-09                                 | ... | 1.020384e-08                   |
     """
+    # pylint: enable=line-too-long
     return self._construct_time_series_df(
         matrix_name="reward_value_matrix",
         ids_name="reward_ids_map",
@@ -651,9 +715,22 @@ class BuildingDatasetPartition:
 
   @cached_property
   def reward_infos_df(self) -> pd.DataFrame:
+    # pylint: disable=line-too-long
     """A time-series dataframe of numeric reward info values.
-    Columns represent unique rewards. Rows represent time steps.
+    Columns represent unique rewards. Row indices are sequential timestamps.
+
+    Returns:
+      A `pandas.DataFrame`. Here is an example of the structure:
+
+        | timestamp                 | rooms/9028552126@heating_setpoint_temperature | ... | 14409954889734029312@air_conditioning_electrical_energy_rate |
+        |---------------------------|-----------------------------------------------|-----|---------------------------------------------------------------|
+        | 2021-12-31 23:55:00+00:00 | 294.0                                         | ... | 0.0                                                           |
+        | 2022-01-01 00:00:00+00:00 | 294.0                                         | ... | 0.0                                                           |
+        | 2022-01-01 00:05:00+00:00 | 294.0                                         | ... | 0.0                                                           |
+        | 2022-01-01 00:10:00+00:00 | 294.0                                         | ... | 0.0                                                           |
+        | 2022-01-01 00:15:00+00:00 | 294.0                                         | ... | 0.0                                                           |
     """
+    # pylint: enable=line-too-long
     return self._construct_time_series_df(
         matrix_name="reward_info_value_matrix",
         ids_name="reward_ids_map",
