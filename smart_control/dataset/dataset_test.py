@@ -1,69 +1,21 @@
-"""Tests for the Smart Buildings Dataset.
-
-Includes high fidelity tests to download the dataset and verify its structure.
-
-It takes around two minutes to download and unzip the data, so we are skipping
-dataset tests by default, to keep the build fast. But you can trigger a download
-by setting the `TEST_DATASET_DOWNLOAD` environment variable to 'true'.
-
-Downloaded data will not get cleared after tests run, so we can use it in
-subsequent test runs without needing to re-download. This allows developers to
-run dataset tests fairly quickly on their local machines. When the dataset
-already exists locally, the tests take around five seconds.
-
-The dataset tests will be run if the data is being downloaded, or if there is
-existing local data.
-
-Downloaded data will not get cleared by default before tests run, but you can
-force a clean up and fresh download by setting the `CLEAR_TEST_DATASET_DOWNLOAD`
-environment variable to 'true'.
-
-These real tests are meant to be run periodically, for example once per day.
-"""
+"""Tests for BuildingDataset class."""
 
 import os
-import shutil
 import unittest
 
 from absl.testing import absltest
-from dotenv import load_dotenv
 import numpy as np
 import pandas as pd
+import pytest
 
-from smart_control.dataset.dataset import BuildingDataset
-from smart_control.dataset.dataset import BuildingDatasetPartition
+from smart_control.dataset.conftest import DATASET_DIRPATH
+from smart_control.dataset.conftest import SKIP_REASON
+from smart_control.dataset.conftest import TEST_DATASET
+from smart_control.dataset.conftest import ZIP_FILEPATH
 from smart_control.dataset.dataset import DATA_DIR
-
-load_dotenv()
-
-# whether or not to download the dataset:
-TEST_DATASET_DOWNLOAD = bool(os.getenv('TEST_DATASET_DOWNLOAD', default='false').lower() == 'true')  # pylint: disable=line-too-long
-# whether or not to delete existing local data before downloading:
-CLEAR_TEST_DATASET_DOWNLOAD = bool(os.getenv('CLEAR_TEST_DATASET_DOWNLOAD', default='false').lower() == 'true')  # pylint: disable=line-too-long
-
-DATASET_DIRPATH = os.path.join(DATA_DIR, 'sb1')
-ZIP_FILEPATH = os.path.join(DATA_DIR, 'sb1.zip')
-
-# whether or not to run dataset tests:
-TEST_DATASET = bool(TEST_DATASET_DOWNLOAD or os.path.isdir(DATASET_DIRPATH))
-SKIP_REASON = 'Skip large download by default.'
-
-
-#
-# SHARED FIXTURES & DATA STRUCTURES
-#
-
-_dataset = None  # module-level dataset fixture
 
 _BUILDING_ID = 'sb1'
 _PARTITION_IDS = ['2022_a', '2022_b', '2023_a', '2023_b', '2024_a']
-
-_ACTION_IDS_MAP = {
-    '12945159110931775488@supply_air_temperature_setpoint': 0,
-    '13761436543392677888@supply_water_temperature_setpoint': 1,
-    '14409954889734029312@supply_air_temperature_setpoint': 2,
-}
-_ACTION_IDS = list(_ACTION_IDS_MAP.keys())
 
 _DEVICE_LAYOUT_IDS = [
     'VAV CO 1-1-06',
@@ -293,58 +245,6 @@ _DEVICE_ACTIONABLE_FIELD_NAMES = [
     'zone_air_heating_temperature_setpoint',
 ]
 
-_REWARD_IDS = [
-    'rooms/9028552126@heating_setpoint_temperature',
-    'rooms/9028552126@cooling_setpoint_temperature',
-    'rooms/9028552126@zone_air_temperature',
-    'rooms/9028552126@air_flow_rate_setpoint',
-    'rooms/9028552126@air_flow_rate',
-    'rooms/9028552126@average_occupancy',
-    'rooms/9028472496@heating_setpoint_temperature',
-    'rooms/9028472496@cooling_setpoint_temperature',
-    'rooms/9028472496@zone_air_temperature',
-    'rooms/9028472496@air_flow_rate_setpoint',
-    'rooms/9028472496@air_flow_rate',
-    'rooms/9028472496@average_occupancy',
-    'rooms/9028552250@heating_setpoint_temperature',
-    'rooms/9028552250@cooling_setpoint_temperature',
-    'rooms/9028552250@zone_air_temperature',
-    'rooms/9028552250@air_flow_rate_setpoint',
-    'rooms/9028552250@air_flow_rate',
-]
-
-#
-# SET UP METHODS
-#
-
-
-def cleanup_files():
-  print('Deleting dataset files...')
-
-  if os.path.isfile(ZIP_FILEPATH):
-    os.remove(ZIP_FILEPATH)
-
-  if os.path.isdir(DATASET_DIRPATH):
-    shutil.rmtree(DATASET_DIRPATH)
-
-
-def setUpModule():
-  """Module-level setup. Cleans up files as desired. Downloads data as desired.
-  Initializes the dataset as a module level fixture as desired.
-  """
-  global _dataset
-
-  if TEST_DATASET_DOWNLOAD and CLEAR_TEST_DATASET_DOWNLOAD:
-    cleanup_files()
-
-  print('Initializing BuildingDataset (this should happen only once)...')
-  _dataset = BuildingDataset(building_id='sb1', download=TEST_DATASET_DOWNLOAD)
-
-
-#
-# TESTS
-#
-
 
 class TestDataDirectory(absltest.TestCase):
   """Tests for the data directory."""
@@ -353,15 +253,9 @@ class TestDataDirectory(absltest.TestCase):
     self.assertTrue(os.path.isdir(DATA_DIR))
 
 
+@pytest.mark.usefixtures('inject_dataset')
 class TestBuildingDataset(absltest.TestCase):
   """Tests for the BuildingDataset class."""
-
-  ds = None
-
-  @classmethod
-  def setUpClass(cls):
-    super().setUpClass()
-    cls.ds = _dataset
 
   def test_building_id(self):
     self.assertEqual(self.ds.building_id, _BUILDING_ID)
@@ -570,297 +464,6 @@ class TestBuildingDataset(absltest.TestCase):
     first_row = _FIRST_ZONE_INFO.copy()
     first_row['n_devices'] = 2  # we added this column to the df
     self.assertEqual(zones_df.iloc[0].to_dict(), first_row)
-
-
-class TestBuildingDatasetPartition(absltest.TestCase):
-  """Tests for the BuildingDatasetPartition class."""
-
-  ds = None
-  partition = None
-
-  @classmethod
-  def setUpClass(cls):
-    super().setUpClass()
-    cls.ds = _dataset
-    cls.partition = BuildingDatasetPartition(
-        building_dataset=cls.ds, partition_id='2022_a'
-    )
-
-  def _assert_timestamps(self, timestamps, earliest, latest, length):
-    """
-    Assertions for timestamps.
-
-    Args:
-      timestamps (list): the timestamps to test
-      earliest and latest (str): expected earliest and latest values,
-        as strings, like '2022-06-30 00:55:00+00:00'
-      length (int) : expected length of the list
-    """
-    self.assertIsInstance(timestamps, list)
-    self.assertEqual(len(timestamps), length)
-
-    first_timestamp = timestamps[0]
-    last_timestamp = timestamps[-1]
-    self.assertIsInstance(first_timestamp, pd.Timestamp)
-    self.assertIsInstance(last_timestamp, pd.Timestamp)
-    self.assertEqual(str(first_timestamp), earliest)
-    self.assertEqual(str(last_timestamp), latest)
-
-  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
-  def test_partition_data(self):
-    data = self.partition.data
-    self.assertIsInstance(data, np.lib.npyio.NpzFile)
-
-    # we are surfacing each key into its own high-level public property
-    # fmt: off
-    # pylint: disable=line-too-long
-    with self.subTest('action_value_matrix'):
-      np.testing.assert_array_equal(
-          data['action_value_matrix'], self.partition.action_value_matrix
-      )
-    with self.subTest('observation_value_matrix'):
-      np.testing.assert_array_equal(
-          data['observation_value_matrix'], self.partition.observation_value_matrix
-      )
-    with self.subTest('reward_value_matrix'):
-      np.testing.assert_array_equal(
-          data['reward_value_matrix'], self.partition.reward_value_matrix
-      )
-    with self.subTest('reward_info_value_matrix'):
-      np.testing.assert_array_equal(
-          data['reward_info_value_matrix'], self.partition.reward_info_value_matrix
-      )
-    # pylint: enable=line-too-long
-    # fmt: on
-
-  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
-  def test_partition_metadata(self):
-    metadata = self.partition.metadata
-
-    self.assertIsInstance(metadata, dict)
-    self.assertEqual(
-        sorted(metadata.keys()),
-        [
-            'action_ids_map',
-            'action_timestamps',
-            'observation_ids_map',
-            'observation_timestamps',
-            'reward_ids_map',
-            'reward_info_timestamps',
-            'reward_timestamps',
-        ],
-    )
-
-    # we are surfacing each key into its own high-level public property
-    # fmt: off
-    # pylint: disable=line-too-long
-    self.assertEqual(metadata['action_ids_map'], self.partition.action_ids_map)
-    self.assertEqual(metadata['observation_ids_map'], self.partition.observation_ids_map)
-    self.assertEqual(metadata['reward_ids_map'], self.partition.reward_ids_map)
-
-    self.assertEqual(metadata['action_timestamps'], self.partition.action_timestamps)
-    self.assertEqual(metadata['observation_timestamps'], self.partition.observation_timestamps)
-    self.assertEqual(metadata['reward_timestamps'], self.partition.reward_timestamps)
-    self.assertEqual(metadata['reward_info_timestamps'], self.partition.reward_info_timestamps)
-    # pylint: enable=line-too-long
-    # fmt: on
-
-  #
-  # DATA PROPERTIES...
-  #
-
-  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
-  def test_action_value_matrix(self):
-    self.assertEqual(self.partition.action_value_matrix.shape, (51852, 3))
-
-  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
-  def test_observation_value_matrix(self):
-    self.assertEqual(self.partition.observation_value_matrix.shape, (51852, 1198))  # pylint: disable=line-too-long
-
-  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
-  def test_reward_value_matrix(self):
-    self.assertEqual(self.partition.reward_value_matrix.shape, (51852, 17))
-
-  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
-  def test_reward_info_value_matrix(self):
-    self.assertEqual(self.partition.reward_info_value_matrix.shape, (51852, 3252))  # pylint: disable=line-too-long
-
-  #
-  # METADATA PROPERTIES...
-  #
-
-  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
-  def test_action_ids_map(self):
-    self.assertEqual(self.partition.action_ids_map, _ACTION_IDS_MAP)
-
-  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
-  def test_observation_ids_map(self):
-    observation_ids_map = self.partition.observation_ids_map
-    self.assertIsInstance(observation_ids_map, dict)
-    self.assertEqual(len(observation_ids_map), 1198)
-
-    # keys are in the format of `device_id@setting_name`:
-    keys = list(observation_ids_map.keys())
-    self.assertEqual(keys[0], '202194278473007104@building_air_static_pressure_setpoint')  # pylint: disable=line-too-long
-    self.assertEqual(keys[-1], '2640423556868160@zone_air_temperature_sensor')
-
-    # values are unique integers:
-    values = list(observation_ids_map.values())
-    self.assertEqual(values[0], 0)
-    self.assertEqual(values[-1], 1197)
-    self.assertEqual(len(values), len(list(set(values))))  # all unique
-
-  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
-  def test_reward_ids_map(self):
-    reward_ids_map = self.partition.reward_ids_map
-    self.assertIsInstance(reward_ids_map, dict)
-    self.assertEqual(len(reward_ids_map), 3252)
-
-    # keys are in the format of `zone_id@setting` or `device_id@setting`:
-    keys = list(reward_ids_map.keys())
-    self.assertEqual(keys[0], 'rooms/9028552126@heating_setpoint_temperature')
-    self.assertEqual(keys[-1], '14409954889734029312@air_conditioning_electrical_energy_rate')  # pylint: disable=line-too-long
-
-    # values are unique integers:
-    values = list(reward_ids_map.values())
-    self.assertEqual(values[0], 0)
-    self.assertEqual(values[-1], 3251)
-    self.assertEqual(len(values), len(list(set(values))))
-
-  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
-  def test_action_ids(self):
-    self.assertEqual(self.partition.action_ids, _ACTION_IDS)
-
-  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
-  def test_observation_ids(self):
-    self.assertEqual(
-        self.partition.observation_ids,
-        list(self.partition.observation_ids_map.keys()),
-    )
-
-  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
-  def test_reward_ids(self):
-    self.assertEqual(
-        self.partition.reward_ids, list(self.partition.reward_ids_map.keys())
-    )
-
-  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
-  def test_action_timestamps(self):
-    self._assert_timestamps(
-        self.partition.action_timestamps,
-        earliest='2022-01-01 00:00:00+00:00',
-        latest='2022-06-30 00:55:00+00:00',
-        length=51852,
-    )
-
-  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
-  def test_observation_timestamps(self):
-    self._assert_timestamps(
-        self.partition.observation_timestamps,
-        earliest='2022-01-01 00:00:00+00:00',
-        latest='2022-06-30 00:55:00+00:00',
-        length=51852,
-    )
-
-  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
-  def test_reward_timestamps(self):
-    self._assert_timestamps(
-        self.partition.reward_timestamps,
-        earliest='2021-12-31 23:55:00+00:00',
-        latest='2022-06-30 00:50:00+00:00',
-        length=51852,
-    )
-
-  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
-  def test_reward_info_timestamps(self):
-    self._assert_timestamps(
-        self.partition.reward_info_timestamps,
-        earliest='2021-12-31 23:55:00+00:00',
-        latest='2022-06-30 00:50:00+00:00',
-        length=51852,
-    )
-
-  #
-  # DATAFRAME PROPERTIES...
-  #
-
-  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
-  def test_observations_df(self):
-    df = self.partition.observations_df
-
-    self.assertIsInstance(df, pd.DataFrame)
-    self.assertEqual(df.shape, (51852, 1198))
-
-    # columns corresponding to the observation ids:
-    # ... there are 1198, but here are some examples:
-    self.assertIn(
-        '202194278473007104@building_air_static_pressure_setpoint', df.columns
-    )
-    self.assertIn('2640423556868160@zone_air_temperature_sensor', df.columns)
-
-    # index corresponding to the observation timestamps:
-    self.assertEqual(str(df.index[0]), '2022-01-01 00:00:00+00:00')
-    self.assertEqual(str(df.index[-1]), '2022-06-30 00:55:00+00:00')
-
-    # values are numeric (float) and non-null:
-    self.assertEqual(df.isna().sum().sum(), 0)
-    self.assertEqual(df.dtypes.unique().tolist(), [np.dtype('float64')])
-
-  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
-  def test_actions_df(self):
-    df = self.partition.actions_df
-
-    self.assertIsInstance(df, pd.DataFrame)
-    self.assertEqual(df.shape, (51852, 3))
-
-    # columns corresponding to the action ids:
-    self.assertEqual(df.columns.tolist(), _ACTION_IDS)
-
-    # index corresponding to the action timestamps:
-    self.assertEqual(str(df.index[0]), '2022-01-01 00:00:00+00:00')
-    self.assertEqual(str(df.index[-1]), '2022-06-30 00:55:00+00:00')
-
-    # values are numeric (float) and non-null:
-    self.assertEqual(df.isna().sum().sum(), 0)
-    self.assertEqual(df.dtypes.unique().tolist(), [np.dtype('float64')])
-
-  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
-  def test_rewards_df(self):
-    df = self.partition.rewards_df
-
-    self.assertIsInstance(df, pd.DataFrame)
-    self.assertEqual(df.shape, (51852, 17))
-
-    # columns corresponding to the reward ids:
-    self.assertEqual(df.columns.tolist(), _REWARD_IDS)
-
-    # index corresponding to the reward timestamps:
-    self.assertEqual(str(df.index[0]), '2021-12-31 23:55:00+00:00')
-    self.assertEqual(str(df.index[-1]), '2022-06-30 00:50:00+00:00')
-
-    # values are numeric (float) and non-null:
-    self.assertEqual(df.isna().sum().sum(), 0)  # all non-null
-    self.assertEqual(df.dtypes.unique().tolist(), [np.dtype('float64')])
-
-  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
-  def test_reward_infos_df(self):
-    df = self.partition.reward_infos_df
-
-    self.assertIsInstance(df, pd.DataFrame)
-    self.assertEqual(df.shape, (51852, 3252))
-
-    # columns corresponding to the reward ids:
-    # ... there are 3252 but here are some examples:
-    self.assertIn('rooms/9028552126@heating_setpoint_temperature', df.columns)
-    self.assertIn('14409954889734029312@air_conditioning_electrical_energy_rate', df.columns)  # pytest: disable=line-too-long # fmt:skip
-
-    # index corresponding to the reward info timestamps:
-    self.assertEqual(str(df.index[0]), '2021-12-31 23:55:00+00:00')
-    self.assertEqual(str(df.index[-1]), '2022-06-30 00:50:00+00:00')
-
-    # values are numeric (float) and non-null:
-    self.assertEqual(df.isna().sum().sum(), 0)
-    self.assertEqual(df.dtypes.unique().tolist(), [np.dtype('float64')])
 
 
 if __name__ == '__main__':
