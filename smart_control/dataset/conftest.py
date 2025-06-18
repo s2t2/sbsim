@@ -82,13 +82,14 @@ def partition(dataset):  # pylint: disable=redefined-outer-name
 @pytest.fixture(scope='class')
 def set_dataset(request, dataset):  # pylint: disable=redefined-outer-name
   """
-  A class-scoped fixture that takes the result of the  'dataset' fixture and
+  A class-scoped fixture that takes the result of the 'dataset' fixture and
   injects it into the test class as 'cls.ds'.
 
   Use by decorating your test class with:
 
     @pytest.mark.usefixtures('set_dataset')
 
+  NOTE: the injection happens AFTER the setUp methods run in the test class.
   """
   if request.cls:
     request.cls.ds = dataset
@@ -104,6 +105,7 @@ def set_partition(request, partition):  # pylint: disable=redefined-outer-name, 
 
     @pytest.mark.usefixtures('set_partition')
 
+  NOTE: the injection happens AFTER the setUp methods run in the test class.
   """
   if request.cls:
     request.cls.partition = partition
