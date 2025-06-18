@@ -253,7 +253,7 @@ class TestDataDirectory(absltest.TestCase):
     self.assertTrue(os.path.isdir(DATA_DIR))
 
 
-@pytest.mark.usefixtures('inject_dataset')
+@pytest.mark.usefixtures('set_dataset')
 class TestBuildingDataset(absltest.TestCase):
   """Tests for the BuildingDataset class."""
 

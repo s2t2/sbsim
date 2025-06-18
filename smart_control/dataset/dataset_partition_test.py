@@ -10,9 +10,6 @@ import pytest
 from smart_control.dataset.conftest import SKIP_REASON
 from smart_control.dataset.conftest import TEST_DATASET
 
-# from smart_control.dataset.dataset_partition import BuildingDatasetPartition
-
-
 _ACTION_IDS_MAP = {
     '12945159110931775488@supply_air_temperature_setpoint': 0,
     '13761436543392677888@supply_water_temperature_setpoint': 1,
@@ -41,9 +38,16 @@ _REWARD_IDS = [
 ]
 
 
-@pytest.mark.usefixtures('inject_partition')
+@pytest.mark.usefixtures('set_partition')
 class TestBuildingDatasetPartition(absltest.TestCase):
   """Tests for the BuildingDatasetPartition class."""
+
+  # @classmethod
+  # def setUpClass(cls):
+  #  super().setUpClass()
+  #  cls.partition = BuildingDatasetPartition(
+  #      building_dataset=cls.ds, partition_id='2022_a'
+  #  )
 
   def _assert_timestamps(self, timestamps, earliest, latest, length):
     """

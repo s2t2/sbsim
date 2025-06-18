@@ -17,8 +17,6 @@ existing local data.
 Downloaded data will not get cleared by default before tests run, but you can
 force a clean up and fresh download by setting the `CLEAR_TEST_DATASET_DOWNLOAD`
 environment variable to 'true'.
-
-These real tests are meant to be run periodically, for example once per day.
 """
 
 import os
@@ -59,8 +57,11 @@ def cleanup_files():
 # PYTEST MODULE LEVEL FIXTURES
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='session')
 def dataset():
+  """Session-scoped pytest fixture that will be run once and shared across
+  multiple test files as desired.
+  """
   if TEST_DATASET_DOWNLOAD and CLEAR_TEST_DATASET_DOWNLOAD:
     cleanup_files()
 
@@ -68,7 +69,7 @@ def dataset():
   return BuildingDataset(building_id='sb1', download=TEST_DATASET_DOWNLOAD)
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='session')
 def partition(dataset):  # pylint: disable=redefined-outer-name
   return BuildingDatasetPartition(
       building_dataset=dataset, partition_id='2022_a'
@@ -79,20 +80,30 @@ def partition(dataset):  # pylint: disable=redefined-outer-name
 
 
 @pytest.fixture(scope='class')
-def inject_dataset(request, dataset):  # pylint: disable=redefined-outer-name
+def set_dataset(request, dataset):  # pylint: disable=redefined-outer-name
   """
-  A class-scoped fixture that takes the result of the module-scoped
-  'dataset' fixture and injects it into the test class as 'cls.ds'.
+  A class-scoped fixture that takes the result of the  'dataset' fixture and
+  injects it into the test class as 'cls.ds'.
+
+  Use by decorating your test class with:
+
+    @pytest.mark.usefixtures('set_dataset')
+
   """
   if request.cls:
     request.cls.ds = dataset
 
 
 @pytest.fixture(scope='class')
-def inject_partition(request, partition):  # pylint: disable=redefined-outer-name, line-too-long
+def set_partition(request, partition):  # pylint: disable=redefined-outer-name, line-too-long
   """
-  A class-scoped fixture that takes the result of the module-scoped
-  'partition' fixture and injects it into the test class as 'cls.partition'.
+  A class-scoped fixture that takes the result of the 'partition' fixture and
+  injects it into the test class as 'cls.partition'.
+
+  Use by decorating your test class with:
+
+    @pytest.mark.usefixtures('set_partition')
+
   """
   if request.cls:
     request.cls.partition = partition

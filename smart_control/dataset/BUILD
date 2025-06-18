@@ -14,6 +14,8 @@
 
 load("//devtools/python/blaze:pytype.bzl", "pytype_strict_library")
 load("//devtools/python/blaze:strict.bzl", "py_strict_test")
+#load("//third_party/py/pytest:pytest_defs.bzl", "pytest_test")
+# tests have pytest fixtures - do we need to use pytest_test?
 
 package(
     default_applicable_licenses = ["//third_party/py/smart_buildings:license"],
@@ -24,10 +26,58 @@ pytype_strict_library(
     name = "dataset",
     srcs = ["dataset.py"],
     deps = [
+        "//smart_control/utils:constants",
+        "//third_party/py/matplotlib",
         "//third_party/py/numpy",
+        "//third_party/py/pandas",
         "//third_party/py/requests",
     ],
 )
 
+pytype_strict_library(
+    name = "dataset_partition",
+    srcs = ["dataset_partition.py"],
+    deps = [
+        ":dataset",
+        "//third_party/py/numpy",
+        "//third_party/py/pandas",
+    ],
+)
 
-# TODO
+pytype_strict_library(
+    name = "conftest",
+    testonly = True,
+    srcs = ["conftest.py"],
+    deps = [
+        ":dataset",
+        ":dataset_partition",
+        "//third_party/py/pytest",
+        "//third_party/py/dotenv"
+    ],
+)
+
+py_strict_test(
+    name = "dataset_test",
+    srcs = ["dataset_test.py"],
+    deps = [
+        ":dataset",
+        ":conftest",
+        "//third_party/py/absl/testing:absltest",
+        "//third_party/py/numpy",
+        "//third_party/py/pandas",
+        "//third_party/py/pytest",
+    ],
+)
+
+py_strict_test(
+    name = "dataset_partition_test",
+    srcs = ["dataset_partition_test.py"],
+    deps = [
+        #":dataset_partition",
+        ":conftest",
+        "//third_party/py/absl/testing:absltest",
+        "//third_party/py/numpy",
+        "//third_party/py/pandas",
+        "//third_party/py/pytest",
+    ],
+)
