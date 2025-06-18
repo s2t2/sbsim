@@ -1,22 +1,22 @@
 # Building Dataset Partition
 
-::: smart_control.dataset.dataset.BuildingDatasetPartition
+::: smart_control.dataset.dataset_partition.BuildingDatasetPartition
     options:
       members:
-      - data
-      - metadata
+      #- data
+      #- metadata
       - action_ids
-      - action_ids_map
+      #- action_ids_map
       - action_timestamps
       - action_value_matrix
       - actions_df
       - observation_ids
-      - observation_ids_map
+      #- observation_ids_map
       - observation_timestamps
       - observation_value_matrix
       - observations_df
       - reward_ids
-      - reward_ids_map
+      #- reward_ids_map
       - reward_timestamps
       - reward_value_matrix
       - rewards_df

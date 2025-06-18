@@ -399,17 +399,14 @@ if __name__ == "__main__":
 
   ds = BuildingDataset()
 
-  # save building image to docs directory
-  ds.display_floorplan(
-      show=False,
-      save=True,
-      image_filepath=os.path.join(
-          os.path.dirname(__file__),
-          "..",
-          "..",
-          "docs",
-          "assets",
-          "images",
-          f"{ds.building_id}_floorplan.png",
-      ),
+  # save building image to docs directory:
+  filepath = os.path.join(
+      os.path.dirname(__file__),
+      "..",
+      "..",
+      "docs",
+      "assets",
+      "images",
+      f"{ds.building_id}_floorplan.png",
   )
+  ds.display_floorplan(show=False, save=True, image_filepath=filepath)

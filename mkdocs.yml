@@ -78,9 +78,8 @@ nav:
   - 'API Reference':
     - api/config.md
     - 'Dataset':
-      #- 'Overview': api/dataset.md
-      - api/dataset/building_dataset.md
-      - api/dataset/building_dataset_partition.md
+      - api/dataset/dataset.md
+      - api/dataset/dataset_partition.md
     - api/environment.md
     - api/models.md
     - 'Reinforcement Learning':
