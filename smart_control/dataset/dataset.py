@@ -44,6 +44,9 @@ class BuildingDataset:
     if bool(download):
       self.download()
 
+  def __repr__(self):
+    return f"<BuildingDataset '{self.building_id}'>"
+
   @property
   def zip_filename(self):
     """The name of the zip file (e.g. "sb1.zip")."""
@@ -136,7 +139,7 @@ class BuildingDataset:
 
     Here is an example floorplan for building "sb1":
 
-    ![An image of a floorplan.](../assets/images/sb1_floorplan.png)
+    ![An image of a floorplan.](../../assets/images/sb1_floorplan.png)
 
     Args:
       cmap (str): The name of a [matplotlib color map](https://matplotlib.org/stable/users/explain/colors/colormaps.html)
@@ -395,4 +398,18 @@ class BuildingDataset:
 if __name__ == "__main__":
 
   ds = BuildingDataset()
-  ds.display_floorplan(show=False, save=True)
+
+  # save building image to docs directory
+  ds.display_floorplan(
+      show=False,
+      save=True,
+      image_filepath=os.path.join(
+          os.path.dirname(__file__),
+          "..",
+          "..",
+          "docs",
+          "assets",
+          "images",
+          f"{ds.building_id}_floorplan.png",
+      ),
+  )

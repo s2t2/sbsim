@@ -3,12 +3,90 @@
 import unittest
 
 from absl.testing import absltest
+from absl.testing import parameterized
 import numpy as np
 import pandas as pd
 import pytest
 
 from smart_control.dataset.conftest import SKIP_REASON
 from smart_control.dataset.conftest import TEST_DATASET
+from smart_control.dataset.dataset_partition import BuildingDatasetPartition
+
+#
+# HIGH LEVEL TESTS FOR ALL "SB1" PARTITIONS...
+#
+
+
+PARTITION_PARAMETERS = [
+    dict(
+        partition_id='2022_a',
+        actions_shape=(51852, 3),
+        observations_shape=(51852, 1198),
+        rewards_shape=(51852, 17),
+        reward_infos_shape=(51852, 3252),
+    ),
+    dict(
+        partition_id='2022_b',
+        actions_shape=(53292, 3),
+        observations_shape=(53292, 1198),
+        rewards_shape=(53292, 17),
+        reward_infos_shape=(53292, 3318),
+    ),
+    dict(
+        partition_id='2023_a',
+        actions_shape=(51852, 3),
+        observations_shape=(51852, 1198),
+        rewards_shape=(51852, 17),
+        reward_infos_shape=(51852, 3252),
+    ),
+    dict(
+        partition_id='2023_b',
+        actions_shape=(52716, 3),
+        observations_shape=(52716, 1198),
+        rewards_shape=(52716, 17),
+        reward_infos_shape=(52716, 3252),
+    ),
+    dict(
+        partition_id='2024_a',
+        actions_shape=(52140, 3),
+        observations_shape=(52140, 1198),
+        rewards_shape=(52140, 17),
+        reward_infos_shape=(52140, 3252),
+    ),
+]
+
+
+@pytest.mark.usefixtures('set_dataset')
+class TestAllBuildingDatasetPartitions(parameterized.TestCase):
+  """Tests all valid partitions for building "sb1"."""
+
+  @parameterized.parameters(PARTITION_PARAMETERS)
+  def test_all_partitions(
+      self,
+      partition_id,
+      actions_shape,
+      observations_shape,
+      rewards_shape,
+      reward_infos_shape,
+  ):
+    partition = BuildingDatasetPartition(self.ds, partition_id)
+
+    self.assertIsInstance(partition.actions_df, pd.DataFrame)
+    self.assertEqual(partition.actions_df.shape, actions_shape)
+
+    self.assertIsInstance(partition.observations_df, pd.DataFrame)
+    self.assertEqual(partition.observations_df.shape, observations_shape)
+
+    self.assertIsInstance(partition.rewards_df, pd.DataFrame)
+    self.assertEqual(partition.rewards_df.shape, rewards_shape)
+
+    self.assertIsInstance(partition.reward_infos_df, pd.DataFrame)
+    self.assertEqual(partition.reward_infos_df.shape, reward_infos_shape)
+
+
+#
+# DETAILED TESTS FOR THE "2022a" PARTITION...
+#
 
 _ACTION_IDS_MAP = {
     '12945159110931775488@supply_air_temperature_setpoint': 0,
@@ -41,13 +119,6 @@ _REWARD_IDS = [
 @pytest.mark.usefixtures('set_partition')
 class TestBuildingDatasetPartition(absltest.TestCase):
   """Tests for the BuildingDatasetPartition class."""
-
-  # @classmethod
-  # def setUpClass(cls):
-  #  super().setUpClass()
-  #  cls.partition = BuildingDatasetPartition(
-  #      building_dataset=cls.ds, partition_id='2022_a'
-  #  )
 
   def _assert_timestamps(self, timestamps, earliest, latest, length):
     """
