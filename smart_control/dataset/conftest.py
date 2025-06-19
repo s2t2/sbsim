@@ -32,9 +32,13 @@ from smart_control.dataset.dataset_partition import BuildingDatasetPartition
 load_dotenv()
 
 # whether or not to download the dataset:
-TEST_DATASET_DOWNLOAD = bool(os.getenv('TEST_DATASET_DOWNLOAD', default='false').lower() == 'true')  # pylint: disable=line-too-long
+TEST_DATASET_DOWNLOAD = bool(
+    os.getenv('TEST_DATASET_DOWNLOAD', default='false').lower() == 'true'
+)
 # whether or not to delete existing local data before downloading:
-CLEAR_TEST_DATASET_DOWNLOAD = bool(os.getenv('CLEAR_TEST_DATASET_DOWNLOAD', default='false').lower() == 'true')  # pylint: disable=line-too-long
+CLEAR_TEST_DATASET_DOWNLOAD = bool(
+    os.getenv('CLEAR_TEST_DATASET_DOWNLOAD', default='false').lower() == 'true'
+)
 
 DATASET_DIRPATH = os.path.join(DATA_DIR, 'sb1')
 ZIP_FILEPATH = os.path.join(DATA_DIR, 'sb1.zip')
@@ -54,13 +58,15 @@ def cleanup_files():
     shutil.rmtree(DATASET_DIRPATH)
 
 
-# PYTEST MODULE LEVEL FIXTURES
+# PYTEST FIXTURES
+# ... Session-scoped pytest fixtures will be run once and can be shared across
+# ... multiple test files.
 
 
 @pytest.fixture(scope='session')
 def dataset():
   """Session-scoped pytest fixture that will be run once and shared across
-  multiple test files as desired.
+  multiple test files.
   """
   if TEST_DATASET_DOWNLOAD and CLEAR_TEST_DATASET_DOWNLOAD:
     cleanup_files()
@@ -76,7 +82,7 @@ def partition(dataset):  # pylint: disable=redefined-outer-name
   )
 
 
-# SHIMS TO GET PYTEST MODULE FIXTURES TO WORK WITH UNITTEST CLASSES :-)
+# SHIMS TO GET PYTEST FIXTURES TO WORK WITH UNITTEST CLASSES :-)
 
 
 @pytest.fixture(scope='class')
