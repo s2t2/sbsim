@@ -12,6 +12,7 @@ from smart_control.dataset.conftest import DATASET_DIRPATH
 from smart_control.dataset.conftest import SKIP_REASON
 from smart_control.dataset.conftest import TEST_DATASET
 from smart_control.dataset.conftest import ZIP_FILEPATH
+from smart_control.dataset.dataset import BuildingDataset
 from smart_control.dataset.dataset import DATA_DIR
 
 #
@@ -251,7 +252,7 @@ _DEVICE_ACTIONABLE_FIELD_NAMES = [
 
 
 #
-# TESTS
+# BUILDING-SPECIFIC TESTS
 #
 
 
@@ -265,6 +266,11 @@ class TestDataDirectory(absltest.TestCase):
 @pytest.mark.usefixtures('set_dataset')
 class TestBuildingDataset(absltest.TestCase):
   """Tests for the BuildingDataset class."""
+
+  def test_building_validations(self):
+    with self.assertRaises(ValueError):
+      invalid_id = 'OOPS'
+      BuildingDataset(building_id=invalid_id, download=False)
 
   def test_building_id(self):
     self.assertEqual(self.ds.building_id, _BUILDING_ID)

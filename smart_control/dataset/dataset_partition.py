@@ -390,12 +390,12 @@ class BuildingDatasetPartition:
 
 if __name__ == "__main__":
 
-  b_id = input("Please select a building (e.g. 'sb1'): ") or "sb1"
-  ds = BuildingDataset(b_id, download=True)
+  selected_building_id = input("Please select a building (e.g. 'sb1'): ") or "sb1"  # pylint:disable=line-too-long
+  ds = BuildingDataset(selected_building_id, download=True)
   print(ds)
 
-  p_id = input("Please select a partition (e.g. '2022_a'): ") or "2022_a"
-  partition = BuildingDatasetPartition(ds, p_id)
+  selected_partition_id = input("Please select a partition (e.g. '2022_a'): ") or "2022_a"  # pylint:disable=line-too-long
+  partition = BuildingDatasetPartition(ds, selected_partition_id)
   print(partition)
 
   actions_df = partition.actions_df

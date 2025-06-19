@@ -156,9 +156,17 @@ _REWARD_IDS = [
 ]
 
 
+@pytest.mark.usefixtures('set_dataset')
 @pytest.mark.usefixtures('set_partition')
 class TestBuildingDatasetPartition(absltest.TestCase):
   """Tests for the BuildingDatasetPartition class."""
+
+  def test_partition_validations(self):
+    with self.assertRaises(ValueError):
+      invalid_id = 'OOPS'
+      BuildingDatasetPartition(
+          building_dataset=self.ds, partition_id=invalid_id
+      )
 
   def _assert_timestamps(self, timestamps, earliest, latest, length):
     """
@@ -185,16 +193,15 @@ class TestBuildingDatasetPartition(absltest.TestCase):
     data = self.partition.data
     self.assertIsInstance(data, np.lib.npyio.NpzFile)
 
-    # we are surfacing each key into its own high-level public property
-    # fmt: off
-    # pylint: disable=line-too-long
+    # we are surfacing each key into its own high-level public property:
     with self.subTest('action_value_matrix'):
       np.testing.assert_array_equal(
           data['action_value_matrix'], self.partition.action_value_matrix
       )
     with self.subTest('observation_value_matrix'):
       np.testing.assert_array_equal(
-          data['observation_value_matrix'], self.partition.observation_value_matrix
+          data['observation_value_matrix'],
+          self.partition.observation_value_matrix,
       )
     with self.subTest('reward_value_matrix'):
       np.testing.assert_array_equal(
@@ -202,10 +209,9 @@ class TestBuildingDatasetPartition(absltest.TestCase):
       )
     with self.subTest('reward_info_value_matrix'):
       np.testing.assert_array_equal(
-          data['reward_info_value_matrix'], self.partition.reward_info_value_matrix
+          data['reward_info_value_matrix'],
+          self.partition.reward_info_value_matrix,
       )
-    # pylint: enable=line-too-long
-    # fmt: on
 
   @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
   def test_partition_metadata(self):
