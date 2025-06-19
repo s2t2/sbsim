@@ -9,7 +9,7 @@ by setting the `TEST_DATASET_DOWNLOAD` environment variable to 'true'.
 Downloaded data will not get cleared after tests run, so we can use it in
 subsequent test runs without needing to re-download. This allows developers to
 run dataset tests fairly quickly on their local machines. When the dataset
-already exists locally, the tests take a few seconds.
+already exists locally, it only takes around five seconds to load.
 
 The dataset tests will be run if the data is being downloaded, or if there is
 existing local data.

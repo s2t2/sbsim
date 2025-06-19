@@ -382,6 +382,10 @@ class TestBuildingDatasetPartition(absltest.TestCase):
     self.assertEqual(str(df.index[0]), '2022-01-01 00:00:00+00:00')
     self.assertEqual(str(df.index[-1]), '2022-06-30 00:55:00+00:00')
 
+    # index is sorted in ascending order:
+    self.assertEqual(df.index[0], df.index.min())
+    self.assertEqual(df.index[-1], df.index.max())
+
     # values are numeric (float) and non-null:
     self.assertEqual(df.isna().sum().sum(), 0)
     self.assertEqual(df.dtypes.unique().tolist(), [np.dtype('float64')])
@@ -400,6 +404,10 @@ class TestBuildingDatasetPartition(absltest.TestCase):
     self.assertEqual(str(df.index[0]), '2022-01-01 00:00:00+00:00')
     self.assertEqual(str(df.index[-1]), '2022-06-30 00:55:00+00:00')
 
+    # index is sorted in ascending order:
+    self.assertEqual(df.index[0], df.index.min())
+    self.assertEqual(df.index[-1], df.index.max())
+
     # values are numeric (float) and non-null:
     self.assertEqual(df.isna().sum().sum(), 0)
     self.assertEqual(df.dtypes.unique().tolist(), [np.dtype('float64')])
@@ -417,6 +425,10 @@ class TestBuildingDatasetPartition(absltest.TestCase):
     # index corresponding to the reward timestamps:
     self.assertEqual(str(df.index[0]), '2021-12-31 23:55:00+00:00')
     self.assertEqual(str(df.index[-1]), '2022-06-30 00:50:00+00:00')
+
+    # index is sorted in ascending order:
+    self.assertEqual(df.index[0], df.index.min())
+    self.assertEqual(df.index[-1], df.index.max())
 
     # values are numeric (float) and non-null:
     self.assertEqual(df.isna().sum().sum(), 0)  # all non-null
@@ -437,6 +449,10 @@ class TestBuildingDatasetPartition(absltest.TestCase):
     # index corresponding to the reward info timestamps:
     self.assertEqual(str(df.index[0]), '2021-12-31 23:55:00+00:00')
     self.assertEqual(str(df.index[-1]), '2022-06-30 00:50:00+00:00')
+
+    # index is sorted in ascending order:
+    self.assertEqual(df.index[0], df.index.min())
+    self.assertEqual(df.index[-1], df.index.max())
 
     # values are numeric (float) and non-null:
     self.assertEqual(df.isna().sum().sum(), 0)

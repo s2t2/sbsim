@@ -225,7 +225,7 @@ class BuildingDatasetPartition:
   @cached_property
   def reward_ids(self) -> list[str]:
     """A list of unique reward identifiers.
-    Action identifiers are in the format of `device_id@field_name` or
+    Reward identifiers are in the format of `device_id@field_name` or
     `zone_id@field_name`.
     For example: `'rooms/9028552126@heating_setpoint_temperature'` or
     `'14409954889734029312@air_conditioning_electrical_energy_rate'`.
@@ -234,7 +234,7 @@ class BuildingDatasetPartition:
 
   @cached_property
   def action_timestamps(self) -> list[pd.Timestamp]:
-    """A list of sequential timestamps, representing the time of each action."""
+    """A list of sequential timestamps representing the time of each action."""
     return self.metadata["action_timestamps"]
 
   @cached_property
@@ -246,12 +246,12 @@ class BuildingDatasetPartition:
 
   @cached_property
   def reward_timestamps(self) -> list[pd.Timestamp]:
-    """A list of sequential timestamps, representing the time of each reward."""
+    """A list of sequential timestamps representing the time of each reward."""
     return self.metadata["reward_timestamps"]
 
   @cached_property
   def reward_info_timestamps(self) -> list[pd.Timestamp]:
-    """A list of sequential timestamps, related to reward information."""
+    """A list of sequential timestamps related to reward information."""
     return self.metadata["reward_info_timestamps"]
 
   #
@@ -268,6 +268,7 @@ class BuildingDatasetPartition:
     df = df.rename(columns=columns_map)
     df.index = getattr(self, timestamps_name)
     df.index.name = "timestamp"
+    df.sort_index()  # ensure timestamps are in ascending order
     return df
 
   @cached_property
