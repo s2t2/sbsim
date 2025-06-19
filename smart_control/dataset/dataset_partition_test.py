@@ -164,29 +164,7 @@ class TestBuildingDatasetPartition(absltest.TestCase):
   def test_partition_validations(self):
     with self.assertRaises(ValueError):
       invalid_id = 'OOPS'
-      BuildingDatasetPartition(
-          building_dataset=self.ds, partition_id=invalid_id
-      )
-
-  def _assert_timestamps(self, timestamps, earliest, latest, length):
-    """
-    Assertions for timestamps.
-
-    Args:
-      timestamps (list): the timestamps to test
-      earliest and latest (str): expected earliest and latest values,
-        as strings, like '2022-06-30 00:55:00+00:00'
-      length (int) : expected length of the list
-    """
-    self.assertIsInstance(timestamps, list)
-    self.assertEqual(len(timestamps), length)
-
-    first_timestamp = timestamps[0]
-    last_timestamp = timestamps[-1]
-    self.assertIsInstance(first_timestamp, pd.Timestamp)
-    self.assertIsInstance(last_timestamp, pd.Timestamp)
-    self.assertEqual(str(first_timestamp), earliest)
-    self.assertEqual(str(last_timestamp), latest)
+      BuildingDatasetPartition(self.ds, partition_id=invalid_id)
 
   @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
   def test_partition_data(self):
@@ -218,22 +196,20 @@ class TestBuildingDatasetPartition(absltest.TestCase):
     metadata = self.partition.metadata
 
     self.assertIsInstance(metadata, dict)
-    self.assertEqual(
-        sorted(metadata.keys()),
-        [
-            'action_ids_map',
-            'action_timestamps',
-            'observation_ids_map',
-            'observation_timestamps',
-            'reward_ids_map',
-            'reward_info_timestamps',
-            'reward_timestamps',
-        ],
-    )
+    expected_keys = [
+        'action_ids_map',
+        'action_timestamps',
+        'observation_ids_map',
+        'observation_timestamps',
+        'reward_ids_map',
+        'reward_info_timestamps',
+        'reward_timestamps',
+    ]
+    self.assertEqual(sorted(metadata.keys()), expected_keys)
 
-    # we are surfacing each key into its own high-level public property
     # fmt: off
     # pylint: disable=line-too-long
+    # we are surfacing each key into its own high-level public property:
     self.assertEqual(metadata['action_ids_map'], self.partition.action_ids_map)
     self.assertEqual(metadata['observation_ids_map'], self.partition.observation_ids_map)
     self.assertEqual(metadata['reward_ids_map'], self.partition.reward_ids_map)
@@ -323,6 +299,31 @@ class TestBuildingDatasetPartition(absltest.TestCase):
     self.assertEqual(
         self.partition.reward_ids, list(self.partition.reward_ids_map.keys())
     )
+
+  def _assert_timestamps(self, timestamps, earliest, latest, length):
+    """
+    Assertions for timestamps.
+
+    Args:
+      timestamps (list): the timestamps to test
+      earliest and latest (str): expected earliest and latest values,
+        as strings, like '2022-06-30 00:55:00+00:00'
+      length (int) : expected length of the list
+    """
+    self.assertIsInstance(timestamps, list)
+    self.assertEqual(len(timestamps), length)
+
+    first_timestamp = timestamps[0]
+    last_timestamp = timestamps[-1]
+    # values are Timestamp objects:
+    self.assertIsInstance(first_timestamp, pd.Timestamp)
+    self.assertIsInstance(last_timestamp, pd.Timestamp)
+    # timestamp range matches expectations:
+    self.assertEqual(str(first_timestamp), earliest)
+    self.assertEqual(str(last_timestamp), latest)
+    # timestamps are sorted in ascending order:
+    self.assertEqual(first_timestamp, min(timestamps))
+    self.assertEqual(last_timestamp, max(timestamps))
 
   @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
   def test_action_timestamps(self):
