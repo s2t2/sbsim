@@ -49,8 +49,8 @@ pytype_strict_library(
     deps = [
         ":dataset",
         ":dataset_partition",
-        "//third_party/py/pytest",
         "//third_party/py/dotenv"
+        "//third_party/py/pytest",
     ],
 )
 
@@ -71,7 +71,7 @@ py_strict_test(
     name = "dataset_partition_test",
     srcs = ["dataset_partition_test.py"],
     deps = [
-        #":dataset_partition",
+        ":dataset_partition",
         ":conftest",
         "//third_party/py/absl/testing:absltest",
         "//third_party/py/numpy",

@@ -13,7 +13,7 @@ from smart_control.dataset.conftest import TEST_DATASET
 from smart_control.dataset.dataset_partition import BuildingDatasetPartition
 
 #
-# HIGH LEVEL TESTS FOR ALL "SB1" PARTITIONS...
+# HIGH LEVEL TESTS FOR ALL PARTITIONS IN BUILDING "SB1"...
 #
 
 

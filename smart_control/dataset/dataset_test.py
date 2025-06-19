@@ -14,6 +14,10 @@ from smart_control.dataset.conftest import TEST_DATASET
 from smart_control.dataset.conftest import ZIP_FILEPATH
 from smart_control.dataset.dataset import DATA_DIR
 
+#
+# EXAMPLE BUILDING LEVEL DATA
+#
+
 _BUILDING_ID = 'sb1'
 _PARTITION_IDS = ['2022_a', '2022_b', '2023_a', '2023_b', '2024_a']
 
@@ -244,6 +248,11 @@ _DEVICE_ACTIONABLE_FIELD_NAMES = [
     'zone_air_cooling_temperature_setpoint',
     'zone_air_heating_temperature_setpoint',
 ]
+
+
+#
+# TESTS
+#
 
 
 class TestDataDirectory(absltest.TestCase):

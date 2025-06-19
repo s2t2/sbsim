@@ -14,6 +14,7 @@ import requests
 from smart_control.utils.constants import ROOT_DIR
 
 DATA_DIR = os.path.join(ROOT_DIR, "data")
+DOCS_DIR = os.path.join(ROOT_DIR, "docs")
 
 VALID_BUILDING_PARTITIONS = {
     "sb1": ["2022_a", "2022_b", "2023_a", "2023_b", "2024_a"]
@@ -126,7 +127,7 @@ class BuildingDataset:
   def floorplan_image_filepath(self):
     """Filepath for saving an image of the floorplan."""
     floorplan_image_filename = f"{self.building_id}_floorplan.png"
-    return os.path.join(self.building_dirpath, floorplan_image_filename)
+    return os.path.join(DOCS_DIR, "assets", "images", floorplan_image_filename)
 
   def display_floorplan(
       self,
@@ -400,13 +401,4 @@ if __name__ == "__main__":
   ds = BuildingDataset()
 
   # save building image to docs directory:
-  filepath = os.path.join(
-      os.path.dirname(__file__),
-      "..",
-      "..",
-      "docs",
-      "assets",
-      "images",
-      f"{ds.building_id}_floorplan.png",
-  )
-  ds.display_floorplan(show=False, save=True, image_filepath=filepath)
+  ds.display_floorplan(show=False, save=True)
