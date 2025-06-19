@@ -296,7 +296,7 @@ class BuildingDataset:
     return self._count_device_fields("actionable_fields")
 
   @cached_property
-  def actionable_fields(self) -> list:
+  def actionable_fields(self) -> list[str]:
     """Names of all unique actionable fields across all devices."""
     return sorted(self.actionable_field_counts.keys())
 
@@ -306,14 +306,15 @@ class BuildingDataset:
     return self._count_device_fields("observable_fields")
 
   @cached_property
-  def observable_fields(self) -> list:
+  def observable_fields(self) -> list[str]:
     """Names of all unique observable fields across all devices."""
     return sorted(self.observable_field_counts.keys())
 
   @cached_property
   def fields_df(self) -> pd.DataFrame:
     # pylint: disable=line-too-long
-    """A dataframe containing information about the building's fields.
+    """A dataframe containing information about all device fields in the
+    building, including whether each is observable and/or actionable.
 
     Each row is uniquely identified by the "field_name".
 

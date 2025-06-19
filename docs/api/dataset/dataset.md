@@ -6,6 +6,7 @@
       group_by_category: false
       members:
         - download
+        - building_dirpath
         - floorplan
         - floorplan_image_filepath
         - display_floorplan
