@@ -171,25 +171,32 @@ class TestBuildingDatasetPartition(absltest.TestCase):
     data = self.partition.data
     self.assertIsInstance(data, np.lib.npyio.NpzFile)
 
+    # fmt: off
     # we are surfacing each key into its own high-level public property:
     with self.subTest('action_value_matrix'):
       np.testing.assert_array_equal(
-          data['action_value_matrix'], self.partition.action_value_matrix
+          data['action_value_matrix'],
+          self.partition.action_value_matrix
       )
+
     with self.subTest('observation_value_matrix'):
       np.testing.assert_array_equal(
           data['observation_value_matrix'],
           self.partition.observation_value_matrix,
       )
+
     with self.subTest('reward_value_matrix'):
       np.testing.assert_array_equal(
-          data['reward_value_matrix'], self.partition.reward_value_matrix
+          data['reward_value_matrix'],
+          self.partition.reward_value_matrix
       )
+
     with self.subTest('reward_info_value_matrix'):
       np.testing.assert_array_equal(
           data['reward_info_value_matrix'],
           self.partition.reward_info_value_matrix,
       )
+    # fmt: on
 
   @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
   def test_partition_metadata(self):
