@@ -131,7 +131,7 @@ class BuildingDatasetPartition:
 
   @cached_property
   def reward_value_matrix(self) -> np.ndarray:
-    """Time-series reward value data."""
+    """Time-series reward data."""
     return self.data["reward_value_matrix"]
 
   @cached_property
@@ -209,6 +209,7 @@ class BuildingDatasetPartition:
   @cached_property
   def action_ids(self) -> list[str]:
     """A list of unique action identifiers.
+
     Action identifiers are in the format of `device_id@field_name`.
     For example: `'12945159110931775488@supply_air_temperature_setpoint'`.
     """
@@ -217,6 +218,7 @@ class BuildingDatasetPartition:
   @cached_property
   def observation_ids(self) -> list[str]:
     """A list of unique observation identifiers.
+
     Observation identifiers are in the format of `device_id@field_name`.
     For example: `'2640423556868160@zone_air_temperature_sensor'`.
     """
@@ -225,6 +227,7 @@ class BuildingDatasetPartition:
   @cached_property
   def reward_ids(self) -> list[str]:
     """A list of unique reward identifiers.
+
     Reward identifiers are in the format of `device_id@field_name` or
     `zone_id@field_name`.
     For example: `'rooms/9028552126@heating_setpoint_temperature'` or
