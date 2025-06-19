@@ -36,10 +36,7 @@ class BuildingDatasetPartition:
       raise ValueError(f"Invalid partition: {self.partition_id}.")
 
   def __repr__(self):
-    return (
-        "<BuildingDatasetPartition"
-        f" '{self.ds.building_id}':'{self.partition_id}'>"
-    )
+    return "<BuildingDatasetPartition '{self.ds.building_id}':'{self.partition_id}'>"  # pylint:disable=line-too-long
 
   @property
   def partition_dirpath(self):
