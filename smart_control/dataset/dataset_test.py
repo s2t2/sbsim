@@ -295,6 +295,19 @@ class TestBuildingDataset(absltest.TestCase):
     value_counts = dict(zip(values, counts))
     self.assertEqual(value_counts, {0.0: 436332, 1.0: 60204, 2.0: 250440})
 
+  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
+  def test_display_floorplan(self):
+    # setup:
+    filepath = os.path.join(os.path.dirname(__file__), 'tmp_floorplan.png')
+    self.assertEqual(os.path.isfile(filepath), False)
+
+    # it saves the image to disk, with option to customize the filepath:
+    self.ds.display_floorplan(show=False, save=True, image_filepath=filepath)
+    self.assertEqual(os.path.isfile(filepath), True)
+
+    # clean up:
+    os.remove(filepath)
+
   # DEVICES
 
   @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
