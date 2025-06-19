@@ -1,0 +1,15 @@
+{
+    "starter_buffer_path": "/app/smart_control/utils/../../smart_control/reinforcement_learning/replay_buffer_data/initial_exploration_buffer",
+    "experiment_name": "test_training_run_1day",
+    "agent_type": "sac",
+    "train_iterations": 10,
+    "collect_steps_per_iteration": 50,
+    "batch_size": 256,
+    "log_interval": 1,
+    "eval_interval": 10,
+    "num_eval_episodes": 1,
+    "checkpoint_interval": 10,
+    "learner_iterations": 200,
+    "scenario_config_path": "/tmp/gin_configs/config_timestepsec-300_numdaysinepisode-1_starttimestamp-2023-07-06.gin",
+    "timestamp": "2025_06_19-21:10:54"
+}
