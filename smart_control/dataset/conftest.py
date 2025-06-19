@@ -59,14 +59,12 @@ def cleanup_files():
 
 
 # PYTEST FIXTURES
-# ... Session-scoped pytest fixtures will be run once and can be shared across
-# ... multiple test files.
 
 
 @pytest.fixture(scope='session')
 def dataset():
-  """Session-scoped pytest fixture that will be run once and shared across
-  multiple test files.
+  """Session-scoped pytest fixture for an example dataset.
+  Will be executed only once, and can be shared across multiple test files.
   """
   if TEST_DATASET_DOWNLOAD and CLEAR_TEST_DATASET_DOWNLOAD:
     cleanup_files()
@@ -77,6 +75,9 @@ def dataset():
 
 @pytest.fixture(scope='session')
 def partition(dataset):  # pylint: disable=redefined-outer-name
+  """Session-scoped pytest fixture for an example dataset partition.
+  Will be executed only once, and can be shared across multiple test files.
+  """
   return BuildingDatasetPartition(
       building_dataset=dataset, partition_id='2022_a'
   )
