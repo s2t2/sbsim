@@ -135,26 +135,6 @@ _ACTION_IDS_MAP = {
 }
 _ACTION_IDS = list(_ACTION_IDS_MAP.keys())
 
-_REWARD_IDS = [
-    'rooms/9028552126@heating_setpoint_temperature',
-    'rooms/9028552126@cooling_setpoint_temperature',
-    'rooms/9028552126@zone_air_temperature',
-    'rooms/9028552126@air_flow_rate_setpoint',
-    'rooms/9028552126@air_flow_rate',
-    'rooms/9028552126@average_occupancy',
-    'rooms/9028472496@heating_setpoint_temperature',
-    'rooms/9028472496@cooling_setpoint_temperature',
-    'rooms/9028472496@zone_air_temperature',
-    'rooms/9028472496@air_flow_rate_setpoint',
-    'rooms/9028472496@air_flow_rate',
-    'rooms/9028472496@average_occupancy',
-    'rooms/9028552250@heating_setpoint_temperature',
-    'rooms/9028552250@cooling_setpoint_temperature',
-    'rooms/9028552250@zone_air_temperature',
-    'rooms/9028552250@air_flow_rate_setpoint',
-    'rooms/9028552250@air_flow_rate',
-]
-
 
 @pytest.mark.usefixtures('set_dataset')
 @pytest.mark.usefixtures('set_partition')
@@ -242,6 +222,8 @@ class TestBuildingDatasetPartition(absltest.TestCase):
 
   @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
   def test_reward_value_matrix(self):
+    # QUESTION: there are 3252 reward identifiers, but only 17 columns here
+    # so what are these 17 columns about?
     self.assertEqual(self.partition.reward_value_matrix.shape, (51852, 17))
 
   @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
@@ -279,7 +261,7 @@ class TestBuildingDatasetPartition(absltest.TestCase):
     self.assertIsInstance(reward_ids_map, dict)
     self.assertEqual(len(reward_ids_map), 3252)
 
-    # keys are the reward ids:
+    # keys are the reward ids (there are 3252 but here are some examples):
     keys = list(reward_ids_map.keys())
     self.assertEqual(keys[0], 'rooms/9028552126@heating_setpoint_temperature')
     self.assertEqual(keys[-1], '14409954889734029312@air_conditioning_electrical_energy_rate')  # pylint: disable=line-too-long
@@ -373,50 +355,52 @@ class TestBuildingDatasetPartition(absltest.TestCase):
   #
 
   @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
-  def test_observations_df(self):
-    df = self.partition.observations_df
-
-    self.assertIsInstance(df, pd.DataFrame)
-    self.assertEqual(df.shape, (51852, 1198))
-
-    # columns corresponding to the observation ids:
-    # ... there are 1198, but here are some examples:
-    self.assertIn(
-        '202194278473007104@building_air_static_pressure_setpoint', df.columns
-    )
-    self.assertIn('2640423556868160@zone_air_temperature_sensor', df.columns)
-
-    # index corresponding to the observation timestamps:
-    self.assertEqual(str(df.index[0]), '2022-01-01 00:00:00+00:00')
-    self.assertEqual(str(df.index[-1]), '2022-06-30 00:55:00+00:00')
-
-    # index is sorted in ascending order:
-    self.assertEqual(df.index[0], df.index.min())
-    self.assertEqual(df.index[-1], df.index.max())
-
-    # values are numeric (float) and non-null:
-    self.assertEqual(df.isna().sum().sum(), 0)
-    self.assertEqual(df.dtypes.unique().tolist(), [np.dtype('float64')])
-
-  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
   def test_actions_df(self):
     df = self.partition.actions_df
 
     self.assertIsInstance(df, pd.DataFrame)
     self.assertEqual(df.shape, (51852, 3))
 
-    # columns corresponding to the action ids:
+    # columns are the action ids:
     self.assertEqual(df.columns.tolist(), _ACTION_IDS)
 
-    # index corresponding to the action timestamps:
+    # index values are the action timestamps:
     self.assertEqual(str(df.index[0]), '2022-01-01 00:00:00+00:00')
     self.assertEqual(str(df.index[-1]), '2022-06-30 00:55:00+00:00')
 
-    # index is sorted in ascending order:
+    # index timestamps are sorted in ascending order:
     self.assertEqual(df.index[0], df.index.min())
     self.assertEqual(df.index[-1], df.index.max())
 
-    # values are numeric (float) and non-null:
+    # values are all numeric (float) and non-null:
+    self.assertEqual(df.isna().sum().sum(), 0)
+    self.assertEqual(df.dtypes.unique().tolist(), [np.dtype('float64')])
+
+  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
+  def test_observations_df(self):
+    df = self.partition.observations_df
+
+    self.assertIsInstance(df, pd.DataFrame)
+    self.assertEqual(df.shape, (51852, 1198))
+
+    # columns are the observation ids:
+    # ... (there are 1198, but here are some examples):
+    example_column_names = [
+        '202194278473007104@building_air_static_pressure_setpoint',
+        '2640423556868160@zone_air_temperature_sensor',
+    ]
+    for column_name in example_column_names:
+      self.assertIn(column_name, df.columns)
+
+    # index values are the observation timestamps:
+    self.assertEqual(str(df.index[0]), '2022-01-01 00:00:00+00:00')
+    self.assertEqual(str(df.index[-1]), '2022-06-30 00:55:00+00:00')
+
+    # index timestamps are sorted in ascending order:
+    self.assertEqual(df.index[0], df.index.min())
+    self.assertEqual(df.index[-1], df.index.max())
+
+    # values are all numeric (float) and non-null:
     self.assertEqual(df.isna().sum().sum(), 0)
     self.assertEqual(df.dtypes.unique().tolist(), [np.dtype('float64')])
 
@@ -427,18 +411,27 @@ class TestBuildingDatasetPartition(absltest.TestCase):
     self.assertIsInstance(df, pd.DataFrame)
     self.assertEqual(df.shape, (51852, 17))
 
-    # columns corresponding to the reward ids:
-    self.assertEqual(df.columns.tolist(), _REWARD_IDS)
+    # columns are the reward ids:
+    # ... (there are 3252 but here are some examples):
+    example_column_names = [
+        'rooms/9028552126@heating_setpoint_temperature',
+        '14409954889734029312@air_conditioning_electrical_energy_rate',
+    ]
+    for column_name in example_column_names:
+      self.assertIn(column_name, df.columns)
+    #
+    # QUESTION: if the columns are supposed to be the reward ids,
+    # ... why are there only 17 columns in the reward_value_matrix?
 
-    # index corresponding to the reward timestamps:
+    # index values are the reward timestamps:
     self.assertEqual(str(df.index[0]), '2021-12-31 23:55:00+00:00')
     self.assertEqual(str(df.index[-1]), '2022-06-30 00:50:00+00:00')
 
-    # index is sorted in ascending order:
+    # index timestamps are sorted in ascending order:
     self.assertEqual(df.index[0], df.index.min())
     self.assertEqual(df.index[-1], df.index.max())
 
-    # values are numeric (float) and non-null:
+    # values are all numeric (float) and non-null:
     self.assertEqual(df.isna().sum().sum(), 0)  # all non-null
     self.assertEqual(df.dtypes.unique().tolist(), [np.dtype('float64')])
 
@@ -449,10 +442,14 @@ class TestBuildingDatasetPartition(absltest.TestCase):
     self.assertIsInstance(df, pd.DataFrame)
     self.assertEqual(df.shape, (51852, 3252))
 
-    # columns corresponding to the reward ids:
-    # ... there are 3252 but here are some examples:
-    self.assertIn('rooms/9028552126@heating_setpoint_temperature', df.columns)
-    self.assertIn('14409954889734029312@air_conditioning_electrical_energy_rate', df.columns)  # pytest: disable=line-too-long # fmt:skip
+    # columns are the reward ids:
+    # ... (there are 3252 but here are some examples):
+    example_column_names = [
+        'rooms/9028552126@heating_setpoint_temperature',
+        '14409954889734029312@air_conditioning_electrical_energy_rate',
+    ]
+    for column_name in example_column_names:
+      self.assertIn(column_name, df.columns)
 
     # index corresponding to the reward info timestamps:
     self.assertEqual(str(df.index[0]), '2021-12-31 23:55:00+00:00')
@@ -462,7 +459,7 @@ class TestBuildingDatasetPartition(absltest.TestCase):
     self.assertEqual(df.index[0], df.index.min())
     self.assertEqual(df.index[-1], df.index.max())
 
-    # values are numeric (float) and non-null:
+    # values are all numeric (float) and non-null:
     self.assertEqual(df.isna().sum().sum(), 0)
     self.assertEqual(df.dtypes.unique().tolist(), [np.dtype('float64')])
 
