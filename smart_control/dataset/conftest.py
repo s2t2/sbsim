@@ -90,7 +90,7 @@ def partition(dataset):  # pylint: disable=redefined-outer-name
 def set_dataset(request, dataset):  # pylint: disable=redefined-outer-name
   """
   A class-scoped fixture that takes the result of the 'dataset' fixture and
-  injects it into the test class as 'cls.ds'.
+  injects it into the test class as `cls.ds`.
 
   Use by decorating your test class with:
 
@@ -106,7 +106,7 @@ def set_dataset(request, dataset):  # pylint: disable=redefined-outer-name
 def set_partition(request, partition):  # pylint: disable=redefined-outer-name, line-too-long
   """
   A class-scoped fixture that takes the result of the 'partition' fixture and
-  injects it into the test class as 'cls.partition'.
+  injects it into the test class as `cls.partition`.
 
   Use by decorating your test class with:
 
