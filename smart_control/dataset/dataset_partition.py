@@ -390,14 +390,30 @@ class BuildingDatasetPartition:
 
 if __name__ == "__main__":
 
-  ds = BuildingDataset("sb1", download=True)
+  b_id = input("Please select a building (e.g. 'sb1'): ") or "sb1"
+  ds = BuildingDataset(b_id, download=True)
   print(ds)
 
-  selected_id = input("Please input a partition identifier: ") or "2022_a"
-  partition = BuildingDatasetPartition(ds, selected_id)
+  p_id = input("Please select a partition (e.g. '2022_a'): ") or "2022_a"
+  partition = BuildingDatasetPartition(ds, p_id)
   print(partition)
 
-  print("ACTIONS:", partition.actions_df.shape)
-  print("OBSERVATIONS:", partition.observations_df.shape)
-  print("REWARDS:", partition.rewards_df.shape)
-  print("REWARD INFOS:", partition.reward_infos_df.shape)
+  actions_df = partition.actions_df
+  print("ACTIONS:", actions_df.shape)
+  print(actions_df.index[0])
+  print(actions_df.index[-1])
+
+  observations_df = partition.observations_df
+  print("OBSERVATIONS:", observations_df.shape)
+  print(observations_df.index[0])
+  print(observations_df.index[-1])
+
+  rewards_df = partition.rewards_df
+  print("REWARDS:", rewards_df.shape)
+  print(rewards_df.index[0])
+  print(rewards_df.index[-1])
+
+  reward_infos_df = partition.reward_infos_df
+  print("REWARD INFOS:", reward_infos_df.shape)
+  print(reward_infos_df.index[0])
+  print(reward_infos_df.index[-1])

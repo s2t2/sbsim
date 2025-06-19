@@ -16,44 +16,67 @@ from smart_control.dataset.dataset_partition import BuildingDatasetPartition
 # HIGH LEVEL TESTS FOR ALL PARTITIONS IN BUILDING "SB1"...
 #
 
-
+# pylint:disable=line-too-long
+# fmt:off
 PARTITION_PARAMETERS = [
-    dict(
-        partition_id='2022_a',
-        actions_shape=(51852, 3),
-        observations_shape=(51852, 1198),
-        rewards_shape=(51852, 17),
-        reward_infos_shape=(51852, 3252),
-    ),
-    dict(
-        partition_id='2022_b',
-        actions_shape=(53292, 3),
-        observations_shape=(53292, 1198),
-        rewards_shape=(53292, 17),
-        reward_infos_shape=(53292, 3318),
-    ),
-    dict(
-        partition_id='2023_a',
-        actions_shape=(51852, 3),
-        observations_shape=(51852, 1198),
-        rewards_shape=(51852, 17),
-        reward_infos_shape=(51852, 3252),
-    ),
-    dict(
-        partition_id='2023_b',
-        actions_shape=(52716, 3),
-        observations_shape=(52716, 1198),
-        rewards_shape=(52716, 17),
-        reward_infos_shape=(52716, 3252),
-    ),
-    dict(
-        partition_id='2024_a',
-        actions_shape=(52140, 3),
-        observations_shape=(52140, 1198),
-        rewards_shape=(52140, 17),
-        reward_infos_shape=(52140, 3252),
-    ),
+  dict(
+    partition_id='2022_a',
+    actions_shape=(51852, 3),
+    actions_range=('2022-01-01 00:00:00+00:00', '2022-06-30 00:55:00+00:00'),
+    observations_shape=(51852, 1198),
+    observations_range=('2022-01-01 00:00:00+00:00', '2022-06-30 00:55:00+00:00'),
+    rewards_shape=(51852, 17),
+    rewards_range=('2021-12-31 23:55:00+00:00', '2022-06-30 00:50:00+00:00'),
+    reward_infos_shape=(51852, 3252),
+    reward_infos_range=('2021-12-31 23:55:00+00:00', '2022-06-30 00:50:00+00:00'),
+  ),
+  dict(
+    partition_id='2022_b',
+    actions_shape=(53292, 3),
+    actions_range=('2022-07-01 00:00:00+00:00', '2022-12-31 00:55:00+00:00'),
+    observations_shape=(53292, 1198),
+    observations_range=('2022-07-01 00:00:00+00:00', '2022-12-31 00:55:00+00:00'),
+    rewards_shape=(53292, 17),
+    rewards_range=('2022-06-30 23:55:00+00:00', '2022-12-31 00:50:00+00:00'),
+    reward_infos_shape=(53292, 3318),
+    reward_infos_range=('2022-06-30 23:55:00+00:00', '2022-12-31 00:50:00+00:00'),
+  ),
+  dict(
+    partition_id='2023_a',
+    actions_shape=(51852, 3),
+    actions_range=('2023-01-01 00:00:00+00:00', '2023-06-30 00:55:00+00:00'),
+    observations_shape=(51852, 1198),
+    observations_range=('2023-01-01 00:00:00+00:00', '2023-06-30 00:55:00+00:00'),
+    rewards_shape=(51852, 17),
+    rewards_range=('2022-12-31 23:55:00+00:00', '2023-06-30 00:50:00+00:00'),
+    reward_infos_shape=(51852, 3252),
+    reward_infos_range=('2022-12-31 23:55:00+00:00', '2023-06-30 00:50:00+00:00'),
+  ),
+  dict(
+    partition_id='2023_b',
+    actions_shape=(52716, 3),
+    actions_range=('2023-07-01 00:00:00+00:00', '2023-12-31 00:55:00+00:00'),
+    observations_shape=(52716, 1198),
+    observations_range=('2023-07-01 00:00:00+00:00', '2023-12-31 00:55:00+00:00'),
+    rewards_shape=(52716, 17),
+    rewards_range=('2023-06-30 23:55:00+00:00', '2023-12-31 00:50:00+00:00'),
+    reward_infos_shape=(52716, 3252),
+    reward_infos_range=('2023-06-30 23:55:00+00:00', '2023-12-31 00:50:00+00:00'),
+  ),
+  dict(
+    partition_id='2024_a',
+    actions_shape=(52140, 3),
+    actions_range=('2024-01-01 00:00:00+00:00', '2024-06-30 00:55:00+00:00'),
+    observations_shape=(52140, 1198),
+    observations_range=('2024-01-01 00:00:00+00:00', '2024-06-30 00:55:00+00:00'),
+    rewards_shape=(52140, 17),
+    rewards_range=('2023-12-31 23:55:00+00:00', '2024-06-30 00:50:00+00:00'),
+    reward_infos_shape=(52140, 3252),
+    reward_infos_range=('2023-12-31 23:55:00+00:00', '2024-06-30 00:50:00+00:00'),
+  ),
 ]
+# pylint:enable=line-too-long
+# fmt: on
 
 
 @pytest.mark.usefixtures('set_dataset')
@@ -66,23 +89,39 @@ class TestAllBuildingDatasetPartitions(parameterized.TestCase):
       self,
       partition_id,
       actions_shape,
+      actions_range,
       observations_shape,
+      observations_range,
       rewards_shape,
+      rewards_range,
       reward_infos_shape,
+      reward_infos_range,
   ):
     partition = BuildingDatasetPartition(self.ds, partition_id)
 
-    self.assertIsInstance(partition.actions_df, pd.DataFrame)
-    self.assertEqual(partition.actions_df.shape, actions_shape)
+    actions_df = partition.actions_df
+    self.assertIsInstance(actions_df, pd.DataFrame)
+    self.assertEqual(actions_df.shape, actions_shape)
+    self.assertEqual(str(actions_df.index[0]), actions_range[0])
+    self.assertEqual(str(actions_df.index[-1]), actions_range[-1])
 
-    self.assertIsInstance(partition.observations_df, pd.DataFrame)
-    self.assertEqual(partition.observations_df.shape, observations_shape)
+    observations_df = partition.observations_df
+    self.assertIsInstance(observations_df, pd.DataFrame)
+    self.assertEqual(observations_df.shape, observations_shape)
+    self.assertEqual(str(observations_df.index[0]), observations_range[0])
+    self.assertEqual(str(observations_df.index[-1]), observations_range[-1])
 
-    self.assertIsInstance(partition.rewards_df, pd.DataFrame)
-    self.assertEqual(partition.rewards_df.shape, rewards_shape)
+    rewards_df = partition.rewards_df
+    self.assertIsInstance(rewards_df, pd.DataFrame)
+    self.assertEqual(rewards_df.shape, rewards_shape)
+    self.assertEqual(str(rewards_df.index[0]), rewards_range[0])
+    self.assertEqual(str(rewards_df.index[-1]), rewards_range[-1])
 
-    self.assertIsInstance(partition.reward_infos_df, pd.DataFrame)
-    self.assertEqual(partition.reward_infos_df.shape, reward_infos_shape)
+    reward_infos_df = partition.reward_infos_df
+    self.assertIsInstance(reward_infos_df, pd.DataFrame)
+    self.assertEqual(reward_infos_df.shape, reward_infos_shape)
+    self.assertEqual(str(reward_infos_df.index[0]), reward_infos_range[0])
+    self.assertEqual(str(reward_infos_df.index[-1]), reward_infos_range[-1])
 
 
 #
