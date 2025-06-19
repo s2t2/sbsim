@@ -60,6 +60,7 @@ PARTITION_PARAMETERS = [
 class TestAllBuildingDatasetPartitions(parameterized.TestCase):
   """Tests all valid partitions for building "sb1"."""
 
+  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
   @parameterized.parameters(PARTITION_PARAMETERS)
   def test_all_partitions(
       self,
