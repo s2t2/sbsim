@@ -69,7 +69,7 @@ def dataset():
   if TEST_DATASET_DOWNLOAD and CLEAR_TEST_DATASET_DOWNLOAD:
     cleanup_files()
 
-  print('Downloading and initializing the dataset...')
+  print('Initializing the dataset fixture...')
   return BuildingDataset(building_id='sb1', download=TEST_DATASET_DOWNLOAD)
 
 
