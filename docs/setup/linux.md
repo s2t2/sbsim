@@ -153,7 +153,7 @@ notebook-related dependencies:
 poetry install --with notebooks
 ```
 
-Create a kernel (required for VS Code, optional for Jupyter):
+Create a kernel:
 
 ```sh
 poetry run python -m ipykernel install --user --name=sbsim-kernel
