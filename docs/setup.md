@@ -5,20 +5,27 @@ development.
 
 ## Prerequisites
 
-This project requires the following dependencies:
+This project requires the following system dependencies:
 
 - Git
-- [Protocol Buffer Compiler](https://grpc.io/docs/protoc-installation/) (v
-  3.21.12)
-- [FFmpeg](https://ffmpeg.org/) (v 7.1.1)
-- Python (>=3.10.12 and \<3.12) and a Python Virtual Environment
+- [Protocol Buffer Compiler](https://grpc.io/docs/protoc-installation/)
+  (`v 3.21.12`)
+- [FFmpeg](https://ffmpeg.org/) (`v 7.1.1`)
+- Python (`>=3.10.12 and <3.12`)
 
 ## Repository Setup
 
-Clone the repository, for example using an SSH approach:
+To download the codebase, you can clone the repository (for example using an SSH
+approach, however an HTTPS approach should be fine as well):
 
 ```sh
 git clone git@github.com:google/sbsim.git
+```
+
+After downloading the repository, navigate to the root directory from the
+command line before continuing:
+
+```
 cd sbsim/
 ```
 
