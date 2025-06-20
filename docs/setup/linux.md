@@ -161,13 +161,9 @@ poetry run python -m ipykernel install --user --name=sbsim-kernel
 
 Finally you can run the notebook using Jupyter or VS Code:
 
-A. Run the notebooks using Jupyter (then visit the resulting
-[localhost:8000](localhost:8000) URL in the browser, and choose the
-"sbsim-kernel" from the kernel drop-down menu):
+- A) Run the notebooks using Jupyter by running `poetry run jupyter notebook`
+  (then visit the resulting [localhost:8000](localhost:8000) URL in the browser,
+  and choose the "sbsim-kernel" from the kernel drop-down menu).
 
-```sh
-poetry run jupyter notebook
-```
-
-B. Run the notebooks using VS Code (choosing the "sbsim-kernel" kernel from the
-kernel drop-down menu).
+- B) Run the notebooks using VS Code (choosing the "sbsim-kernel" kernel from
+  the kernel drop-down menu).
