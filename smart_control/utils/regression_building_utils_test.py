@@ -147,7 +147,25 @@ class RegressionBuildingUtilsTest(absltest.TestCase):
         ('dow', 'sin_000'): 0.7818314824680298,
         ('d0', 's0'): 294.5,
     }
-    self.assertDictEqual(expected_feature_map, feature_map)
+
+    # this assertion passes on Linux, but fails on intel-based Macs,
+    # due to floating point math differences:
+    # self.assertDictEqual(expected_feature_map, feature_map)
+
+    # ... equality assertions when applicable:
+    for key in ['timestamp', ('d0', 's0')]:
+      self.assertEqual(feature_map[key], expected_feature_map[key])
+
+    # ... almost-equal assertions for the sin and cos values:
+    for key in [
+        ('hod', 'cos_000'),
+        ('hod', 'sin_000'),
+        ('dow', 'cos_000'),
+        ('dow', 'sin_000'),
+    ]:
+      self.assertAlmostEqual(
+          feature_map[key], expected_feature_map[key], places=7
+      )
 
   def test_get_observation_sequence(self):
     req_ts = pd.Timestamp('2021-01-12 00:00')

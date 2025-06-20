@@ -58,7 +58,7 @@ RUN /opt/venv/bin/pip install \
 
 # Install dependencies from the temporary location
 RUN cd /tmp/sbsim && \
-    poetry lock --no-update && \
+    poetry lock && \
     poetry install --no-root
 
 # Build .proto files

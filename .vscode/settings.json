@@ -24,4 +24,8 @@
     // using pyink instead of black:
     ".venv/bin/pyink"
   ],
+  "[dockerfile]": {
+    "editor.formatOnSave": false,
+    "editor.defaultFormatter": null
+  }
 }
