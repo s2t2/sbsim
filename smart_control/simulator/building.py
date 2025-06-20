@@ -9,6 +9,7 @@ import numpy as np
 
 from smart_control.simulator import base_convection_simulator
 from smart_control.simulator import building_utils
+from smart_control.simulator import building_utils_radiation
 from smart_control.simulator import constants
 from smart_control.simulator import thermal_diffuser_utils
 
@@ -26,6 +27,16 @@ class MaterialProperties:
   conductivity: float
   heat_capacity: float
   density: float
+
+
+@gin.configurable
+@dataclasses.dataclass
+class RadiationProperties:
+  """Holds the radiative properties for a material."""
+
+  alpha: float = 0.0  # absorptivity
+  epsilon: float = 0.0  # emissivity
+  tau: float = 0.0  # transmittance
 
 
 def _check_room_sizes(matrix_shape: Shape2D, room_shape: Shape2D):
@@ -399,6 +410,7 @@ class Building(BaseSimulatorBuilding):
       volume.
     cv_type: a matrix noting whether each CV is outside air, interior space, or
       a wall. cv_type will be used in the sweep() function.
+
   """
 
   def __init__(
@@ -633,6 +645,9 @@ class FloorPlanBasedBuilding(BaseSimulatorBuilding):
       inside_air_properties: MaterialProperties,
       inside_wall_properties: MaterialProperties,
       building_exterior_properties: MaterialProperties,
+      inside_air_radiative_properties: RadiationProperties | None = None,
+      inside_wall_radiative_properties: RadiationProperties | None = None,
+      building_exterior_radiative_properties: RadiationProperties | None = None,
       zone_map: Optional[np.ndarray] = None,
       zone_map_filepath: Optional[str] = None,
       floor_plan: Optional[np.ndarray] = None,
@@ -652,6 +667,10 @@ class FloorPlanBasedBuilding(BaseSimulatorBuilding):
       inside_air_properties: MaterialProperties for interior air.
       inside_wall_properties: MaterialProperties for interior walls.
       building_exterior_properties: MaterialProperties for building's exterior.
+      inside_air_radiative_properties: RadiationProperties for interior air.
+      inside_wall_radiative_properties: RadiationProperties for interior walls.
+      building_exterior_radiative_properties: RadiationProperties for building's
+        exterior.
       zone_map: an np.ndarray noting where the VAV zones are.
       zone_map_filepath: a string of where to find the zone_map in CNS. Note
         that the user requires only to provide one of either zone_map_filepath
@@ -756,6 +775,78 @@ class FloorPlanBasedBuilding(BaseSimulatorBuilding):
 
     self.neighbors = self._calculate_neighbors()
     self.len_neighbors = self._calculate_length_of_neighbors()
+
+    # Beginning of radiation-related calculation
+    self.indexed_floor_plan = (
+        self._exterior_space.copy()
+        + exterior_walls.copy()
+        + interior_walls.copy()
+    )
+    self.interior_wall_idx = [
+        (r, c)
+        for r in range(self.indexed_floor_plan.shape[0])
+        for c in range(self.indexed_floor_plan.shape[1])
+        if self.indexed_floor_plan[r, c] == -3
+    ]
+    self.interior_wall_mask = (
+        self.indexed_floor_plan == constants.INTERIOR_WALL_VALUE_IN_FUNCTION
+    )
+    self.interior_wall_index = np.full(self.indexed_floor_plan.shape, -1)
+    self.interior_wall_index[self.interior_wall_mask] = np.arange(
+        np.sum(self.interior_wall_mask)
+    )
+    self.interior_wall_VF = building_utils_radiation.get_VF(  # pylint: disable=invalid-name
+        self.indexed_floor_plan
+    )
+
+    # radiative properties
+    # by default, all radiative properties are 0.0
+    if inside_wall_radiative_properties is None:
+      inside_wall_radiative_properties = RadiationProperties(
+          epsilon=0.0, alpha=0.0, tau=0.0
+      )
+    if building_exterior_radiative_properties is None:
+      building_exterior_radiative_properties = RadiationProperties(
+          epsilon=0.0, alpha=0.0, tau=0.0
+      )
+    if inside_air_radiative_properties is None:
+      inside_air_radiative_properties = RadiationProperties(
+          epsilon=0.0, alpha=0.0, tau=0.0
+      )
+
+    # emissivity
+    self._epsilon = _assign_interior_and_exterior_values(
+        exterior_walls=exterior_walls,
+        interior_walls=interior_walls,
+        interior_wall_value=inside_wall_radiative_properties.epsilon,
+        exterior_wall_value=building_exterior_radiative_properties.epsilon,
+        interior_and_exterior_space_value=inside_air_radiative_properties.epsilon,  # pylint: disable=line-too-long
+    )
+    # absorptivity
+    self._alpha = _assign_interior_and_exterior_values(
+        exterior_walls=exterior_walls,
+        interior_walls=interior_walls,
+        interior_wall_value=inside_wall_radiative_properties.alpha,
+        exterior_wall_value=building_exterior_radiative_properties.alpha,
+        interior_and_exterior_space_value=inside_air_radiative_properties.alpha,
+    )
+    # transmittance
+    self._tau = _assign_interior_and_exterior_values(
+        exterior_walls=exterior_walls,
+        interior_walls=interior_walls,
+        interior_wall_value=inside_wall_radiative_properties.tau,
+        exterior_wall_value=building_exterior_radiative_properties.tau,
+        interior_and_exterior_space_value=inside_air_radiative_properties.tau,
+    )
+    self._epsilon_vector = self._epsilon[self.interior_wall_mask]
+    self.A_tilde_inv = building_utils_radiation.calculate_A_tilde_inv(  # pylint: disable=invalid-name
+        self._epsilon_vector, self.interior_wall_VF
+    )
+    self.IFAinv = building_utils_radiation.calculate_IFAinv(  # pylint: disable=invalid-name
+        self.interior_wall_VF, self.A_tilde_inv
+    )
+
+    ## End of radiation-related calculation
 
     self.reset()
 
@@ -892,3 +983,20 @@ class FloorPlanBasedBuilding(BaseSimulatorBuilding):
   def apply_convection(self) -> None:
     if self._convection_simulator is not None:
       self._convection_simulator.apply_convection(self._room_dict, self.temp)
+
+  # Radiative heat transfer
+  def apply_longwave_interior_radiative_heat_transfer(
+      self, temperature_estimates: np.ndarray
+  ) -> np.ndarray:
+    """
+    Applies long-wave interior radiative heat transfer.
+
+    This function calculates the net radiative heat flux and radiosity for each
+    interior wall.
+
+    """
+
+    q_lwx = building_utils_radiation.net_radiative_heatflux_function_of_T(
+        temperature_estimates[self.interior_wall_mask], self.IFAinv
+    )
+    return q_lwx
