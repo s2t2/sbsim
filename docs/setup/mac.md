@@ -53,8 +53,7 @@ Install [Anaconda](https://www.anaconda.com/download), which we will use to
 install Python and manage a virtual environment.
 
 The installation results in automatically adding some content to your "~/.zshrc"
-file. You may need to run a `conda init bash` or `conda init zsh` command, if
-prompted to do so.
+file. You may need to run a `conda init zsh` command, if prompted to do so.
 
 Remember to restart your shell afterwards.
 
@@ -90,10 +89,11 @@ poetry install --with dev
 ```
 
 > NOTE: there may be issues with the `dm-reverb` package on Mac. See:
-> https://github.com/google/sbsim/issues/102. This issue only affects
-> reinforcement learning functionality related to replay buffers, so you should
-> still be able to run all other parts of the codebase. We welcome contributions
-> to fix this issue and get all the functionality working on Mac!
+> [https://github.com/google/sbsim/issues/102](https://github.com/google/sbsim/issues/102).
+> This issue only affects reinforcement learning functionality related to replay
+> buffers, so you should still be able to run all other parts of the codebase.
+> We welcome contributions to fix this issue and get all the functionality
+> working on Mac!
 
 ## Protocol Buffer Compilation
 
