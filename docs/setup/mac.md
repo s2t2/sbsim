@@ -89,6 +89,12 @@ Use poetry to install dependencies, including development dependencies:
 poetry install --with dev
 ```
 
+> NOTE: there may be issues with the `dm-reverb` package on Mac. See:
+> https://github.com/google/sbsim/issues/102. This issue only affects
+> reinforcement learning functionality related to replay buffers, so you should
+> still be able to run all other parts of the codebase. We welcome contributions
+> to fix this issue and get all the functionality working on Mac!
+
 ## Protocol Buffer Compilation
 
 Build the ".proto" files defined in the "smart_control/proto" directory into
@@ -106,6 +112,10 @@ cd ../..
 
 > NOTE: the generated "\*pb2.py" files have been checked in to the repository to
 > facilitate publishing this package on PyPI.
+
+> NOTE: contributors can skip this step and just use the current versions of the
+> protos that have been checked in to the repository. Maintainers can run this
+> step periodically to update the protos.
 
 ## Environment Variable Setup
 

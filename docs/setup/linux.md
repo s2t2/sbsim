@@ -112,6 +112,10 @@ cd ../..
 > NOTE: the generated "\*pb2.py" files have been checked in to the repository to
 > facilitate publishing this package on PyPI.
 
+> NOTE: contributors can skip this step and just use the current versions of the
+> protos that have been checked in to the repository. Maintainers can run this
+> step periodically to update the protos.
+
 ## Environment Variable Setup
 
 By default, simulation videos are stored in the "simulator/videos" directory
