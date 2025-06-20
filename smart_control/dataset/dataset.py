@@ -40,7 +40,7 @@ class SmartBuildingsDataset:
 
       return local_filename
 
-    url = "https://storage.googleapis.com/gresearch/smart_buildings_dataset/tabular_data/sb1.zip" #pylint: disable=line-too-long
+    url = "https://storage.googleapis.com/gresearch/smart_buildings_dataset/tabular_data/sb1.zip"  # pylint: disable=line-too-long
     download_file(url)
     shutil.unpack_archive("sb1.zip", "sb1/")
 

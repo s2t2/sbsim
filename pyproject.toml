@@ -62,7 +62,13 @@ pyink-annotation-pragmas = [
   "pyright:",
   "pyre-",
 ]
-force-exclude = [".*_pb2.py", "BUILD$"]
+force-exclude = '''
+(
+  /.*_pb2\.py
+  | /BUILD$
+)
+'''
+
 
 [tool.isort]
 lexicographical = true
