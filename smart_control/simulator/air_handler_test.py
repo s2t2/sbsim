@@ -1,6 +1,4 @@
-"""Tests for air_handler.
-
-"""
+"""Tests for air_handler."""
 
 from absl.testing import absltest
 from absl.testing import parameterized

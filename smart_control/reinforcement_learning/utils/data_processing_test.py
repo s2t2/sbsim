@@ -1,6 +1,4 @@
-"""Tests for reinforcement learning data processing utils.
-
-"""
+"""Tests for reinforcement learning data processing utils."""
 
 from absl.testing import absltest
 

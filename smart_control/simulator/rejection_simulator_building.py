@@ -1,6 +1,4 @@
-"""A simulator building that initially throws RPC exceptions before start.
-
-"""
+"""A simulator building that initially throws RPC exceptions before start."""
 
 from typing import Sequence
 

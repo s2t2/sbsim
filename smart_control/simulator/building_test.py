@@ -1,6 +1,4 @@
-"""Tests for building.
-
-"""
+"""Tests for building."""
 
 import random
 

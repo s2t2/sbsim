@@ -1,6 +1,4 @@
-"""Tests for simulator_building.
-
-"""
+"""Tests for simulator_building."""
 
 from absl.testing import absltest
 

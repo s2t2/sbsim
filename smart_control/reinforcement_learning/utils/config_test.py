@@ -1,6 +1,4 @@
-"""Tests for reinforcement learning utils config.
-
-"""
+"""Tests for reinforcement learning utils config."""
 
 import os
 

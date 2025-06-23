@@ -1,6 +1,4 @@
-"""Tests for boiler.
-
-"""
+"""Tests for boiler."""
 
 from absl.testing import absltest
 from absl.testing import parameterized

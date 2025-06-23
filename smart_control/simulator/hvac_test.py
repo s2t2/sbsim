@@ -1,6 +1,4 @@
-"""Tests for hvac.
-
-"""
+"""Tests for hvac."""
 
 from absl.testing import absltest
 import pandas as pd

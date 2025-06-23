@@ -1,6 +1,5 @@
 """Base class for a convection simulator.
 
-
 A convection simulator provides a method for simulating airflow convection in
 a building.
 """

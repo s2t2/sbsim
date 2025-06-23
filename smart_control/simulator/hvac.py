@@ -2,7 +2,6 @@
 
 The model assumes a single boiler and air handler, with one VAV per zone in the
 building.
-
 """
 
 from typing import List, Mapping, Tuple

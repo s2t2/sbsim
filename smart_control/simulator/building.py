@@ -1,6 +1,4 @@
-"""Code for representing the control volumes within a building.
-
-"""
+"""Code for representing the control volumes within a building."""
 
 import abc
 import dataclasses

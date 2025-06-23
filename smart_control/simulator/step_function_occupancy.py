@@ -9,7 +9,6 @@ This implementation assumes:
   (b) the occupancy is constant for work periods, and
   (c) the occupancy is constant for non-work periods (off hours, weekends and
   holidays).
-
 """
 
 from typing import Tuple
