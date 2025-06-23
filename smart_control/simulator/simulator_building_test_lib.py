@@ -1,6 +1,4 @@
-"""Tests for rejection_simulator_building.
-
-"""
+"""Tests for rejection_simulator_building."""
 
 from absl.testing import parameterized
 import pandas as pd

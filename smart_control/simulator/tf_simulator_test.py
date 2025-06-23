@@ -1,6 +1,4 @@
-"""Tests for Tensorflow-enabled Finite Difference calculator.
-
-"""
+"""Tests for Tensorflow-enabled Finite Difference calculator."""
 
 from unittest import mock
 

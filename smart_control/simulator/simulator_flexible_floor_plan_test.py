@@ -1,6 +1,4 @@
-"""Tests for simulator.
-
-"""
+"""Tests for simulator."""
 
 import copy
 from unittest import mock

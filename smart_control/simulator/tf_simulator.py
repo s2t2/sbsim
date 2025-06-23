@@ -1,6 +1,4 @@
-"""Tensorflow-enabled Finite Difference calculator.
-
-"""
+"""Tensorflow-enabled Finite Difference calculator."""
 
 import enum
 import functools

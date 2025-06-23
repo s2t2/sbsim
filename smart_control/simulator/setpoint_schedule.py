@@ -1,6 +1,4 @@
-"""Stores and maintains setpoint schedule of HVAC in simulator.
-
-"""
+"""Stores and maintains setpoint schedule of HVAC in simulator."""
 
 import datetime
 from typing import Optional, Set, Tuple

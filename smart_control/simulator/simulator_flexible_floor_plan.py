@@ -1,6 +1,4 @@
-"""Simulator of a simplified thermodynamic system for flexible geometries.
-
-"""
+"""Simulator of a simplified thermodynamic system for flexible geometries."""
 
 from typing import Mapping, Optional, Tuple
 
