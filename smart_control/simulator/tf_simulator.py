@@ -1,4 +1,10 @@
-"""Tensorflow-enabled Finite Difference calculator."""
+"""Tensorflow-enabled Finite Difference calculator.
+
+Iterative methods that loop through each control volume sequentially
+are very slow with geometries that have many control volumes (CV). The
+TFSimulator, instead, processes the finite differences as a set of
+tensor operations.
+"""
 
 import enum
 import functools
