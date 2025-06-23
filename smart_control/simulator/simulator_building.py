@@ -1,7 +1,8 @@
 """Extension of BaseBuilding for a simulated building.
 
 This file is used to build an RL environment with a simulator controlling the
-thermodynamics and observation/action space."""
+thermodynamics and observation/action space.
+"""
 
 from typing import Sequence, Type, Union
 import uuid
