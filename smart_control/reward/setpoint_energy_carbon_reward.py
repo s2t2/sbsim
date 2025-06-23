@@ -1,19 +1,5 @@
 """Reward Function for Smart Buildings.
 
-Copyright 2024 Google LLC
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    https://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
 The reward function provides a feedback signal to the reinforcement learning
 agent that indicates the benefit of the action taken. During training, the
 agent learns an action policy to maximize the cumulative, or long-term reward.
@@ -35,10 +21,10 @@ The three factors can be scaled and combined into a single reward function:
         r = s(setpoint) - u x f(cost) - w x g(carbon)
 where:
   r is the incremental reward at this step
-  s(setpoint) is the reward for maintining setpoint
+  s(setpoint) is the reward for maintaining setpoint
   f(cost) is the cost of consuming electrical and natural gas energy
   g(carbon) is the cost of emitting carbon,
-  and u, w are weighing factors for cost and carbon dependingon the policy.
+  and u, w are weighing factors for cost and carbon depending on the policy.
 
 The fundamental metric unit of energy is the Joule (J), and the unit of energy
 applied over a fixed time interval (energy rate) is power measured in J/sec or
