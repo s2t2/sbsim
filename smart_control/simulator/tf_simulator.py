@@ -23,7 +23,7 @@ from smart_control.simulator import weather_controller as weather_controller_py
 
 # List of neighbors for a specific CV.
 NeighborCoordinates = Sequence[simulator.CVCoordinates]
-# Neighors, indexable by a specific i,j coord.
+# Neighbors, indexable by a specific i,j coord.
 Neighbors = Sequence[Sequence[NeighborCoordinates]]
 
 
