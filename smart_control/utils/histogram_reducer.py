@@ -1,6 +1,5 @@
 """Histogram Reducer for RegressionBuilding.
 
-
 The objective of the histogram reducer is to compress a very wide
 multivariate timeseries with minimal data loss. The current control agents
 don't really benefit from knowing the temperature (etc.) of each zone, but
@@ -8,7 +7,7 @@ simply need to know that some zones are below of above setpoints. As such,
 representing each zone as a separate timeseries is rather inefficient.
 
 Reduce function converts a feature from individual timeseries into a histogram.
-For exammple, devices d1, d2 have a zone_air_temperature timeseries,
+For example, devices d1, d2 have a zone_air_temperature timeseries,
 the histogram reducer converts the timeseries into a counts on temperature
 bins, like 70, 71, 72, etc. and assigns a count to the bin. This reduces
 the dimensionality into a more compressed format if the number of the devices

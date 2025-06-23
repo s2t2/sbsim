@@ -1,6 +1,5 @@
 """Run command predictor predicts whether the device is On or Off.
 
-
 Some RL Agents, like Soft-Actor-Critic, are designed for continuous action
 spaces. However, SM control requires a hybrid action space (continuous pressures
 and temperatures, and a discrete on/off run command.

@@ -1,11 +1,9 @@
 """Stochastic simulator of convection flow in bldg.
 
-
 A convection simulator that randomly shuffles control volumes as a stochastic
-imitation of convection
+imitation of convection.
 We specify probability of a control volume getting shuffled, as well as maximum
-distance that any given
-control volume can be moved.
+distance that any given control volume can be moved.
 """
 
 import collections

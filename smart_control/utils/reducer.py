@@ -1,6 +1,5 @@
 """Utilities to reduce dimensionality of the observation space.
 
-
 The observation space dimensionality of the real building is greater a thousand,
 with multiple observations being of the same type. For example, in US-MTV-1055,
 there are 127 VAVs each reporting zone_air_temperature_sensor values, creating

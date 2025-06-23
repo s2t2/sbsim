@@ -1,4 +1,4 @@
-"""Single location for constants related to the simulation and environment."""
+"""Constants related to the simulation and RL environment."""
 
 import os
 from typing import Final
