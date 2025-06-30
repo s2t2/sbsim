@@ -8,8 +8,8 @@ import gin
 import numpy as np
 
 from smart_control.simulator import base_convection_simulator
+from smart_control.simulator import building_radiation_utils
 from smart_control.simulator import building_utils
-from smart_control.simulator import building_utils_radiation
 from smart_control.simulator import constants
 from smart_control.simulator import thermal_diffuser_utils
 
@@ -795,7 +795,7 @@ class FloorPlanBasedBuilding(BaseSimulatorBuilding):
     self.interior_wall_index[self.interior_wall_mask] = np.arange(
         np.sum(self.interior_wall_mask)
     )
-    self.interior_wall_VF = building_utils_radiation.get_VF(  # pylint: disable=invalid-name
+    self.interior_wall_VF = building_radiation_utils.get_VF(  # pylint: disable=invalid-name
         self.indexed_floor_plan
     )
 
@@ -839,10 +839,10 @@ class FloorPlanBasedBuilding(BaseSimulatorBuilding):
         interior_and_exterior_space_value=inside_air_radiative_properties.tau,
     )
     self._epsilon_vector = self._epsilon[self.interior_wall_mask]
-    self.A_tilde_inv = building_utils_radiation.calculate_A_tilde_inv(  # pylint: disable=invalid-name
+    self.A_tilde_inv = building_radiation_utils.calculate_A_tilde_inv(  # pylint: disable=invalid-name
         self._epsilon_vector, self.interior_wall_VF
     )
-    self.IFAinv = building_utils_radiation.calculate_IFAinv(  # pylint: disable=invalid-name
+    self.IFAinv = building_radiation_utils.calculate_IFAinv(  # pylint: disable=invalid-name
         self.interior_wall_VF, self.A_tilde_inv
     )
 
@@ -996,7 +996,7 @@ class FloorPlanBasedBuilding(BaseSimulatorBuilding):
 
     """
 
-    q_lwx = building_utils_radiation.net_radiative_heatflux_function_of_T(
+    q_lwx = building_radiation_utils.net_radiative_heatflux_function_of_T(
         temperature_estimates[self.interior_wall_mask], self.IFAinv
     )
     return q_lwx
