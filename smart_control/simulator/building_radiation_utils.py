@@ -10,7 +10,9 @@ import numpy as np
 
 from smart_control.simulator import constants
 
-# pylint: disable=invalid-name,line-too-long
+# we are choosing to keep the mathematical notation names for the functions and
+# variables in this file
+# pylint: disable=invalid-name
 
 
 def calculate_A_tilde_inv(epsilon: np.ndarray, F: np.ndarray) -> np.ndarray:
@@ -27,8 +29,8 @@ def calculate_A_tilde_inv(epsilon: np.ndarray, F: np.ndarray) -> np.ndarray:
       The A-tilde matrix relating radiosity to blackbody emissive power
 
   Raises:
-      AssertionError: If emissivity vector size doesn't match view factor matrix or
-          if emissivity values are outside [0,1]
+      AssertionError: If emissivity vector size doesn't match view factor matrix
+          or if emissivity values are outside [0,1]
   """
   n = epsilon.shape[0]
   epsilon[epsilon == 0] = 1e-10
@@ -43,11 +45,30 @@ def calculate_A_tilde_inv(epsilon: np.ndarray, F: np.ndarray) -> np.ndarray:
 
 def calculate_IFAinv(F: np.ndarray, A_inv: np.ndarray) -> np.ndarray:
   """
-  Calculates the IFAinv matrix.
-  IFAinv = (I - F) @ A_inv
-  where q=(I-F)@J, J=A_inv@Eb, Eb=sigma*T^4
-  so q=sigma*(I-F)@A_inv@T^4
+  Calculates the $IFA_{inv}$ matrix.
+
+  Main equation:
+
+  $$IFA_{inv} = (I - F) @ A_{inv}$$
+
+  Where:
+
+    + $q=(I-F)@J$
+    + $J=A_{inv}@E_b$
+    + $E_b=sigma*T^4$
+
+  So:
+
+  $$q=sigma*(I-F)@A_{inv}@T^4$$
+
+  Args:
+      F (np.ndarray): The F matrix.
+      A_inv (np.ndarray): The A inverse matrix.
+
+  Returns:
+      IFA_inv : The IFA inverse matrix.
   """
+
   n = F.shape[0]
 
   I = np.eye(n)
@@ -59,15 +80,15 @@ def net_radiative_heatflux_function_of_T(
     T: np.ndarray, IFAinv: np.ndarray
 ) -> np.array:
   """
-  Calculates the net radiative heat flux and radiosity for given surface temperatures.
+  Calculates the net radiative heat flux and radiosity for given surface
+    temperatures.
 
   Args:
       T (np.ndarray): Surface temperatures in Celsius.
       IFAinv (np.ndarray): (I - F) @ A_inv.
 
   Returns:
-      - q (np.ndarray): Net radiative heat flux [W/m^2]
-
+      q : Net radiative heat flux [W/m^2]
 
   """
   sigma = 5.67 * 1e-8  # [W/m^2K^4] Stefan-Boltzmann constant
@@ -84,31 +105,35 @@ def mark_air_connected_interior_walls(
     air_value: int = constants.INTERIOR_SPACE_VALUE_IN_FUNCTION,
 ) -> Tuple[Optional[np.ndarray], Optional[np.ndarray]]:
   """
-  Mark all interior wall nodes that are connected to the same air space as the starting interior wall.
-  Uses 8-directional connectivity (including diagonals) to check wall-air adjacency.
+  Mark all interior wall nodes that are connected to the same air space as the
+      starting interior wall.
+  Uses 8-directional connectivity (including diagonals) to check wall-air
+      adjacency.
   All connected walls including the starting position are marked.
 
   Args:
-    indexed_floor_plan (np.ndarray): 2D numpy array representing the floor plan where
-        different values represent different types of cells (walls, air, etc.).
-    start_pos (Tuple[int, int]): Starting position (row, col) of the interior wall to begin marking from.
-    interior_wall_value (int, optional): Value used to represent interior walls in the floor plan.
-        Defaults to -3 (from constats.py).
+    indexed_floor_plan (np.ndarray): 2D numpy array representing the floor plan
+        where different values represent different types of cells (walls, air,
+        etc.).
+    start_pos (Tuple[int, int]): Starting position (row, col) of the interior
+        wall to begin marking from.
+    interior_wall_value (int, optional): Value used to represent interior walls
+        in the floor plan. Defaults to -3 (from constants.py).
     marked_value (int, optional): Value used to mark connected interior walls.
         Defaults to -33.
-    air_value (int, optional): Value used to represent air spaces in the floor plan.
-        Defaults to 0 (from constats.py).
+    air_value (int, optional): Value used to represent air spaces in the floor
+        plan. Defaults to 0 (from constants.py).
 
   Returns:
-    Tuple[Optional[np.ndarray], Optional[np.ndarray]]: A tuple containing:
-      - modified_floor_plan: Copy of input floor plan with connected walls marked with marked_value.
-        None if start_pos is invalid.
-      - interior_space_array: Extracted interior space containing only air and marked walls,
-        cropped to the bounding box of the connected region. None if start_pos is invalid or
-        no interior space is found.
+    A tuple containing:
+      - modified_floor_plan: Copy of input floor plan with connected walls
+          marked with marked_value. `None` if `start_pos` is invalid.
+      - interior_space_array: Extracted interior space containing only air and
+          marked walls, cropped to the bounding box of the connected region.
+          `None` if `start_pos` is invalid or no interior space is found.
 
   Raises:
-    ValueError: If the starting position is out of bounds of the floor plan.
+      ValueError: If the starting position is out of bounds of the floor plan.
   """
   # Make a copy to avoid modifying the original
   floor_plan = indexed_floor_plan.copy()
@@ -124,10 +149,12 @@ def mark_air_connected_interior_walls(
   if floor_plan[start_pos[0], start_pos[1]] != interior_wall_value:
     return None, None
 
-  # Directions for 4-connectivity (up, down, left, right) - for air-to-air connections
+  # Directions for 4-connectivity (up, down, left, right)
+  # - for air-to-air connections
   air_directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
 
-  # Directions for 8-connectivity (including diagonals) - for wall-air adjacency
+  # Directions for 8-connectivity (including diagonals)
+  # - for wall-air adjacency
   wall_air_directions = [
       (-1, -1),
       (-1, 0),
@@ -141,7 +168,8 @@ def mark_air_connected_interior_walls(
 
   start_row, start_col = start_pos
 
-  # Find all air cells that are connected to the starting wall (using 8-connectivity)
+  # Find all air cells that are connected to the starting wall
+  # (using 8-connectivity)
   connected_air_cells = set()
   air_queue = deque()
 
@@ -181,7 +209,8 @@ def mark_air_connected_interior_walls(
         air_queue.append((new_row, new_col))
         connected_air_cells.add((new_row, new_col))
 
-  # Now find all interior walls that are adjacent to any of the connected air cells (using 8-connectivity)
+  # Now find all interior walls that are adjacent to any of the connected air
+  # cells (using 8-connectivity)
   walls_to_mark = set()
 
   for air_row, air_col in connected_air_cells:
@@ -242,7 +271,7 @@ def mark_air_connected_interior_walls(
   return floor_plan, interior_space
 
 
-def fix_view_factors(F, A=None):
+def fix_view_factors(F: np.ndarray, A: np.ndarray = None) -> np.ndarray:
   """
   Fix approximate view factors and enforce reciprocity and completeness.
 
@@ -251,11 +280,10 @@ def fix_view_factors(F, A=None):
       A (np.ndarray, optional): Area vector (N elements). Defaults to None.
 
   Returns:
-      np.ndarray: Fixed view factor matrix
+      Fixed view factor matrix
 
   References:
-      FixViewFactors function in EnergyPlus: https://github.com/NREL/EnergyPlus/blob/develop/src/EnergyPlus/HeatBalanceIntRadExchange.cc
-
+      FixViewFactors function in [EnergyPlus](https://github.com/NREL/EnergyPlus/blob/develop/src/EnergyPlus/HeatBalanceIntRadExchange.cc)
   """
 
   # Parameter definitions
@@ -407,16 +435,17 @@ def fix_view_factors(F, A=None):
       ) = abs(sum_FixedF - N)
       results['row_sum'] = sum_FixedF
 
+      # pylint:disable=line-too-long
       if CheckConvergeTolerance > 0.005:
         if CheckConvergeTolerance > 0.1:
           # warnings.warn(f"FixViewFactors: View factors convergence has failed and will lead to heat balance errors in zone=\"{encl_name}\".")
-
           pass
 
         # warnings.warn(f"FixViewFactors: View factors not complete. Check for bad surface descriptions or unenclosed zone=\"{encl_name}\".")
         # warnings.warn(f"Enforced reciprocity has tolerance (ideal is 0)=[{CheckConvergeTolerance:.6f}], Row Sum (ideal is {N})=[{results['row_sum']:.2f}].")
         # warnings.warn("If zone is unusual or tolerance is on the order of 0.001, view factors might be OK but results should be checked carefully.")
         pass
+      # pylint:enable=line-too-long
 
       if abs(results['fixed_check_value']) < abs(
           results['original_check_value']
@@ -460,18 +489,20 @@ def get_VF(
   """
   Calculate view factors between interior walls in the floor plan.
 
-
   Args:
-      indexed_floor_plan (np.ndarray): 2D array representing the floor plan with indexed values.
-      interior_wall_value (int, optional): Value representing interior walls. Defaults to -3 (constants.INTERIOR_WALL_VALUE_IN_FUNCTION).
-      marked_value (int, optional): Value to mark connected walls. Defaults to -33.
-      air_value (int, optional): Value representing air spaces. Defaults to 0.
+      indexed_floor_plan (np.ndarray): 2D array representing the floor plan with
+          indexed values.
+      interior_wall_value (int, optional): Value representing interior walls.
+          Defaults to -3 (constants.INTERIOR_WALL_VALUE_IN_FUNCTION).
+      marked_value (int, optional): Value to mark connected walls. Defaults to
+          -33.
 
   Returns:
-      np.ndarray: View factor matrix where VF[i,j] represents the view factor from wall i to wall j.
+      np.ndarray: View factor matrix where VF[i,j] represents the view factor
+          from wall i to wall j.
 
   """
-  # TODO: how to handle for non typical.. or no iterior walls?c
+  # TODO: how to handle for non typical.. or no interior walls?
   interior_wall_mask = indexed_floor_plan == interior_wall_value
   n_interior_wall = np.sum(interior_wall_mask)
   VF = np.zeros((n_interior_wall, n_interior_wall))
