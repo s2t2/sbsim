@@ -126,9 +126,11 @@ def mark_air_connected_interior_walls(
 
   Returns:
     A tuple containing:
-      - modified_floor_plan: Copy of input floor plan with connected walls
+
+      - `modified_floor_plan`: Copy of input floor plan with connected walls
           marked with marked_value. `None` if `start_pos` is invalid.
-      - interior_space_array: Extracted interior space containing only air and
+
+      - `interior_space_array`: Extracted interior space containing only air and
           marked walls, cropped to the bounding box of the connected region.
           `None` if `start_pos` is invalid or no interior space is found.
 
@@ -283,7 +285,7 @@ def fix_view_factors(F: np.ndarray, A: np.ndarray = None) -> np.ndarray:
       Fixed view factor matrix
 
   References:
-      FixViewFactors function in [EnergyPlus](https://github.com/NREL/EnergyPlus/blob/develop/src/EnergyPlus/HeatBalanceIntRadExchange.cc)
+      See `FixViewFactors` function in [EnergyPlus](https://github.com/NREL/EnergyPlus/blob/develop/src/EnergyPlus/HeatBalanceIntRadExchange.cc)
   """
 
   # Parameter definitions
@@ -493,13 +495,13 @@ def get_VF(
       indexed_floor_plan (np.ndarray): 2D array representing the floor plan with
           indexed values.
       interior_wall_value (int, optional): Value representing interior walls.
-          Defaults to -3 (constants.INTERIOR_WALL_VALUE_IN_FUNCTION).
+          Defaults to -3 (`constants.INTERIOR_WALL_VALUE_IN_FUNCTION`).
       marked_value (int, optional): Value to mark connected walls. Defaults to
           -33.
 
   Returns:
-      np.ndarray: View factor matrix where VF[i,j] represents the view factor
-          from wall i to wall j.
+      View factor matrix where `VF[i,j]` represents the view factor from wall
+          `i` to wall `j`.
 
   """
   # TODO: how to handle for non typical.. or no interior walls?
