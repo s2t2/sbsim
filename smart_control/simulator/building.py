@@ -32,7 +32,13 @@ class MaterialProperties:
 @gin.configurable
 @dataclasses.dataclass
 class RadiationProperties:
-  """Holds the radiative properties for a material."""
+  """Holds the radiative properties for a material.
+
+  Args:
+    alpha (float): absorptivity
+    epsilon (float): emissivity
+    tau (float): transmittance
+  """
 
   alpha: float = 0.0  # absorptivity
   epsilon: float = 0.0  # emissivity
