@@ -698,40 +698,9 @@ class FloorPlanBasedBuilding(BaseSimulatorBuilding):
     self._convection_simulator = convection_simulator
     self._reset_temp_values = reset_temp_values
 
-    # below is new code, to derive necessary artifacts from the floor plan.
-    # TODO(spangher): neaten code by turning the next twenty lines into a
-    #   private method.
+    self._set_floor_plan(floor_plan, floor_plan_filepath)
 
-    if floor_plan is None and floor_plan_filepath is None:
-      raise ValueError(
-          "Both floor_plan and floor_plan_filepath cannot be None."
-      )
-
-    elif floor_plan is None and floor_plan_filepath:
-      self.floor_plan = building_utils.read_floor_plan_from_filepath(
-          floor_plan_filepath
-      )
-
-    elif floor_plan is not None and floor_plan_filepath is None:
-      self.floor_plan = floor_plan
-
-    else:
-      raise ValueError("floor_plan and floor_plan_filepath ")
-
-    if zone_map_filepath is None and zone_map is None:
-      raise ValueError("please provide a zone_map_filepath or a zone_map")
-
-    if zone_map_filepath is not None and zone_map is not None:
-      raise ValueError(
-          "You have provided both zone_map_filepath and a zone_map"
-      )
-
-    if zone_map is not None and zone_map_filepath is None:
-      self._zone_map = zone_map
-
-    if zone_map is None and zone_map_filepath is not None:
-      zone_map = building_utils.read_floor_plan_from_filepath(zone_map_filepath)
-      self._zone_map = zone_map
+    self._set_zone_map(zone_map, zone_map_filepath)
 
     (self._room_dict, exterior_walls, interior_walls, self._exterior_space) = (
         building_utils.construct_building_data_types(
@@ -805,45 +774,108 @@ class FloorPlanBasedBuilding(BaseSimulatorBuilding):
         self.indexed_floor_plan
     )
 
-    # radiative properties
-    # by default, all radiative properties are 0.0
-    if inside_wall_radiative_properties is None:
-      inside_wall_radiative_properties = RadiationProperties(
-          epsilon=0.0, alpha=0.0, tau=0.0
+    # breakpoint()
+    self._set_radiative_properties(
+        inside_air_radiative_properties,
+        inside_wall_radiative_properties,
+        building_exterior_radiative_properties,
+        exterior_walls,  # do we want to use self.exterior_walls?
+        interior_walls,  # do we want to use self.interior_walls?
+    )
+
+    self.reset()
+
+  def _set_floor_plan(
+      self,
+      floor_plan: Optional[np.ndarray] = None,
+      floor_plan_filepath: Optional[str] = None,
+  ):
+
+    if floor_plan is None and floor_plan_filepath is None:
+      raise ValueError("Please provide a floor_plan or a floor_plan_filepath")
+
+    elif floor_plan is not None and floor_plan_filepath is not None:
+      raise ValueError(
+          "Provide either a floor_plan or a floor_plan_filepath, but not both."
       )
 
-    if building_exterior_radiative_properties is None:
-      building_exterior_radiative_properties = RadiationProperties(
-          epsilon=0.0, alpha=0.0, tau=0.0
+    elif floor_plan_filepath is not None:
+      self.floor_plan = building_utils.read_floor_plan_from_filepath(
+          floor_plan_filepath
       )
-    if inside_air_radiative_properties is None:
-      inside_air_radiative_properties = RadiationProperties(
-          epsilon=0.0, alpha=0.0, tau=0.0
+
+    elif floor_plan is not None:
+      self.floor_plan = floor_plan
+
+  def _set_zone_map(
+      self,
+      zone_map: Optional[np.ndarray] = None,
+      zone_map_filepath: Optional[str] = None,
+  ):
+    if zone_map is None and zone_map_filepath is None:
+      raise ValueError("Please provide a zone_map or a zone_map_filepath")
+
+    elif zone_map is not None and zone_map_filepath is not None:
+      raise ValueError(
+          "Provide either a zone_map or a zone_map_filepath, but not both."
       )
+
+    elif zone_map_filepath is not None:
+      self.zone_map = building_utils.read_floor_plan_from_filepath(
+          zone_map_filepath
+      )
+
+    elif zone_map is not None:
+      self.zone_map = zone_map
+
+  def _set_radiative_properties(
+      self,
+      inside_air_radiative_properties: RadiationProperties | None,
+      inside_wall_radiative_properties: RadiationProperties | None,
+      building_exterior_radiative_properties: RadiationProperties | None,
+      exterior_walls,
+      interior_walls,
+  ):
+
+    # radiative properties
+    # by default, all radiative properties are 0.0
+    self.inside_wall_radiative_properties = (
+        inside_wall_radiative_properties
+        or RadiationProperties(epsilon=0.0, alpha=0.0, tau=0.0)
+    )
+
+    self.building_exterior_radiative_properties = (
+        building_exterior_radiative_properties
+        or RadiationProperties(epsilon=0.0, alpha=0.0, tau=0.0)
+    )
+    self.inside_air_radiative_properties = (
+        inside_air_radiative_properties
+        or RadiationProperties(epsilon=0.0, alpha=0.0, tau=0.0)
+    )
 
     # emissivity
     self._epsilon = _assign_interior_and_exterior_values(
         exterior_walls=exterior_walls,
         interior_walls=interior_walls,
-        interior_wall_value=inside_wall_radiative_properties.epsilon,
-        exterior_wall_value=building_exterior_radiative_properties.epsilon,
-        interior_and_exterior_space_value=inside_air_radiative_properties.epsilon,  # pylint: disable=line-too-long
+        interior_wall_value=self.inside_wall_radiative_properties.epsilon,
+        exterior_wall_value=self.building_exterior_radiative_properties.epsilon,
+        interior_and_exterior_space_value=self.inside_air_radiative_properties.epsilon,  # pylint: disable=line-too-long
     )
     # absorptivity
     self._alpha = _assign_interior_and_exterior_values(
         exterior_walls=exterior_walls,
         interior_walls=interior_walls,
-        interior_wall_value=inside_wall_radiative_properties.alpha,
-        exterior_wall_value=building_exterior_radiative_properties.alpha,
-        interior_and_exterior_space_value=inside_air_radiative_properties.alpha,
+        interior_wall_value=self.inside_wall_radiative_properties.alpha,
+        exterior_wall_value=self.building_exterior_radiative_properties.alpha,
+        interior_and_exterior_space_value=self.inside_air_radiative_properties.alpha,  # pylint: disable=line-too-long
     )
     # transmittance
     self._tau = _assign_interior_and_exterior_values(
         exterior_walls=exterior_walls,
         interior_walls=interior_walls,
-        interior_wall_value=inside_wall_radiative_properties.tau,
-        exterior_wall_value=building_exterior_radiative_properties.tau,
-        interior_and_exterior_space_value=inside_air_radiative_properties.tau,
+        interior_wall_value=self.inside_wall_radiative_properties.tau,
+        exterior_wall_value=self.building_exterior_radiative_properties.tau,
+        interior_and_exterior_space_value=self.inside_air_radiative_properties.tau,  # pylint: disable=line-too-long
     )
     self._epsilon_vector = self._epsilon[self.interior_wall_mask]
     self.A_tilde_inv = building_radiation_utils.calculate_A_tilde_inv(  # pylint: disable=invalid-name
@@ -852,10 +884,6 @@ class FloorPlanBasedBuilding(BaseSimulatorBuilding):
     self.IFAinv = building_radiation_utils.calculate_IFAinv(  # pylint: disable=invalid-name
         self.interior_wall_VF, self.A_tilde_inv
     )
-
-    ## End of radiation-related calculation
-
-    self.reset()
 
   @property
   def density(self) -> np.ndarray:
