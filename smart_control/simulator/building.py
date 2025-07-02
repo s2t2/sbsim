@@ -276,7 +276,7 @@ def _construct_cv_type_array(
 ) -> np.ndarray:
   """Fills once the CV type matrix and save it.
 
-  In the original imlementation,
+  In the original implementation,
       the sweep() function would call the get_cv_type() function every time,
       repeating logic that only needed to be computed once and saved.
 
@@ -407,7 +407,7 @@ class Building(BaseSimulatorBuilding):
       length of the building.
     temp: The current temp in K of each control volume.
     conductivity: Thermal conductivity in of each control volume W/m/K.
-    heat_capacity: Thermal heat cpacity of each control volume in J/kg/K.
+    heat_capacity: Thermal heat capacity of each control volume in J/kg/K.
     density: Material density in kg/m3 of each control volume.
     input_q: Heat energy applied (sign indicates heating/cooling) at the CV in W
       (J/s).
@@ -811,6 +811,7 @@ class FloorPlanBasedBuilding(BaseSimulatorBuilding):
       inside_wall_radiative_properties = RadiationProperties(
           epsilon=0.0, alpha=0.0, tau=0.0
       )
+
     if building_exterior_radiative_properties is None:
       building_exterior_radiative_properties = RadiationProperties(
           epsilon=0.0, alpha=0.0, tau=0.0
@@ -999,9 +1000,7 @@ class FloorPlanBasedBuilding(BaseSimulatorBuilding):
 
     This function calculates the net radiative heat flux and radiosity for each
     interior wall.
-
     """
-
     q_lwx = building_radiation_utils.net_radiative_heatflux_function_of_T(
         temperature_estimates[self.interior_wall_mask], self.IFAinv
     )
