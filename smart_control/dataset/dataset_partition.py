@@ -84,8 +84,8 @@ class BuildingDatasetPartition:
         - `'observation_ids'`
         - `'observation_timestamps'`
         - `'reward_info_ids'`
-        - `'reward_timestamps'`
         - `'reward_info_timestamps'`
+        - `'reward_timestamps'`
 
         Each of these keys has a corresponding public method for convenience.
         See corresponding documentation below for more information about each.
@@ -103,15 +103,15 @@ class BuildingDatasetPartition:
         "reward_info_timestamps": metadata["reward_info_timestamps"],
     }
 
-    # here we were redundantly adding information from the dataset.
-    # however we should consider whether this is desired, or if we would prefer
-    # to reach into the dataset instead as necessary...
+    # here we were previously redundantly adding information from the dataset:
     #
     # if "device_infos" not in metadata.keys():
     #  metadata["device_infos"] = self.ds.device_infos
     #
     # if "zone_infos" not in metadata.keys():
     #  metadata["zone_infos"] = self.ds.zone_infos
+    #
+    # however we are now preferring to reach into the dataset as desired
 
     return metadata
 
@@ -188,6 +188,8 @@ class BuildingDatasetPartition:
   @cached_property
   def reward_info_ids_map(self) -> dict:
     """A mapping of unique reward info identifiers.
+
+    See: `RewardInfo` in "smart_control/proto/smart_control_reward.proto".
 
     Returns:
       A dictionary where the keys are the [`reward_info_ids`](./#smart_control.dataset.dataset_partition.BuildingDatasetPartition.reward_info_ids)
