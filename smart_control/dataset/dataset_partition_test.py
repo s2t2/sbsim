@@ -136,6 +136,28 @@ _ACTION_IDS_MAP = {
 _ACTION_IDS = list(_ACTION_IDS_MAP.keys())
 
 
+_REWARD_IDS_MAP = {
+    'agent_reward_value': 0,
+    'productivity_reward': 1,
+    'electricity_energy_cost': 2,
+    'natural_gas_energy_cost': 3,
+    'carbon_emitted': 4,
+    'carbon_cost': 5,
+    'productivity_weight': 6,
+    'energy_cost_weight': 7,
+    'carbon_emission_weight': 8,
+    'person_productivity': 9,
+    'total_occupancy': 10,
+    'reward_scale': 11,
+    'reward_shift': 12,
+    'productivity_regret': 13,
+    'normalized_productivity_regret': 14,
+    'normalized_energy_cost': 15,
+    'normalized_carbon_emission': 16,
+}
+_REWARD_IDS = list(_REWARD_IDS_MAP.keys())
+
+
 @pytest.mark.usefixtures('set_dataset')
 @pytest.mark.usefixtures('set_partition')
 class TestBuildingDatasetPartition(absltest.TestCase):
@@ -188,7 +210,7 @@ class TestBuildingDatasetPartition(absltest.TestCase):
         'action_timestamps',
         'observation_ids_map',
         'observation_timestamps',
-        'reward_ids_map',
+        'reward_info_ids_map',
         'reward_info_timestamps',
         'reward_timestamps',
     ]
@@ -199,7 +221,7 @@ class TestBuildingDatasetPartition(absltest.TestCase):
     # we are surfacing each key into its own high-level public property:
     self.assertEqual(metadata['action_ids_map'], self.partition.action_ids_map)
     self.assertEqual(metadata['observation_ids_map'], self.partition.observation_ids_map)
-    self.assertEqual(metadata['reward_ids_map'], self.partition.reward_ids_map)
+    self.assertEqual(metadata['reward_info_ids_map'], self.partition.reward_info_ids_map)
 
     self.assertEqual(metadata['action_timestamps'], self.partition.action_timestamps)
     self.assertEqual(metadata['observation_timestamps'], self.partition.observation_timestamps)
@@ -222,8 +244,6 @@ class TestBuildingDatasetPartition(absltest.TestCase):
 
   @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
   def test_reward_value_matrix(self):
-    # QUESTION: there are 3252 reward identifiers, but only 17 columns here
-    # so what are these 17 columns about?
     self.assertEqual(self.partition.reward_value_matrix.shape, (51852, 17))
 
   @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
@@ -256,20 +276,36 @@ class TestBuildingDatasetPartition(absltest.TestCase):
     self.assertEqual(len(values), len(list(set(values))))  # all unique
 
   @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
-  def test_reward_ids_map(self):
-    reward_ids_map = self.partition.reward_ids_map
-    self.assertIsInstance(reward_ids_map, dict)
-    self.assertEqual(len(reward_ids_map), 3252)
+  def test_reward_info_ids_map(self):
+    reward_info_ids_map = self.partition.reward_info_ids_map
+    self.assertIsInstance(reward_info_ids_map, dict)
+    self.assertEqual(len(reward_info_ids_map), 3252)
 
     # keys are the reward ids (there are 3252 but here are some examples):
-    keys = list(reward_ids_map.keys())
+    keys = list(reward_info_ids_map.keys())
     self.assertEqual(keys[0], 'rooms/9028552126@heating_setpoint_temperature')
     self.assertEqual(keys[-1], '14409954889734029312@air_conditioning_electrical_energy_rate')  # pylint: disable=line-too-long
 
     # values are unique integers:
-    values = list(reward_ids_map.values())
+    values = list(reward_info_ids_map.values())
     self.assertEqual(values[0], 0)
     self.assertEqual(values[-1], 3251)
+    self.assertEqual(len(values), len(list(set(values))))
+
+  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
+  def test_reward_ids_map(self):
+    reward_ids_map = self.partition.reward_ids_map
+    self.assertIsInstance(reward_ids_map, dict)
+    self.assertEqual(len(reward_ids_map), 17)
+
+    # keys are the reward ids:
+    keys = list(reward_ids_map.keys())
+    self.assertEqual(keys, _REWARD_IDS)
+
+    # values are unique integers:
+    values = list(reward_ids_map.values())
+    self.assertEqual(values[0], 0)
+    self.assertEqual(values[-1], 16)
     self.assertEqual(len(values), len(list(set(values))))
 
   @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
@@ -284,10 +320,15 @@ class TestBuildingDatasetPartition(absltest.TestCase):
     )
 
   @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
-  def test_reward_ids(self):
+  def test_reward_info_ids(self):
     self.assertEqual(
-        self.partition.reward_ids, list(self.partition.reward_ids_map.keys())
+        self.partition.reward_info_ids,
+        list(self.partition.reward_info_ids_map.keys()),
     )
+
+  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
+  def test_reward_ids(self):
+    self.assertEqual(self.partition.reward_ids, _REWARD_IDS)
 
   def _assert_timestamps(self, timestamps, earliest, latest, length):
     """
@@ -411,17 +452,8 @@ class TestBuildingDatasetPartition(absltest.TestCase):
     self.assertIsInstance(df, pd.DataFrame)
     self.assertEqual(df.shape, (51852, 17))
 
-    # columns are the reward ids:
-    # ... (there are 3252 but here are some examples):
-    example_column_names = [
-        'rooms/9028552126@heating_setpoint_temperature',
-        '14409954889734029312@air_conditioning_electrical_energy_rate',
-    ]
-    for column_name in example_column_names:
-      self.assertIn(column_name, df.columns)
-    #
-    # QUESTION: if the columns are supposed to be the reward ids,
-    # ... why are there only 17 columns in the reward_value_matrix?
+    # columns correspond with fields from the `RewardResponse` proto:
+    self.assertEqual(df.columns.tolist(), _REWARD_IDS)
 
     # index values are the reward timestamps:
     self.assertEqual(str(df.index[0]), '2021-12-31 23:55:00+00:00')

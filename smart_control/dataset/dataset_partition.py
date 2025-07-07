@@ -83,7 +83,7 @@ class BuildingDatasetPartition:
         - `'action_timestamps'`
         - `'observation_ids'`
         - `'observation_timestamps'`
-        - `'reward_ids'`
+        - `'reward_info_ids'`
         - `'reward_timestamps'`
         - `'reward_info_timestamps'`
 
@@ -98,7 +98,7 @@ class BuildingDatasetPartition:
         "action_timestamps": metadata["action_timestamps"],
         "observation_ids_map": metadata["observation_ids"],  # renamed
         "observation_timestamps": metadata["observation_timestamps"],
-        "reward_ids_map": metadata["reward_ids"],  # renamed
+        "reward_info_ids_map": metadata["reward_ids"],  # renamed
         "reward_timestamps": metadata["reward_timestamps"],
         "reward_info_timestamps": metadata["reward_info_timestamps"],
     }
@@ -186,13 +186,12 @@ class BuildingDatasetPartition:
     return self.metadata["observation_ids_map"]
 
   @cached_property
-  def reward_ids_map(self) -> dict:
-    """A mapping of unique reward identifiers.
+  def reward_info_ids_map(self) -> dict:
+    """A mapping of unique reward info identifiers.
 
     Returns:
-      A dictionary where the keys are the [`reward_ids`](./#smart_control.dataset.dataset_partition.BuildingDatasetPartition.reward_ids)
-        and the values are unique integers referencing column indices in the [`reward_value_matrix`](./#smart_control.dataset.dataset_partition.BuildingDatasetPartition.reward_value_matrix)
-        as well as the [`reward_info_value_matrix`](./#smart_control.dataset.dataset_partition.BuildingDatasetPartition.reward_info_value_matrix).
+      A dictionary where the keys are the [`reward_info_ids`](./#smart_control.dataset.dataset_partition.BuildingDatasetPartition.reward_info_ids)
+        and the values are unique integers referencing column indices in the [`reward_info_value_matrix`](./#smart_control.dataset.dataset_partition.BuildingDatasetPartition.reward_info_value_matrix).
 
         For example:
 
@@ -204,7 +203,37 @@ class BuildingDatasetPartition:
           }
         ```
     """
-    return self.metadata["reward_ids_map"]
+    return self.metadata["reward_info_ids_map"]
+
+  @cached_property
+  def reward_ids_map(self) -> dict:
+    """A mapping of unique reward identifiers.
+    Reward identifiers correspond with fields from the `RewardResponse` proto.
+    See: `RewardResponse` in "smart_control/proto/smart_control_reward.proto".
+
+    Returns:
+      A dictionary where the keys are the [`reward_ids`](./#smart_control.dataset.dataset_partition.BuildingDatasetPartition.reward_ids)
+        and the values are unique integers referencing column indices in the [`reward_value_matrix`](./#smart_control.dataset.dataset_partition.BuildingDatasetPartition.reward_value_matrix).
+    """
+    return {
+        "agent_reward_value": 0,
+        "productivity_reward": 1,
+        "electricity_energy_cost": 2,
+        "natural_gas_energy_cost": 3,
+        "carbon_emitted": 4,
+        "carbon_cost": 5,
+        "productivity_weight": 6,
+        "energy_cost_weight": 7,
+        "carbon_emission_weight": 8,
+        "person_productivity": 9,
+        "total_occupancy": 10,
+        "reward_scale": 11,
+        "reward_shift": 12,
+        "productivity_regret": 13,
+        "normalized_productivity_regret": 14,
+        "normalized_energy_cost": 15,
+        "normalized_carbon_emission": 16,
+    }
 
   @cached_property
   def action_ids(self) -> list[str]:
@@ -228,12 +257,20 @@ class BuildingDatasetPartition:
   def reward_ids(self) -> list[str]:
     """A list of unique reward identifiers.
 
-    Reward identifiers are in the format of `device_id@field_name` or
+    Reward identifiers correspond with fields from the `RewardResponse` proto.
+    """
+    return list(self.reward_ids_map.keys())
+
+  @cached_property
+  def reward_info_ids(self) -> list[str]:
+    """A list of unique reward info identifiers.
+
+    Reward info identifiers are in the format of `device_id@field_name` or
     `zone_id@field_name`.
     For example: `'rooms/9028552126@heating_setpoint_temperature'` or
     `'14409954889734029312@air_conditioning_electrical_energy_rate'`.
     """
-    return list(self.reward_ids_map.keys())
+    return list(self.reward_info_ids_map.keys())
 
   @cached_property
   def action_timestamps(self) -> list[pd.Timestamp]:
@@ -345,13 +382,13 @@ class BuildingDatasetPartition:
     Returns:
       A `pandas.DataFrame`. Here is an example of the structure:
 
-        | timestamp                 | rooms/9028552126@heating_setpoint_temperature | ... | rooms/9028552250@air_flow_rate |
-        |---------------------------|-----------------------------------------------|-----|--------------------------------|
-        | 2021-12-31 23:55:00+00:00 | -1.005403e-08                                 | ... | 1.797313e-08                   |
-        | 2022-01-01 00:00:00+00:00 | -1.002312e-08                                 | ... | 1.782538e-08                   |
-        | 2022-01-01 00:05:00+00:00 | -1.002312e-08                                 | ... | 1.782538e-08                   |
-        | 2022-01-01 00:10:00+00:00 | -1.002312e-08                                 | ... | 1.782538e-08                   |
-        | 2022-01-01 00:15:00+00:00 | -5.737567e-09                                 | ... | 1.020384e-08                   |
+        | timestamp                 | agent_reward_value | ... | normalized_carbon_emission |
+        |---------------------------|--------------------|-----|----------------------------|
+        | 2021-12-31 23:55:00+00:00 | -1.005403e-08      | ... | 1.797313e-08               |
+        | 2022-01-01 00:00:00+00:00 | -1.002312e-08      | ... | 1.782538e-08               |
+        | 2022-01-01 00:05:00+00:00 | -1.002312e-08      | ... | 1.782538e-08               |
+        | 2022-01-01 00:10:00+00:00 | -1.002312e-08      | ... | 1.782538e-08               |
+        | 2022-01-01 00:15:00+00:00 | -5.737567e-09      | ... | 1.020384e-08               |
     """
     # pylint: enable=line-too-long
     return self._construct_time_series_df(
@@ -366,7 +403,7 @@ class BuildingDatasetPartition:
     """A time-series dataframe of numeric reward info values, constructed from
     the following components:
 
-      + Columns are the [`reward_ids`](./#smart_control.dataset.dataset_partition.BuildingDatasetPartition.reward_ids)
+      + Columns are the [`reward_info_ids`](./#smart_control.dataset.dataset_partition.BuildingDatasetPartition.reward_info_ids)
       + Row indices are the [`reward_info_timestamps`](./#smart_control.dataset.dataset_partition.BuildingDatasetPartition.reward_info_timestamps)
       + Cell values are from the [`reward_info_value_matrix`](./#smart_control.dataset.dataset_partition.BuildingDatasetPartition.reward_info_value_matrix)
 
@@ -384,7 +421,7 @@ class BuildingDatasetPartition:
     # pylint: enable=line-too-long
     return self._construct_time_series_df(
         matrix_name="reward_info_value_matrix",
-        ids_name="reward_ids_map",
+        ids_name="reward_info_ids_map",
         timestamps_name="reward_info_timestamps",
     )
 
