@@ -1,19 +1,4 @@
-"""Tests for regression_building_utils.
-
-Copyright 2024 Google LLC
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    https://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
+"""Tests for regression_building_utils."""
 
 from absl.testing import absltest
 import pandas as pd
@@ -147,7 +132,25 @@ class RegressionBuildingUtilsTest(absltest.TestCase):
         ('dow', 'sin_000'): 0.7818314824680298,
         ('d0', 's0'): 294.5,
     }
-    self.assertDictEqual(expected_feature_map, feature_map)
+
+    # this assertion passes on Linux, but fails on intel-based Macs,
+    # due to floating point math differences:
+    # self.assertDictEqual(expected_feature_map, feature_map)
+
+    # ... equality assertions when applicable:
+    for key in ['timestamp', ('d0', 's0')]:
+      self.assertEqual(feature_map[key], expected_feature_map[key])
+
+    # ... almost-equal assertions for the sin and cos values:
+    for key in [
+        ('hod', 'cos_000'),
+        ('hod', 'sin_000'),
+        ('dow', 'cos_000'),
+        ('dow', 'sin_000'),
+    ]:
+      self.assertAlmostEqual(
+          feature_map[key], expected_feature_map[key], places=7
+      )
 
   def test_get_observation_sequence(self):
     req_ts = pd.Timestamp('2021-01-12 00:00')

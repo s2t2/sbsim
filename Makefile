@@ -1,10 +1,7 @@
 # NOTE: you have to use tabs (not spaces) to define commands in the Makefile
 
 # these are commands to be run, not files to be created:
-.PHONY: activate docs docs-build docs-quiet mdformat pyink isort pylint lint test
-
-# variable pointing to the virtual environment executable files:
-VENV_BIN := .venv/bin
+.PHONY: venv-activate docs docs-build docs-quiet mdformat pyink isort pylint lint test
 
 #
 # ENVIRONMENT
@@ -23,16 +20,16 @@ activate:
 #
 
 mdformat:
-	${VENV_BIN}/mdformat README.md docs/
+	poetry run mdformat README.md docs/*
 
 pyink:
-	${VENV_BIN}/pyink .
+	poetry run pyink .
 
 isort:
-	$(VENV_BIN)/isort .
+	poetry run isort .
 
 pylint:
-	$(VENV_BIN)/pylint --rcfile=.pylintrc --ignore=proto smart_control
+	poetry run pylint --rcfile=.pylintrc --ignore=proto smart_control
 
 # mega-command for running all formatters:
 format: mdformat pyink isort pylint
@@ -42,17 +39,17 @@ format: mdformat pyink isort pylint
 #
 
 test:
-	$(VENV_BIN)/pytest --disable-pytest-warnings
+	poetry run pytest --disable-pytest-warnings
 
 #
 # DOCS
 #
 
 docs:
-	$(VENV_BIN)/mkdocs serve
+	poetry run mkdocs serve
 
 docs-quiet:
-	${VENV_BIN}/mkdocs serve --quiet
+	poetry run mkdocs serve --quiet
 
 docs-build:
-	$(VENV_BIN)/mkdocs build
+	poetry run mkdocs build

@@ -72,7 +72,11 @@ theme:
 nav:
   - 'Home': index.md
   - 'Local Development':
-    - 'Setup': setup.md
+    - 'Setup':
+      - 'Overview': setup.md
+      - 'Linux': setup/linux.md
+      - 'Mac': setup/mac.md
+      - 'Docker': setup/docker.md
     - 'Contributing': contributing.md
     - 'Documentation Site': docs-site.md
   - 'API Reference':
@@ -105,6 +109,15 @@ nav:
 markdown_extensions:
   - toc:
       permalink: "#" # adds clickable link anchors for all headings
+
+  # enable language-specific syntax highlighting:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      #line_spans: __span
+      pygments_lang_class: true
+  #- pymdownx.inlinehilite # For inline code highlighting
+  #- pymdownx.snippets
+  - pymdownx.superfences
 
 plugins:
   - search

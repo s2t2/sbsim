@@ -9,6 +9,7 @@ repos:
       language: system
       types: [file, python]
       files: '^smart_control/'
+      exclude: '^smart_control/Dockerfile'
 
     - id: isort
       name: isort
