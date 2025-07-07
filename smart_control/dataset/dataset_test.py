@@ -270,10 +270,10 @@ class TestBuildingDataset(absltest.TestCase):
   def test_building_validations(self):
     with self.assertRaises(ValueError):
       invalid_id = 'OOPS'
-      BuildingDataset(building_id=invalid_id, download=False)
+      BuildingDataset(dataset_id=invalid_id, download=False)
 
-  def test_building_id(self):
-    self.assertEqual(self.ds.building_id, _BUILDING_ID)
+  def test_dataset_id(self):
+    self.assertEqual(self.ds.dataset_id, _BUILDING_ID)
 
   def test_partition_ids(self):
     self.assertEqual(self.ds.partition_ids, _PARTITION_IDS)

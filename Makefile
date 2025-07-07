@@ -12,7 +12,9 @@ VENV_BIN := .venv/bin
 
 # https://stackoverflow.com/questions/33839018/activate-virtualenv-in-makefile
 # this command uses a different shell, so you must run it manually:
-# bash -c "source .venv/bin/activate"
+# 	bash -c "source .venv/bin/activate"
+# or consider setting as a bash alias:
+# 	alias make-env='source .venv/bin/activate'
 activate:
 	@echo "Run this command to activate the environment: source .venv/bin/activate"
 

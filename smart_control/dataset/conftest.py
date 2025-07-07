@@ -70,7 +70,7 @@ def dataset():
     cleanup_files()
 
   print('Initializing the dataset fixture...')
-  return BuildingDataset(building_id='sb1', download=TEST_DATASET_DOWNLOAD)
+  return BuildingDataset(dataset_id='sb1', download=TEST_DATASET_DOWNLOAD)
 
 
 @pytest.fixture(scope='session')
@@ -78,9 +78,7 @@ def partition(dataset):  # pylint: disable=redefined-outer-name
   """Session-scoped pytest fixture for an example dataset partition.
   Will be executed only once, and can be shared across multiple test files.
   """
-  return BuildingDatasetPartition(
-      building_dataset=dataset, partition_id='2022_a'
-  )
+  return BuildingDatasetPartition(dataset=dataset, partition_id='2022_a')
 
 
 # SHIMS TO GET PYTEST FIXTURES TO WORK WITH UNITTEST CLASSES :-)

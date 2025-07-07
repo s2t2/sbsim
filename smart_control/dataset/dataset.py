@@ -16,42 +16,43 @@ from smart_control.utils.constants import ROOT_DIR
 DATA_DIR = os.path.join(ROOT_DIR, "data")
 DOCS_DIR = os.path.join(ROOT_DIR, "docs")
 
-VALID_BUILDING_PARTITIONS = {
+VALID_DATASET_PARTITIONS = {
     "sb1": ["2022_a", "2022_b", "2023_a", "2023_b", "2024_a"]
 }
+"""Specifies the available partition identifiers for each dataset."""
 
 
 class BuildingDataset:
   """A helper class for handling the dataset for a specific building.
 
   Args:
-    building_id (str): The identifier of the building (e.g. "sb1").
+    dataset_id (str): The identifier of the building dataset (e.g. "sb1").
     download (bool): Whether or not to download the dataset.
 
   Examples:
     ```python
-    ds = BuildingDataset(building_id="sb1", download=True)
+    ds = BuildingDataset(dataset_id="sb1", download=True)
     ```
   """
 
-  def __init__(self, building_id="sb1", download=True):
-    self.building_id = building_id
+  def __init__(self, dataset_id="sb1", download=True):
+    self.dataset_id = dataset_id
 
-    if self.building_id not in VALID_BUILDING_PARTITIONS:
-      raise ValueError("Invalid building: '{self.building_id}'.")
+    if self.dataset_id not in VALID_DATASET_PARTITIONS:
+      raise ValueError("Invalid building: '{self.dataset_id}'.")
 
-    self.partition_ids = VALID_BUILDING_PARTITIONS[self.building_id]
+    self.partition_ids = VALID_DATASET_PARTITIONS[self.dataset_id]
 
     if bool(download):
       self.download()
 
   def __repr__(self):
-    return f"<BuildingDataset '{self.building_id}'>"
+    return f"<BuildingDataset '{self.dataset_id}'>"
 
   @property
   def zip_filename(self):
     """The name of the zip file (e.g. "sb1.zip")."""
-    return f"{self.building_id}.zip"
+    return f"{self.dataset_id}.zip"
 
   @property
   def zip_url(self):
@@ -71,7 +72,7 @@ class BuildingDataset:
     """The local directory containing the building's dataset, after it has been
     extracted from the local zip file.
     """
-    return os.path.join(DATA_DIR, self.building_id)
+    return os.path.join(DATA_DIR, self.dataset_id)
 
   def download(self, timeout=60):
     """Downloads the building's dataset from Google Cloud Storage.
@@ -126,7 +127,7 @@ class BuildingDataset:
   @property
   def floorplan_image_filepath(self):
     """Filepath for saving an image of the floorplan."""
-    floorplan_image_filename = f"{self.building_id}_floorplan.png"
+    floorplan_image_filename = f"{self.dataset_id}_floorplan.png"
     return os.path.join(DOCS_DIR, "assets", "images", floorplan_image_filename)
 
   def display_floorplan(

@@ -16,31 +16,31 @@ class BuildingDatasetPartition:
   A partition is a subset of the building's data over a specific time period.
 
   Args:
-    building_dataset (BuildingDataset): The building dataset.
+    dataset (BuildingDataset): The building dataset.
     partition_id (str): The identifier of a partition in the specified dataset
       (e.g. "2022_a").
 
   Example:
     ```python
-    ds = BuildingDataset(building_id='sb1', download=True)
-    partition = BuildingDatasetPartition(building_dataset=ds, partition_id='2022_a')
+    ds = BuildingDataset(dataset_id='sb1', download=True)
+    partition = BuildingDatasetPartition(dataset=ds, partition_id='2022_a')
     ```
   """
   # pylint:enable=line-too-long
 
-  def __init__(self, building_dataset: BuildingDataset, partition_id: str):
-    self.ds = building_dataset
+  def __init__(self, dataset: BuildingDataset, partition_id: str):
+    self.ds = dataset
     self.partition_id = partition_id
 
     if self.partition_id not in self.ds.partition_ids:
       raise ValueError(f"Invalid partition: {self.partition_id}.")
 
   def __repr__(self):
-    return "<BuildingDatasetPartition '{self.ds.building_id}':'{self.partition_id}'>"  # pylint:disable=line-too-long
+    return "<BuildingDatasetPartition '{self.ds.dataset_id}':'{self.partition_id}'>"  # pylint:disable=line-too-long
 
   @property
   def partition_dirpath(self):
-    return os.path.join(self.ds.tabular_dirpath, self.ds.building_id, self.partition_id)  # pylint:disable=line-too-long
+    return os.path.join(self.ds.tabular_dirpath, self.ds.dataset_id, self.partition_id)  # pylint:disable=line-too-long
 
   @property
   def data_filepath(self):
@@ -391,8 +391,8 @@ class BuildingDatasetPartition:
 
 if __name__ == "__main__":
 
-  selected_building_id = input("Please select a building (e.g. 'sb1'): ") or "sb1"  # pylint:disable=line-too-long
-  ds = BuildingDataset(selected_building_id, download=True)
+  selected_dataset_id = input("Please select a building (e.g. 'sb1'): ") or "sb1"  # pylint:disable=line-too-long
+  ds = BuildingDataset(selected_dataset_id, download=True)
   print(ds)
 
   selected_partition_id = input("Please select a partition (e.g. '2022_a'): ") or "2022_a"  # pylint:disable=line-too-long
