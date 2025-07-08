@@ -15,6 +15,16 @@ class BuildingDatasetPartition:
   """A helper class for handling a specific dataset partition.
   A partition is a subset of the building's data over a specific time period.
 
+  The partition contains information about observations, actions, and rewards
+  for each time step:
+
+    - **observation**: information the agent receives from the environment
+    - **action**: a decision the agent makes to interact with the environment
+    - **reward info**: feedback from the environment indicating the agent's
+      performance, contains information needed to compute the reward
+    - **reward**: results from passing the raw reward info through the reward
+      function
+
   Args:
     dataset (BuildingDataset): The building dataset.
     partition_id (str): The identifier of a partition in the specified dataset
@@ -210,7 +220,7 @@ class BuildingDatasetPartition:
   @cached_property
   def reward_ids_map(self) -> dict:
     """A mapping of unique reward identifiers.
-    Reward identifiers correspond with fields from the `RewardResponse` proto.
+
     See: `RewardResponse` in "smart_control/proto/smart_control_reward.proto".
 
     Returns:
@@ -259,7 +269,30 @@ class BuildingDatasetPartition:
   def reward_ids(self) -> list[str]:
     """A list of unique reward identifiers.
 
-    Reward identifiers correspond with fields from the `RewardResponse` proto.
+    See: `RewardResponse` in "smart_control/proto/smart_control_reward.proto".
+
+    Returns:
+      A list of the reward identifiers:
+
+        [
+          "agent_reward_value",
+          "productivity_reward",
+          "electricity_energy_cost",
+          "natural_gas_energy_cost",
+          "carbon_emitted",
+          "carbon_cost",
+          "productivity_weight",
+          "energy_cost_weight",
+          "carbon_emission_weight",
+          "person_productivity",
+          "total_occupancy",
+          "reward_scale",
+          "reward_shift",
+          "productivity_regret",
+          "normalized_productivity_regret",
+          "normalized_energy_cost",
+          "normalized_carbon_emission"
+        ]
     """
     return list(self.reward_ids_map.keys())
 
@@ -267,10 +300,14 @@ class BuildingDatasetPartition:
   def reward_info_ids(self) -> list[str]:
     """A list of unique reward info identifiers.
 
+    See: `RewardInfo` in "smart_control/proto/smart_control_reward.proto".
+
     Reward info identifiers are in the format of `device_id@field_name` or
     `zone_id@field_name`.
-    For example: `'rooms/9028552126@heating_setpoint_temperature'` or
-    `'14409954889734029312@air_conditioning_electrical_energy_rate'`.
+    For example:
+
+      + `'rooms/9028552126@heating_setpoint_temperature'`
+      + `'14409954889734029312@air_conditioning_electrical_energy_rate'`
     """
     return list(self.reward_info_ids_map.keys())
 
