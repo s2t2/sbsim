@@ -322,13 +322,13 @@ class BuildingDataset:
     Returns:
       A `pandas.DataFrame`. Here is an example of the structure:
 
-        |    | field_name                            | is_actionable | is_observable | devices_actionable | devices_observable |
-        |---:|:--------------------------------------|:--------------|:--------------|:-------------------|:-------------------|
-        |  0 | building_air_static_pressure_sensor   | False         | True          | 0                  | 3                  |
-        |  1 | building_air_static_pressure_setpoint | True          | True          | 3                  | 3                  |
-        |  2 | cooling_percentage_command            | True          | True          | 3                  | 3                  |
-        |  3 | differential_pressure_sensor          | False         | True          | 0                  | 2                  |
-        |  4 | differential_pressure_setpoint        | True          | True          | 2                  | 2                  |
+        |    | field_name                            | is_actionable | is_observable | n_devices_actionable | n_devices_observable |
+        |---:|:--------------------------------------|:--------------|:--------------|:---------------------|:---------------------|
+        |  0 | building_air_static_pressure_sensor   | False         | True          | 0                    | 3                    |
+        |  1 | building_air_static_pressure_setpoint | True          | True          | 3                    | 3                    |
+        |  2 | cooling_percentage_command            | True          | True          | 3                    | 3                    |
+        |  3 | differential_pressure_sensor          | False         | True          | 0                    | 2                    |
+        |  4 | differential_pressure_setpoint        | True          | True          | 2                    | 2                    |
 
     """
     # pylint: enable=line-too-long
@@ -342,8 +342,8 @@ class BuildingDataset:
           "field_name": field,
           "is_actionable": field in actionable_fields,
           "is_observable": field in observable_fields,
-          "devices_actionable": self.actionable_field_counts.get(field, 0),
-          "devices_observable": self.observable_field_counts.get(field, 0),
+          "n_devices_actionable": self.actionable_field_counts.get(field, 0),
+          "n_devices_observable": self.observable_field_counts.get(field, 0),
       })
     return pd.DataFrame(records).sort_values(by="field_name")
 

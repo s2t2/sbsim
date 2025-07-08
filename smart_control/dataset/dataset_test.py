@@ -422,8 +422,8 @@ class TestBuildingDataset(absltest.TestCase):
             'field_name',
             'is_actionable',
             'is_observable',
-            'devices_actionable',
-            'devices_observable',
+            'n_devices_actionable',
+            'n_devices_observable',
         ],
     )
     # some are observable:
@@ -433,8 +433,8 @@ class TestBuildingDataset(absltest.TestCase):
             'field_name': 'building_air_static_pressure_sensor',
             'is_actionable': False,
             'is_observable': True,
-            'devices_actionable': 0,
-            'devices_observable': 3,
+            'n_devices_actionable': 0,
+            'n_devices_observable': 3,
         },
     )
     # some are actionable:
@@ -444,8 +444,8 @@ class TestBuildingDataset(absltest.TestCase):
             'field_name': 'zone_air_temperature_sensor',
             'is_actionable': False,
             'is_observable': True,
-            'devices_actionable': 0,
-            'devices_observable': 123,
+            'n_devices_actionable': 0,
+            'n_devices_observable': 123,
         },
     )
     # some are both actionable and observable:
