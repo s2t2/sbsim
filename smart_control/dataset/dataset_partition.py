@@ -101,7 +101,6 @@ class BuildingDatasetPartition:
         See corresponding documentation below for more information about each.
     """
     metadata = pickle.load(open(self.metadata_filepath, "rb"))
-
     # renaming keys:
     metadata = {
         "action_ids_map": metadata["action_ids"],  # renamed
@@ -112,17 +111,6 @@ class BuildingDatasetPartition:
         "reward_timestamps": metadata["reward_timestamps"],
         "reward_info_timestamps": metadata["reward_info_timestamps"],
     }
-
-    # here we were previously redundantly adding information from the dataset:
-    #
-    # if "device_infos" not in metadata.keys():
-    #  metadata["device_infos"] = self.ds.device_infos
-    #
-    # if "zone_infos" not in metadata.keys():
-    #  metadata["zone_infos"] = self.ds.zone_infos
-    #
-    # however we are now preferring to reach into the dataset as desired
-
     return metadata
 
   #

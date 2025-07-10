@@ -474,7 +474,7 @@ class TestBuildingDatasetPartition(absltest.TestCase):
     self.assertIsInstance(df, pd.DataFrame)
     self.assertEqual(df.shape, (51852, 3252))
 
-    # columns are the reward ids:
+    # columns are the reward info ids:
     # ... (there are 3252 but here are some examples):
     example_column_names = [
         'rooms/9028552126@heating_setpoint_temperature',

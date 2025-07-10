@@ -113,7 +113,7 @@ class BuildingDataset:
   def floorplan(self) -> np.ndarray:
     """The building's floorplan, as a numpy array.
 
-    The floorplan consists of a map of pixels. Here is a mapping of the values:
+    The floorplan consists of a map of pixels with the following values:
 
       + 0: inside / internal space
       + 1: wall / boundary
