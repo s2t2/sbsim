@@ -19,7 +19,7 @@ from smart_control.dataset.dataset import DATA_DIR
 # EXAMPLE BUILDING LEVEL DATA
 #
 
-_BUILDING_ID = 'sb1'
+_DATASET_ID = 'sb1'
 _PARTITION_IDS = ['2022_a', '2022_b', '2023_a', '2023_b', '2024_a']
 
 _DEVICE_LAYOUT_IDS = [
@@ -273,7 +273,7 @@ class TestBuildingDataset(absltest.TestCase):
       BuildingDataset(dataset_id=invalid_id, download=False)
 
   def test_dataset_id(self):
-    self.assertEqual(self.ds.dataset_id, _BUILDING_ID)
+    self.assertEqual(self.ds.dataset_id, _DATASET_ID)
 
   def test_partition_ids(self):
     self.assertEqual(self.ds.partition_ids, _PARTITION_IDS)
