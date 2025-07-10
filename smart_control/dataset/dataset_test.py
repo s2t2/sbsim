@@ -386,6 +386,9 @@ class TestBuildingDataset(absltest.TestCase):
     value_counts = self.ds.observable_field_counts
     self.assertIsInstance(value_counts, pd.Series)
     self.assertEqual(len(value_counts), 51)
+    self.assertEqual(
+        sorted(list(value_counts.keys())), _DEVICE_OBSERVABLE_FIELD_NAMES
+    )
     # counts how many devices support each field:
     self.assertEqual(
         value_counts.head(5).to_dict(),
@@ -414,6 +417,9 @@ class TestBuildingDataset(absltest.TestCase):
     value_counts = self.ds.actionable_field_counts
     self.assertIsInstance(value_counts, pd.Series)
     self.assertEqual(len(value_counts), 27)
+    self.assertEqual(
+        sorted(list(value_counts.keys())), _DEVICE_ACTIONABLE_FIELD_NAMES
+    )
     # counts how many devices support each field:
     self.assertEqual(
         value_counts.head(5).to_dict(),
