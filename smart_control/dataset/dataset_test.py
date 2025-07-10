@@ -1,6 +1,7 @@
 """Tests for BuildingDataset class."""
 
 import os
+import tempfile
 import unittest
 
 from absl.testing import absltest
@@ -297,16 +298,17 @@ class TestBuildingDataset(absltest.TestCase):
 
   @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
   def test_display_floorplan(self):
-    # setup:
-    filepath = os.path.join(os.path.dirname(__file__), 'tmp_floorplan.png')
-    self.assertEqual(os.path.isfile(filepath), False)
+    with tempfile.TemporaryDirectory() as temp_dir:
+      filepath = os.path.join(temp_dir, 'tmp_floorplan.png')
+      self.assertFalse(os.path.isfile(filepath))
 
-    # it saves the image to disk, with option to customize the filepath:
-    self.ds.display_floorplan(show=False, save=True, image_filepath=filepath)
-    self.assertEqual(os.path.isfile(filepath), True)
+      self.ds.display_floorplan(show=False, save=True, image_filepath=filepath)
 
-    # clean up:
-    os.remove(filepath)
+      # it saves the image to disk, at the specified location:
+      self.assertTrue(os.path.isfile(filepath))
+
+    # testing note: the temp dir gets deleted automatically :-)
+    self.assertFalse(os.path.isfile(filepath))
 
   # DEVICES
 
