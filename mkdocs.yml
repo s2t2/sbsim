@@ -83,7 +83,7 @@ nav:
     - api/config.md
     - 'Dataset':
       - api/dataset/dataset.md
-      - api/dataset/dataset_partition.md
+      - api/dataset/partition.md
     - api/environment.md
     - api/models.md
     - 'Reinforcement Learning':

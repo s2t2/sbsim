@@ -1,6 +1,6 @@
 # Building Dataset Partition
 
-::: smart_control.dataset.dataset_partition.BuildingDatasetPartition
+::: smart_control.dataset.partition.BuildingDatasetPartition
     options:
       members:
       #- data

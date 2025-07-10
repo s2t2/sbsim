@@ -27,7 +27,7 @@ import pytest
 
 from smart_control.dataset.dataset import BuildingDataset
 from smart_control.dataset.dataset import DATA_DIR
-from smart_control.dataset.dataset_partition import BuildingDatasetPartition
+from smart_control.dataset.partition import BuildingDatasetPartition
 
 load_dotenv()
 

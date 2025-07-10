@@ -10,7 +10,7 @@ import pytest
 
 from smart_control.dataset.conftest import SKIP_REASON
 from smart_control.dataset.conftest import TEST_DATASET
-from smart_control.dataset.dataset_partition import BuildingDatasetPartition
+from smart_control.dataset.partition import BuildingDatasetPartition
 
 #
 # HIGH LEVEL TESTS FOR ALL PARTITIONS IN BUILDING "SB1"...
