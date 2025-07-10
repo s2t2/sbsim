@@ -379,14 +379,22 @@ class TestBuildingDataset(absltest.TestCase):
     self.assertEqual(len(observable_fields), 51)
     self.assertEqual(observable_fields, _DEVICE_OBSERVABLE_FIELD_NAMES)
 
+  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
+  def test_observable_field_counts(self):
     value_counts = self.ds.observable_field_counts
     self.assertIsInstance(value_counts, pd.Series)
     self.assertEqual(len(value_counts), 51)
+    # counts how many devices support each field:
     self.assertEqual(
-        value_counts.head(1).to_dict(),
-        {'supply_air_damper_percentage_command': 123},
+        value_counts.head(5).to_dict(),
+        {
+            'supply_air_damper_percentage_command': 123,
+            'zone_air_cooling_temperature_setpoint': 123,
+            'supply_air_flowrate_setpoint': 123,
+            'zone_air_temperature_sensor': 123,
+            'zone_air_heating_temperature_setpoint': 122,
+        },
     )
-
     self.assertEqual(
         value_counts.tail(1).to_dict(),
         {'supervisor_supply_water_temperature_setpoint': 1},
@@ -399,16 +407,25 @@ class TestBuildingDataset(absltest.TestCase):
     self.assertEqual(len(actionable_fields), 27)
     self.assertEqual(actionable_fields, _DEVICE_ACTIONABLE_FIELD_NAMES)
 
-    value_counts = self.ds.observable_field_counts
+  @unittest.skipUnless(TEST_DATASET, SKIP_REASON)
+  def test_actionable_field_counts(self):
+    value_counts = self.ds.actionable_field_counts
     self.assertIsInstance(value_counts, pd.Series)
-    self.assertEqual(len(value_counts), 51)
+    self.assertEqual(len(value_counts), 27)
+    # counts how many devices support each field:
     self.assertEqual(
-        value_counts.head(1).to_dict(),
-        {'supply_air_damper_percentage_command': 123},
+        value_counts.head(5).to_dict(),
+        {
+            'zone_air_cooling_temperature_setpoint': 123,
+            'supply_air_damper_percentage_command': 123,
+            'supply_air_flowrate_setpoint': 123,
+            'zone_air_heating_temperature_setpoint': 122,
+            'heating_water_valve_percentage_command': 99,
+        },
     )
     self.assertEqual(
         value_counts.tail(1).to_dict(),
-        {'supervisor_supply_water_temperature_setpoint': 1},
+        {'program_supply_water_temperature_setpoint': 1},
     )
 
   @unittest.skipUnless(TEST_DATASET, SKIP_REASON)

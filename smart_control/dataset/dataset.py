@@ -293,7 +293,7 @@ class BuildingDataset:
 
   @cached_property
   def actionable_field_counts(self) -> pd.Series:
-    """Value counts of all actionable fields across all devices."""
+    """Counts the number of devices supporting each actionable field."""
     return self._count_device_fields("actionable_fields")
 
   @cached_property
@@ -303,7 +303,7 @@ class BuildingDataset:
 
   @cached_property
   def observable_field_counts(self) -> pd.Series:
-    """Value counts of all unique observable fields across all devices."""
+    """Counts the number of devices supporting each observable field."""
     return self._count_device_fields("observable_fields")
 
   @cached_property
