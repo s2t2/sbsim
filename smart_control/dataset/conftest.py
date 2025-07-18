@@ -13,7 +13,8 @@ already exists locally, it only takes around five seconds to load.
 
 The dataset tests will be run if the data is being downloaded, or if there is
 existing local data. You can override whether or not to test the dataset by
-setting the the `TEST_DATASET` environment variable to 'true' or 'false'.
+setting the the `TEST_DATASET` environment variable to 'true' or 'false'. If set
+to `true`, `TEST_DATASET_DOWNLOAD` must also be set to `true`.
 
 Downloaded data will not get cleared by default before tests run, but you can
 force a clean up and fresh download by setting the `CLEAR_TEST_DATASET_DOWNLOAD`
@@ -44,13 +45,16 @@ CLEAR_TEST_DATASET_DOWNLOAD = bool(
 DATASET_DIRPATH = os.path.join(DATA_DIR, 'sb1')
 ZIP_FILEPATH = os.path.join(DATA_DIR, 'sb1.zip')
 
-# whether or not to run dataset tests:
+# override for whether or not to run dataset tests:
 TEST_DATASET = os.getenv('TEST_DATASET')
 if TEST_DATASET is not None:
   TEST_DATASET = bool(TEST_DATASET.lower() == 'true')
-  print(TEST_DATASET)
 else:
   TEST_DATASET = bool(TEST_DATASET_DOWNLOAD or os.path.isdir(DATASET_DIRPATH))
+
+# if forcing an override to run the tests, we must also download the data:
+if TEST_DATASET and not TEST_DATASET_DOWNLOAD:
+  TEST_DATASET_DOWNLOAD = True
 
 SKIP_REASON = 'Skip large download by default.'
 
