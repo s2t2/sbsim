@@ -12,9 +12,6 @@ __pycache__/
 .pytest_cache
 
 # data downloads:
-sb1.zip
-sb1/
-
 data/*
 !data/.gitkeep
 data/sb1.zip
