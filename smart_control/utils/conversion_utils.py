@@ -78,7 +78,7 @@ def normalize_dow(dow: int) -> float:
 
 
 def normalize_hod(hod: int) -> float:
-  """Returns a normlized hour of day, mapping  [0,23] to [-1., 1.]."""
+  """Returns a normalized hour of day, mapping  [0,23] to [-1., 1.]."""
   assert hod <= 23 and hod >= 0
   return (float(hod) - 11.5) / 11.5
 

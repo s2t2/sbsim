@@ -113,7 +113,7 @@ message SingleObservationRequest {
 
 // Response for a single observation request.
 message SingleObservationResponse {
-  // The validity time in UTC of the meaurement.
+  // The validity time in UTC of the measurement.
   google.protobuf.Timestamp timestamp = 1;
   // Original request.
   SingleObservationRequest single_observation_request = 2;

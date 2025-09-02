@@ -111,7 +111,7 @@ class SimulatorBuildingTestBase(parameterized.TestCase):
     return hvac
 
   def _create_small_simulator(self):
-    """Creats a small simulator for test."""
+    """Creates a small simulator for test."""
     # Set up simulation parameters
     weather_controller = weather_controller_py.WeatherController(296.0, 296.0)
     time_step_sec = 300.0

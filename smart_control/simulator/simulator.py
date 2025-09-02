@@ -46,7 +46,7 @@ class Simulator:
     Args:
       building: Building object controlling the control volumes.
       hvac: Hvac for the building.
-      weather_controller: Weather Controller for modelling ambient temperature.
+      weather_controller: Weather Controller for modeling ambient temperature.
       time_step_sec: Size of each time step in seconds.
       convergence_threshold: Minimum iteration temperature change to finish a
         FDM time step.
@@ -93,7 +93,7 @@ class Simulator:
     """Returns temperature estimate for corner CV in K for next time step.
 
     This function calculates the solution to an equation involving the energy
-    transfer by conduction to neighoring air CVs as well as energy transfer by
+    transfer by conduction to neighboring air CVs as well as energy transfer by
     convection from the external ambient air.
 
     Args:
@@ -139,7 +139,7 @@ class Simulator:
     """Returns temperature estimate for edge CV in K for next time step.
 
     This function calculates the solution to an equation involving the energy
-    transfer by conduction to neighoring air CVs as well as energy transfer by
+    transfer by conduction to neighboring air CVs as well as energy transfer by
     convection from the external ambient air.
 
     Args:
@@ -188,7 +188,7 @@ class Simulator:
     """Returns temperature estimate for interior CV in K for next time step.
 
     This function calculates the solution to an equation involving the energy
-    transfer by conduction to neighoring air CVs as well as energy transfer
+    transfer by conduction to neighboring air CVs as well as energy transfer
     from heat input to the CV from a diffuser.
 
     Args:

@@ -114,7 +114,7 @@ def _get_one_step_action_timeseries(
   devices = []
   setpoints = []
   values = []
-  acknowledgements = []
+  acknowledgments = []
   for single_action_response in action_response.single_action_responses:
     if '_id_' in single_action_response.request.device_id:
       device_id = single_action_response.request.device_id.split('_id_')[0]
@@ -123,7 +123,7 @@ def _get_one_step_action_timeseries(
     devices.append(device_id)
     setpoints.append(single_action_response.request.setpoint_name)
     values.append(float(single_action_response.request.continuous_value))
-    acknowledgements.append(
+    acknowledgments.append(
         smart_control_building_pb2.SingleActionResponse.ActionResponseType.Name(
             single_action_response.response_type
         )
@@ -133,7 +133,7 @@ def _get_one_step_action_timeseries(
       'device': devices,
       'setpoint': setpoints,
       'value': values,
-      'acknowledgement': acknowledgements,
+      'acknowledgement': acknowledgments,
   })
 
 

@@ -81,7 +81,7 @@ class CVType:
   can be an edge with three neighbors, or a corner with two neighbors.
 
   Using a regular class instead of a data class to ensure consistent
-  assignment of CV proprties.
+  assignment of CV properties.
   """
 
   def __init__(

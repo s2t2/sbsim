@@ -60,7 +60,7 @@ class BuildingRenderer:
     width = self._building_width * self.cv_size
 
     white = 255
-    grey = 128
+    gray = 128
 
     image = PIL.Image.new(mode='L', size=(width, height), color=white)
     draw = ImageDraw.Draw(image)
@@ -69,21 +69,21 @@ class BuildingRenderer:
 
     for x in range(0, image.width + self.cv_size, self.cv_size):
       line = ((x, 0), (x, y_end))
-      draw.line(line, fill=grey)
+      draw.line(line, fill=gray)
       line = ((x - 1, 0), (x - 1, y_end))
-      draw.line(line, fill=grey)
+      draw.line(line, fill=gray)
 
     for y in range(0, image.height + self.cv_size, self.cv_size):
       line = ((0, y), (x_end, y))
-      draw.line(line, fill=grey)
+      draw.line(line, fill=gray)
       line = ((0, y - 1), (x_end, y - 1))
-      draw.line(line, fill=grey)
+      draw.line(line, fill=gray)
     del draw
 
     # make binary
     image = PIL.ImageOps.grayscale(image)
     image = np.array(image)
-    image[image == grey] = 1
+    image[image == gray] = 1
     image[image == white] = 0
     image = np.logical_and(
         image.astype(bool), np.array(self._mask).astype(bool)
