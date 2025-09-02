@@ -60,11 +60,11 @@ class ElectricityEnergyCostTest(parameterized.TestCase):
           7.2,
       ),
   ])
-  def test_cost(self, start_time, end_time, energy_rate, expected_cost):
-    cost = electricity_energy_cost.ElectricityEnergyCost()
+  def test_cost(self, start_time, end_time, energy_rate, expected_cost, default_electricity_cost_calculator):
+    cost_calculator = default_electricity_cost_calculator
     self.assertAlmostEqual(
         expected_cost,
-        cost.cost(
+        cost_calculator.cost(
             start_time=start_time, end_time=end_time, energy_rate=energy_rate
         ),
         places=4,
@@ -97,12 +97,12 @@ class ElectricityEnergyCostTest(parameterized.TestCase):
       ),
   ])
   def test_carbon_emisison(
-      self, start_time, end_time, energy_rate, expected_carbon
+      self, start_time, end_time, energy_rate, expected_carbon, default_electricity_cost_calculator
   ):
-    cost = electricity_energy_cost.ElectricityEnergyCost()
+    cost_calculator = default_electricity_cost_calculator
     self.assertAlmostEqual(
         expected_carbon,
-        cost.carbon(
+        cost_calculator.carbon(
             start_time=start_time, end_time=end_time, energy_rate=energy_rate
         ),
         places=4,
