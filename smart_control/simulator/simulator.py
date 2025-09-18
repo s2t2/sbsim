@@ -206,7 +206,6 @@ class Simulator:
     input_q = self.building.input_q[x][y]
     neighbors = self.building.neighbors[x][y]
     neighbor_temps = [temperature_estimates[nx][ny] for nx, ny in neighbors]
-
     # Ensure interior CV.
     assert len(neighbors) == 4
 
@@ -222,7 +221,31 @@ class Simulator:
 
     thermal_source = input_q / conductivity / z
 
-    return (neighbor_transfer + thermal_source + retained_heat) / denominator
+    # checking for implementation of `include_radiative_heat_transfer` because
+    # the `FloorPlanBasedBuilding` implements it, but the `Building` doesn't
+    if (
+        hasattr(self.building, 'include_radiative_heat_transfer')
+        and self.building.include_radiative_heat_transfer
+    ):
+      # Radiative heat transfer
+      q_lwx_array = (
+          self.building.apply_longwave_interior_radiative_heat_transfer(
+              temperature_estimates
+          )
+      )
+      # q_lwx_idx is -1 if the CV does not have LWX
+      q_lwx_idx = self.building.interior_wall_index[x, y]
+      q_lwx = (
+          (q_lwx_array[q_lwx_idx] / conductivity / z)
+          if q_lwx_idx != -1
+          else 0.0
+      )
+    else:
+      q_lwx = 0.0
+
+    return (
+        neighbor_transfer + thermal_source + retained_heat + q_lwx
+    ) / denominator
 
   def _get_cv_temp_estimate(
       self,
