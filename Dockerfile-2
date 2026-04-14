@@ -1,0 +1,42 @@
+# Use a more recent Ubuntu base image
+FROM --platform=linux/amd64 ubuntu:22.04
+
+# Set up environment
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PATH="/root/.local/bin:$PATH"
+WORKDIR /workspace
+
+# Install system dependencies including Python 3.10, pip, venv, protoc, and ffmpeg
+RUN apt-get update && apt-get install -y     python3.10 python3.10-venv python3-pip     protobuf-compiler ffmpeg git curl     && rm -rf /var/lib/apt/lists/*
+
+# Install Poetry
+RUN curl -sSL https://install.python-poetry.org | python3.10 -
+
+# Add Poetry to PATH (permanently in the image)
+ENV PATH="/root/.poetry/bin:$PATH"
+
+# Copy only files necessary for dependency installation
+COPY pyproject.toml poetry.lock ./
+
+# Configure Poetry and install dependencies
+# Install all dependencies including dev and notebook groups
+RUN poetry config virtualenvs.in-project true &&     poetry install --no-interaction --no-ansi --all-extras
+
+# Copy the rest of the application code
+COPY . .
+
+# Compile .proto files
+# Ensure the output directory exists and __init__.py is created if necessary
+RUN mkdir -p /workspace/smart_control/proto &&     touch /workspace/smart_control/proto/__init__.py &&     protoc --python_out=/workspace/smart_control/proto --proto_path=/workspace/smart_control/proto /workspace/smart_control/proto/smart_control_building.proto /workspace/smart_control/proto/smart_control_normalization.proto /workspace/smart_control/proto/smart_control_reward.proto
+
+# Expose Jupyter port
+EXPOSE 8888
+
+# Set the entrypoint to use poetry run. This ensures that commands are run within the project's virtual environment.
+ENTRYPOINT ["poetry", "run"]
+
+# Default command when the container starts.
+# This will start a Jupyter notebook server.
+CMD ["jupyter", "notebook", "--ip=0.0.0.0", "--port=8888", "--allow-root", "--NotebookApp.token=''", "--no-browser", "--notebook-dir=/workspace/smart_control/notebooks"]
