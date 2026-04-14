@@ -10,6 +10,7 @@ from smart_control.simulator import building
 from smart_control.simulator import building_utils
 from smart_control.simulator import constants
 from smart_control.simulator import stochastic_convection_simulator
+from smart_control.utils import factory_utils
 
 
 def _create_dummy_floor_plan():
@@ -581,12 +582,15 @@ class BuildingTest(parameterized.TestCase):
     np.testing.assert_array_equal(outcome, expected_output)
 
   def test_init_direct_attributes(self):
+    # Values used by _create_dummy_building_deprecated_2 and now passed to factory
     cv_size_cm = 20.0
     floor_height_cm = 300.0
     room_shape = (20, 10)
     building_shape = (6, 3)
 
-    b = _create_dummy_building_deprecated_2()
+    b = factory_utils.DeprecatedBuildingFactory(
+        room_shape=room_shape, building_shape=building_shape
+    )
 
     self.assertEqual(b.cv_size_cm, cv_size_cm)
     self.assertEqual(b.floor_height_cm, floor_height_cm)
@@ -908,9 +912,14 @@ class BuildingTest(parameterized.TestCase):
   # Below is post-refactor of direct attributes (excluding thermal diffusers):
 
   def test_init_direct_attributes_post_refactor(self):
+    # Factory default values
     cv_size_cm = 20.0
     floor_height_cm = 300.0
-    b = _create_dummy_building_post_refactor()
+    
+    dummy_floor_plan = _create_dummy_floor_plan()
+    b = factory_utils.FloorPlanBasedBuildingFactory(
+        floor_plan=dummy_floor_plan, zone_map=dummy_floor_plan
+    )
 
     with self.subTest("air"):
       self.assertEqual(b.cv_size_cm, cv_size_cm)
