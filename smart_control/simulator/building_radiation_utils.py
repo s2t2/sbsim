@@ -10,12 +10,13 @@ from typing import Optional, Tuple
 import numpy as np
 
 from smart_control.simulator import constants
+from smart_control.simulator.solar_radiation import calculate_poa_irradiance  # re-export  # pylint: disable=unused-import
+from smart_control.simulator.solar_radiation import IrradianceComponents  # re-export  # pylint: disable=unused-import
 
 TEMPORARY_MARKED_VALUE = -33
 TEMPORARY_BLOCKED_VALUE = -34
 AIR_IN_LINE_OF_SIGHT = 9  # Air nodes along line of sight between wall nodes
 
-# we are choosing to keep the mathematical notation in this file
 # pylint: disable=invalid-name
 
 
@@ -155,7 +156,9 @@ def net_radiative_heatflux_function_of_t(
       q : Net radiative heat flux [W/m^2]
 
   """
-  sigma = 5.67 * 1e-8  # [W/m^2K^4] Stefan-Boltzmann constant
+  sigma = (
+      constants.STEFAN_BOLTZMANN_CONSTANT
+  )  # [W/m^2K^4] Stefan-Boltzmann constant
 
   q = sigma * ifa_inv @ np.power(T, 4)
   return q
@@ -336,7 +339,7 @@ def fix_view_factors(F: np.ndarray, A: np.ndarray = None) -> np.ndarray:
       Fixed view factor matrix
 
   References:
-      See `FixViewFactors` function in [EnergyPlus](https://github.com/NREL/EnergyPlus/blob/develop/src/EnergyPlus/HeatBalanceIntRadExchange.cc)
+      See `FixViewFactors` function in [EnergyPlus](https://github.com/NREL/EnergyPlus/blob/develop/src/EnergyPlus/HeatBalanceIntRadExchange.cc) # pylint: disable=line-too-long
   """
 
   # Parameter definitions
