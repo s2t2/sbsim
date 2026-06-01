@@ -16,7 +16,6 @@ import os
 
 from absl import app
 from absl import flags
-
 from smart_buildings.smart_control.configs.resources.sb1.config_utils import full_config
 from smart_buildings.smart_control.llm.prompts import generator
 from smart_buildings.smart_control.llm.prompts.sb1 import sb1_promptmaker

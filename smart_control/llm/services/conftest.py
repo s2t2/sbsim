@@ -19,7 +19,6 @@ from smart_buildings.smart_control.llm.services import gemini_service
 from smart_buildings.smart_control.llm.services import llm_service
 from smart_buildings.smart_control.llm.services import vertex_service
 
-
 dotenv.load_dotenv()
 
 TEST_GEMINI_SERVICE_LIVE = bool(

@@ -1,5 +1,4 @@
 from absl.testing import absltest
-
 from smart_buildings.smart_control.environment import conftest as env_conftest
 from smart_buildings.smart_control.llm.prompts import promptmaker_test
 from smart_buildings.smart_control.llm.prompts.sb1 import sb1_promptmaker

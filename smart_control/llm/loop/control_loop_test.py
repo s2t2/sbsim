@@ -3,8 +3,6 @@ from unittest import mock
 from absl.testing import absltest
 import numpy as np
 import pandas as pd
-from tf_agents.trajectories import time_step as ts
-
 # pylint: disable=g-bad-import-order local package imports in their own section below third party packages
 from smart_buildings.smart_control.environment import conftest as env_conftest
 from smart_buildings.smart_control.environment import hybrid_action_environment
@@ -12,7 +10,7 @@ from smart_buildings.smart_control.llm.agents import default_agent
 from smart_buildings.smart_control.llm.loop import conftest
 from smart_buildings.smart_control.llm.loop import control_loop
 from smart_buildings.smart_control.utils import writer_lib
-
+from tf_agents.trajectories import time_step as ts
 
 CLOCK_TIMESTAMP = pd.Timestamp('2026-03-26 12:00:00')
 EXAMPLE_TIME_STEP = ts.TimeStep(
@@ -224,6 +222,7 @@ class LoopResultsTest(absltest.TestCase):
     # RUN THE LOOP (SO WE CAN TEST THE RESULTS AFTERWARDS)
 
     original_step_function = cls.loop.env.step
+
     def step_side_effect(*args, **kwargs):
       time_step = original_step_function(*args, **kwargs)
       return time_step._replace(reward=np.array([10.0]))
@@ -252,7 +251,7 @@ class LoopResultsTest(absltest.TestCase):
               'current_timestamp': '2025-12-12 00:25:00-08:00',
               'current_step': 5,
               'cum_reward': 50.0,
-              'results': []
+              'results': [],
           },
       )
 

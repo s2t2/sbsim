@@ -24,21 +24,20 @@ formatted action that can be used to step the environment.
 """
 
 import abc
-from collections.abc import Sequence, Collection
+from collections.abc import Collection
+from collections.abc import Sequence
 import dataclasses
 import json
 from typing import Any, Literal, Self
 
 import pandas as pd
 import pydantic
-
 from smart_buildings.smart_control.environment import environment
 from smart_buildings.smart_control.environment import hybrid_action_environment
 from smart_buildings.smart_control.llm.schema import output_schema
 
 SteppableActionType = (
-    environment.NormalizedActionValues
-    | hybrid_action_environment.HybridAction
+    environment.NormalizedActionValues | hybrid_action_environment.HybridAction
 )
 
 
@@ -63,6 +62,7 @@ class GuardrailsExceededRecord:
       environment.
     clipped_value: The setpoint value after being clipped to the valid range.
   """
+
   device_id: str
   setpoint_name: str
   requested_value: float
@@ -189,15 +189,13 @@ class ActionContext(output_schema.SetpointsAction, Steppable):
       except KeyError as err:
         raise ValueError(
             f"Setpoint for ({device_id!r}, {setpoint_name!r}) not found in the"
-            f" environment"
+            " environment"
         ) from err
       setpoint_action_names.add(action_name)
 
       normalizer = self.env.action_normalizers.get(setpoint_name)
       if normalizer is None:
-        raise ValueError(
-            f"Normalizer not found for setpoint: {action_name!r}"
-        )
+        raise ValueError(f"Normalizer not found for setpoint: {action_name!r}")
 
       setpoint_value = setpoint.setpoint_value
       setpoint_min = normalizer.setpoint_min  # min native value

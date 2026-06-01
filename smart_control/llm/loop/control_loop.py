@@ -56,11 +56,10 @@ from typing import Any, Final
 
 import numpy as np
 import pandas as pd
-from tf_agents.trajectories import time_step as ts
-
 from smart_buildings.smart_control.llm.agents import default_agent
 from smart_buildings.smart_control.proto import smart_control_reward_pb2 as reward_pb2
 from smart_buildings.smart_control.utils import writer_lib
+from tf_agents.trajectories import time_step as ts
 
 SerializableData = dict[str, Any]
 
@@ -311,7 +310,8 @@ class ControlLoop:
     }
 
   def update_results(
-      self, reward: float,
+      self,
+      reward: float,
       reward_info: reward_pb2.RewardInfo,
       reward_response: reward_pb2.RewardResponse,
   ) -> None:

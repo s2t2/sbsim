@@ -100,7 +100,7 @@ def create_action_response(
     empty_setpoints: bool = False,
     missing_setpoint: bool = False,
     missing_field: bool = False,
-    validity_interval: int = 60
+    validity_interval: int = 60,
 ) -> str:
   """Creates an action response for the continuous action environment.
 
@@ -195,7 +195,7 @@ def create_action_context(
 def create_action_with_custom_intervals(
     validity_intervals: Sequence[int] = DEFAULT_VALIDITY_INTERVALS,
     selected_interval: int = 60,
-)-> output_schema.SetpointsAction:
+) -> output_schema.SetpointsAction:
   """Creates a SetpointsAction with custom validity intervals.
 
   Args:
@@ -228,7 +228,7 @@ def create_action_with_custom_intervals(
 
 def create_hybrid_action_response(
     ahu_1_supply_air_temp: float = 285.0,  # -1.0 (bottom of range)
-    ahu_2_supply_air_temp: float = 295.0,   # 1.0 (top of range)
+    ahu_2_supply_air_temp: float = 295.0,  # 1.0 (top of range)
     hws_supply_water_temp: float = 330.0,  # 0.0 (middle of range)
     ahu_1_run_command: int = 1,  # ON
     ahu_2_run_command: int = 1,  # ON
@@ -236,7 +236,7 @@ def create_hybrid_action_response(
     empty_setpoints: bool = False,
     missing_setpoint: bool = False,
     missing_field: bool = False,
-    validity_interval: int = 60
+    validity_interval: int = 60,
 ) -> str:
   """Creates an action response for the hybrid action environment.
 

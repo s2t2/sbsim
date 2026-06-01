@@ -4,7 +4,6 @@ from unittest import mock
 from absl.testing import absltest
 from absl.testing import parameterized
 import pandas as pd
-
 from smart_buildings.smart_control.environment import conftest as env_conftest
 from smart_buildings.smart_control.environment import environment
 from smart_buildings.smart_control.environment import hybrid_action_environment

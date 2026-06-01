@@ -12,7 +12,8 @@ The models use timezone-aware on and off times, to ensure accurate comparisons.
 """
 
 import calendar
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
+from collections.abc import Sequence
 import dataclasses
 import datetime
 from typing import Any, Self
@@ -69,6 +70,7 @@ class DailySchedule:
     time_zone: The time zone used for the on_time and off_time. Required, even
       if the on_time and off_time are None.
   """
+
   day_name: str
   time_zone: str = "UTC"
   on_time: datetime.time | None = None
@@ -243,7 +245,7 @@ class WeeklySchedule:
     day_names = [schedule.day_name for schedule in self.daily_schedules]
     if sorted(day_names) != sorted(DAY_NAMES):
       raise ValueError(
-          f"Weekly schedule must have a schedule for each day of the week."
+          "Weekly schedule must have a schedule for each day of the week."
           f" Expected: {DAY_NAMES}, got: {day_names}."
       )
 

@@ -6,7 +6,6 @@ from absl.testing import absltest
 from absl.testing import parameterized
 import pandas as pd
 from pandas.tseries import holiday
-
 from smart_buildings.smart_control.environment import conftest as env_conftest
 from smart_buildings.smart_control.llm.utils import schedule_models
 from smart_buildings.smart_control.llm.utils import schedule_tool
@@ -316,9 +315,7 @@ class ScheduleScenariosTest(parameterized.TestCase):
     with self.subTest(name="operational_status"):
       self.assertEqual(schedule.is_operational_day, is_operational_day)
       self.assertEqual(schedule.building_is_operational, is_operational)
-      self.assertEqual(
-          schedule.building_operational_mode, operational_mode
-      )
+      self.assertEqual(schedule.building_operational_mode, operational_mode)
 
 
 #
@@ -367,9 +364,7 @@ class CustomHolidayScheduleTest(parameterized.TestCase):
       ),
   )
   def test_custom_holidays(self, timestamp, is_holiday):
-    self.mock_timestamp_now.return_value = pd.Timestamp(
-        timestamp, tz=TIME_ZONE
-    )
+    self.mock_timestamp_now.return_value = pd.Timestamp(timestamp, tz=TIME_ZONE)
     schedule = schedule_tool.ScheduleTool(
         time_zone=TIME_ZONE,
         cal=self.custom_calendar,

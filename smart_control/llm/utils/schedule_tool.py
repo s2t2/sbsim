@@ -47,7 +47,6 @@ from typing import Any, Final, TypeAlias
 
 import pandas as pd
 from pandas.tseries import holiday
-
 from smart_buildings.smart_control.environment import environment
 from smart_buildings.smart_control.llm.utils import schedule_models
 
@@ -59,6 +58,7 @@ class BuildingOperationalMode(enum.Enum):
 
   ON = "ON"
   OFF = "OFF"
+
 
 OPERATIONAL_MODES = tuple(mode.value for mode in BuildingOperationalMode)
 
@@ -224,8 +224,7 @@ class BaseSchedule(abc.ABC):
   def holidays(self) -> set[str]:
     """The holiday calendar, as a set of string dates (like '2025-01-01')."""
     return {
-        d.strftime("%Y-%m-%d")
-        for d in self._get_holidays(return_name=False)
+        d.strftime("%Y-%m-%d") for d in self._get_holidays(return_name=False)
     }
 
   @property

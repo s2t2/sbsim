@@ -10,7 +10,6 @@ import os
 from typing import Type
 
 from absl import logging
-
 from smart_buildings.smart_control.environment import hybrid_action_environment
 from smart_buildings.smart_control.llm.prompts import promptmaker
 
@@ -36,9 +35,7 @@ def write_prompt_md(
   env.reset()
 
   logging.info("CREATING PROMPTMAKER: %s...", promptmaker_class.__name__)
-  pm = promptmaker_class(
-      env=env, include_weights=include_weights
-  )
+  pm = promptmaker_class(env=env, include_weights=include_weights)
 
   logging.info("SETTING UP EXAMPLE PROMPTS DIRECTORY...")
   examples_dirpath = os.path.join(dirpath, "examples")

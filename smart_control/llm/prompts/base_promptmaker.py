@@ -95,10 +95,12 @@ class BasePromptmaker(abc.ABC):
   @property
   def prompt(self) -> str:
     """The final prompt, including response formatting instructions."""
-    return self.dedent('\n\n'.join((
-        self.base_prompt,
-        self.formatting_instructions_section,
-    )))
+    return self.dedent(
+        '\n\n'.join((
+            self.base_prompt,
+            self.formatting_instructions_section,
+        ))
+    )
 
   @property
   def formatting_instructions_section(self) -> str:

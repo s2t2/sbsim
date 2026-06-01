@@ -1,14 +1,11 @@
 from absl.testing import absltest
 from absl.testing import parameterized
-
 import pandas as pd
-
 from smart_buildings.smart_control.environment import conftest as env_conftest
 from smart_buildings.smart_control.llm.prompts import promptmaker
 from smart_buildings.smart_control.llm.schema import output_schema
 from smart_buildings.smart_control.utils.proto_parsers import observation_response_parser
 from smart_buildings.smart_control.utils.proto_parsers import reward_info_parser
-
 
 WEIGHTS = {
     'energy_cost_weight': 0.3,

@@ -10,7 +10,6 @@ import textwrap
 
 from absl.testing import absltest
 import langchain.output_parsers
-
 from smart_buildings.smart_control.llm.schema import conftest
 from smart_buildings.smart_control.llm.schema import output_schema
 

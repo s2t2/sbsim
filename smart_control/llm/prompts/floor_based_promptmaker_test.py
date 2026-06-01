@@ -1,5 +1,4 @@
 from absl.testing import absltest
-
 from smart_buildings.smart_control.environment import conftest as env_conftest
 from smart_buildings.smart_control.llm.prompts import floor_based_promptmaker
 from smart_buildings.smart_control.utils import temperature_conversion as tc

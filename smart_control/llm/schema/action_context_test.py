@@ -344,9 +344,7 @@ class HybridActionContextFromJsonTest(ActionContextFromJsonTest):
     )
 
   def test_initialization(self):
-    self.assertIsInstance(
-        self.action_ctx, action_context.HybridActionContext
-    )
+    self.assertIsInstance(self.action_ctx, action_context.HybridActionContext)
 
 
 #

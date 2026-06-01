@@ -38,7 +38,6 @@ from typing import Any, override
 
 from absl import logging
 import backoff
-
 from smart_buildings.smart_control.environment import hybrid_action_environment
 from smart_buildings.smart_control.llm.agents import base_agent
 from smart_buildings.smart_control.llm.agents import schedule_agent

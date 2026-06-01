@@ -11,7 +11,6 @@ agent control loop.
 from typing import Final
 
 import numpy as np
-
 from smart_buildings.smart_control.environment import environment
 from smart_buildings.smart_control.environment import hybrid_action_environment
 from smart_buildings.smart_control.llm.agents import base_agent
@@ -20,7 +19,6 @@ from smart_buildings.smart_control.llm.schema import output_schema
 from smart_buildings.smart_control.proto import smart_control_building_pb2 as building_pb2
 from smart_buildings.smart_control.proto import smart_control_reward_pb2 as reward_pb2
 from smart_buildings.smart_control.utils import serialization
-
 
 DEFAULT_JUSTIFICATION: Final[str] = "Default action."
 DEFAULT_SETPOINT_JUSTIFICATION: Final[str] = "Default value."

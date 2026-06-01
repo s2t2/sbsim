@@ -9,7 +9,6 @@ from typing import get_args
 
 from absl.testing import absltest
 import pydantic
-
 from smart_buildings.smart_control.llm.schema import conftest
 from smart_buildings.smart_control.llm.schema import output_schema
 
@@ -113,7 +112,8 @@ class ActionTest(absltest.TestCase):
 
   def test_find_setpoint_invalid_setpoint_name(self):
     setpoint = self.action.find_setpoint(
-        device_id="boiler_0", setpoint_name="oops")
+        device_id="boiler_0", setpoint_name="oops"
+    )
     self.assertIsNone(setpoint)
 
   def test_find_setpoint(self):

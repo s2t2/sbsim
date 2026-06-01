@@ -2,7 +2,6 @@ from unittest import mock
 
 from absl.testing import absltest
 from absl.testing import parameterized
-
 from smart_buildings.smart_control.environment import conftest as env_conftest
 from smart_buildings.smart_control.llm.agents import default_agent_test
 from smart_buildings.smart_control.llm.agents import schedule_agent

@@ -6,7 +6,6 @@ from absl.testing import absltest
 from absl.testing import parameterized
 import mock
 import pandas as pd
-
 from smart_buildings.smart_control.environment import conftest
 from smart_buildings.smart_control.environment import environment
 from smart_buildings.smart_control.environment import hybrid_action_environment
@@ -262,9 +261,7 @@ class LLMEnvironmentTest(parameterized.TestCase):
   def test_get_action_records(self, method_name, values, expect_df):
     result = getattr(self.env, method_name)(values)
     if expect_df:
-      self.assertCountEqual(
-          result.to_dict("records"), conftest.ACTION_RECORDS
-      )
+      self.assertCountEqual(result.to_dict("records"), conftest.ACTION_RECORDS)
     else:
       self.assertCountEqual(
           [dataclasses.asdict(r) for r in result],
@@ -313,7 +310,7 @@ class LLMHybridActionEnvironmentTest(parameterized.TestCase):
     super().setUp()
     self.env = conftest.create_hybrid_action_environment(
         layout=conftest.DEMO_LAYOUT,
-        default_actions=conftest.DEFAULT_HYBRID_ACTIONS
+        default_actions=conftest.DEFAULT_HYBRID_ACTIONS,
     )
 
   def test_initialization(self):

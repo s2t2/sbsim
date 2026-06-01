@@ -37,7 +37,6 @@ import dotenv
 from google import genai
 from smart_buildings.smart_control.llm.services import llm_service
 
-
 dotenv.load_dotenv()
 
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')

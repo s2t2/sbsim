@@ -1,7 +1,6 @@
 import json
 
 from absl.testing import absltest
-
 from smart_buildings.smart_control.llm.agents import base_agent
 
 
@@ -27,12 +26,10 @@ class ErrorRecordNestedExceptionsTest(absltest.TestCase):
         {
             'error_type': 'ValidationError',
             'error_message': 'Validation failed',
-            'details': [
-                {
-                    'loc': ['field'],
-                    'ctx': {'error': 'Something went wrong'},
-                }
-            ],
+            'details': [{
+                'loc': ['field'],
+                'ctx': {'error': 'Something went wrong'},
+            }],
             'metadata': {'current_step': 4, 'response_txt': 'OOPS'},
         },
     )

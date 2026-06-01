@@ -13,7 +13,6 @@ for turning devices on and off.
 from typing import Final
 
 import numpy as np
-
 from smart_buildings.smart_control.environment import hybrid_action_environment
 from smart_buildings.smart_control.llm.agents import default_agent
 from smart_buildings.smart_control.llm.schema import action_context
@@ -22,7 +21,6 @@ from smart_buildings.smart_control.llm.utils import schedule_tool as schedule_li
 from smart_buildings.smart_control.proto import smart_control_building_pb2 as building_pb2
 from smart_buildings.smart_control.proto import smart_control_reward_pb2 as reward_pb2
 from smart_buildings.smart_control.utils import serialization
-
 
 NATIVE_ON: Final[float] = 1.0
 NATIVE_OFF: Final[float] = 0.0

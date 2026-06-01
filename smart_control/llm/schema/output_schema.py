@@ -19,7 +19,6 @@ from collections.abc import Sequence
 from typing import Literal, TypeAlias
 
 import pydantic
-
 from smart_buildings.smart_control.utils import serialization
 
 Field = pydantic.Field
@@ -57,13 +56,9 @@ class DeviceSetpoint(pydantic.BaseModel):
     justification: The reason for choosing this specific device setting.
   """
 
-  device_id: str = Field(
-      description="The unique identifier of the device."
-  )
+  device_id: str = Field(description="The unique identifier of the device.")
 
-  setpoint_name: str = Field(
-      description="The name of the setpoint."
-  )
+  setpoint_name: str = Field(description="The name of the setpoint.")
 
   setpoint_value: float = Field(description="The requested value to be set.")
 

@@ -9,7 +9,6 @@ from google import genai
 from google.genai import types
 from smart_buildings.smart_control.llm.services import gemini_service
 
-
 dotenv.load_dotenv()
 
 CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")

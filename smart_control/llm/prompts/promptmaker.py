@@ -32,7 +32,6 @@ import dataclasses
 from typing import Any, Callable, Final
 
 import pandas as pd
-
 from smart_buildings.smart_control.environment import environment
 from smart_buildings.smart_control.environment import hybrid_action_environment as hybrid_env
 from smart_buildings.smart_control.llm.prompts import base_promptmaker
@@ -65,6 +64,7 @@ class BuildingInfo:
     location: The location of the building.
     name: The name of the building, if applicable.
   """
+
   name: str = "SB-1"
   stories: str = "two"
   sqft: int = 96_000
@@ -230,8 +230,7 @@ class Promptmaker(base_promptmaker.BasePromptmaker):
   def building_info_series(self) -> pd.Series:
     """A pandas.Series describing the building information."""
     return pd.Series(
-        dataclasses.asdict(self.building_info),
-        name="building_info"
+        dataclasses.asdict(self.building_info), name="building_info"
     )
 
   @property

@@ -6,10 +6,8 @@ from absl.testing import absltest
 import immutabledict
 import langchain
 import pydantic
-
 from smart_buildings.smart_control.llm.prompts import base_promptmaker
 from smart_buildings.smart_control.llm.schema import conftest as schema_conftest
-
 
 BASE_PROMPT = "What year was America founded?"
 
@@ -27,9 +25,7 @@ EXPECTED_OUTPUT_SCHEMA = immutabledict.immutabledict({
             "type": "integer",
         },
         "explanation": {
-            "description": (
-                "The reasoning behind choosing this specific year."
-            ),
+            "description": "The reasoning behind choosing this specific year.",
             "title": "Explanation",
             "type": "string",
         },
@@ -152,7 +148,7 @@ class BasePromptmakerTest(absltest.TestCase):
               ' "items": {"type": "string"}}}, "required": ["foo"]}\nthe'
               ' object {"foo": ["bar", "baz"]} is a well-formatted instance of'
               ' the schema. The object {"properties": {"foo": ["bar", "baz"]}}'
-              ' is not well-formatted.'
+              " is not well-formatted."
           ),
           instructions,
       )
