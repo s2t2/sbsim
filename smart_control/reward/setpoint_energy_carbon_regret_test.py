@@ -8,6 +8,7 @@ from smart_control.models.base_energy_cost import BaseEnergyCost
 from smart_control.proto import smart_control_reward_pb2
 from smart_control.reward import setpoint_energy_carbon_regret
 from smart_control.utils import conversion_utils
+from smart_control.utils import factory_utils # Added import
 
 
 class SetpointEnergyCarbonRegretTest(parameterized.TestCase):
@@ -234,50 +235,39 @@ class SetpointEnergyCarbonRegretTest(parameterized.TestCase):
       natural_gas_heating_energy_rate=5000.0,
       pump_electrical_energy_rate=250.0,
   ):
-    heating_setpoint_temperature = 293.0
-    cooling_setpoint_temperature = 297.0
-    zone_air_flow_rate_setpoint = 0.013
-    zone_air_flow_rate = 0.012
-    info = smart_control_reward_pb2.RewardInfo()
-    info.agent_id = 'test_agent'
-    info.scenario_id = 'test_scenario'
-    info.start_timestamp.CopyFrom(
-        conversion_utils.pandas_to_proto_timestamp(
-            pd.Timestamp('2021-05-03 12:13:00-5')
-        )
-    )
-    info.end_timestamp.CopyFrom(
-        conversion_utils.pandas_to_proto_timestamp(
-            pd.Timestamp('2021-05-03 12:18:00-5')
-        )
-    )
-    zone_info = smart_control_reward_pb2.RewardInfo.ZoneRewardInfo()
-    zone_info.heating_setpoint_temperature = heating_setpoint_temperature
-    zone_info.cooling_setpoint_temperature = cooling_setpoint_temperature
-    zone_info.zone_air_temperature = zone_air_temperature
-    zone_info.average_occupancy = average_occupancy
-    zone_info.air_flow_rate_setpoint = zone_air_flow_rate_setpoint
-    zone_info.air_flow_rate = zone_air_flow_rate
-    info.zone_reward_infos['0,0'].CopyFrom(zone_info)
-    info.zone_reward_infos['1,1'].CopyFrom(zone_info)
+    # Default values from original function signature that match ZoneRewardInfoFactory defaults:
+    # heating_setpoint_temperature = 293.0
+    # cooling_setpoint_temperature = 297.0
+    # zone_air_flow_rate_setpoint = 0.013
+    # zone_air_flow_rate = 0.012
 
-    air_handler_info = (
-        smart_control_reward_pb2.RewardInfo.AirHandlerRewardInfo()
-    )
-    air_handler_info.blower_electrical_energy_rate = (
-        blower_electrical_energy_rate
-    )
-    air_handler_info.air_conditioning_electrical_energy_rate = (
-        air_conditioning_electrical_energy_rate
-    )
-    info.air_handler_reward_infos['air_handler_0'].CopyFrom(air_handler_info)
-    boiler_info = smart_control_reward_pb2.RewardInfo.BoilerRewardInfo()
-    boiler_info.natural_gas_heating_energy_rate = (
-        natural_gas_heating_energy_rate
-    )
-    boiler_info.pump_electrical_energy_rate = pump_electrical_energy_rate
-    info.boiler_reward_infos['boiler_0'].CopyFrom(boiler_info)
+    zone_info_params = {
+        'zone_air_temperature': zone_air_temperature,
+        'average_occupancy': average_occupancy,
+    }
 
+    air_handler_info_params = {
+        'blower_electrical_energy_rate': blower_electrical_energy_rate,
+        'air_conditioning_electrical_energy_rate': air_conditioning_electrical_energy_rate,
+    }
+
+    boiler_info_params = {
+        'natural_gas_heating_energy_rate': natural_gas_heating_energy_rate,
+        'pump_electrical_energy_rate': pump_electrical_energy_rate,
+    }
+
+    info = factory_utils.RewardInfoFactory(
+        add_zone_infos={
+            '0,0': factory_utils.ZoneRewardInfoFactory(**zone_info_params),
+            '1,1': factory_utils.ZoneRewardInfoFactory(**zone_info_params)
+        },
+        add_air_handler_infos={
+            'air_handler_0': factory_utils.AirHandlerRewardInfoFactory(**air_handler_info_params)
+        },
+        add_boiler_infos={
+            'boiler_0': factory_utils.BoilerRewardInfoFactory(**boiler_info_params)
+        }
+    )
     return info
 
   def test_invalid_productivity_bounds(self):
